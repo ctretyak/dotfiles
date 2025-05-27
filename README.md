@@ -2,17 +2,17 @@
 
 ## Initialization
 
+### Fedora
+
+```sh
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply ctretyak
+```
+
 ### Arch
 
 ```sh
 sudo pacman -S chezmoi --noconfirm
 chezmoi init --apply https://ctretyak:__PROJECT_TOKEN__@gitlab.com/ctretyak/chezmoi.git
-```
-
-### Fedora
-
-```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply https://ctretyak:__PROJECT_TOKEN__@gitlab.com/ctretyak/chezmoi.git
 ```
 
 ### Snap
