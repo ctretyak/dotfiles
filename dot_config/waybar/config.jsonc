@@ -1,0 +1,41 @@
+// -*- mode: jsonc -*-
+// see https://github.com/elifouts/Dotfiles/blob/main/.config/waybar/config
+{
+  "include": [
+    "$HOME/.config/waybar/modules/custom.jsonc",
+    "$HOME/.config/waybar/modules/groups.jsonc",
+    "$HOME/.config/waybar/modules/modules.jsonc",
+    "$HOME/.config/waybar/modules/vertical.jsonc",
+    "$HOME/.config/waybar/modules/workspaces.jsonc"
+  ],
+  "reload_style_on_change": true,
+  "spacing": 3,
+  "margin-top": 3,
+  "margin-left": 8,
+  "margin-right": 8,
+  "modules-left": [
+    "hyprland/workspaces",
+    "group/load",
+    "custom/separator#blank",
+    "group/motherboard#no-cpu",
+    "custom/separator#blank",
+    "custom/pacman"
+    // "custom/cava_mviz",
+    // "custom/separator#blank",
+    // "custom/playerctl",
+    // "custom/separator",
+    // "hyprland/window"
+  ],
+  "modules-center": ["clock#gnome"],
+  "modules-right": [
+    "tray",
+    "custom/separator#dot-line",
+    "custom/keyboard-language",
+    "custom/separator#blank",
+    "pulseaudio",
+    "custom/separator#blank",
+    "battery",
+    "group/settings",
+    "custom/swaync"
+  ]
+}

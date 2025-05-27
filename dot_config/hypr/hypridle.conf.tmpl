@@ -1,0 +1,44 @@
+general {
+    # Pause all media players and avoid launching multiple hyprlock instances.
+    lock_cmd = playerctl --all-players pause && pidof hyprlock || hyprlock
+    # Lock session before suspend.
+    before_sleep_cmd = loginctl lock-session
+    # Turn display back on after suspend (avoid pressing key twice).
+    after_sleep_cmd = hyprctl dispatch dpms on
+}
+
+# Dim the screen after 5 minutes of inactivity.
+listener {
+    timeout = 300
+    on-timeout = brightnessctl -s set 10
+    on-resume = brightnessctl -r
+}
+
+# Lock the screen after 5 minutes and 10 seconds.
+listener {
+    timeout = 310
+    on-timeout = loginctl lock-session
+}
+
+# Turn off the screen after 10 minutes.
+listener {
+    timeout = 600
+    on-timeout = hyprctl dispatch dpms off
+    on-resume = hyprctl dispatch dpms on && brightnessctl -r
+}
+
+{{ if eq (output "sh" (joinPath .chezmoi.sourceDir ".chezmoitemplates" "linux" "has-battery.sh") | trim ) "true" -}}
+# Suspend the system after 20 minutes.
+# Has problems: https://github.com/hyprwm/Hyprland/discussions/10231, https://github.com/hyprwm/Hyprland/discussions/9907
+listener {
+    timeout = 1200
+    on-timeout = systemctl suspend
+}
+{{- end }}
+
+# Turn off keyboard backlight (optional).
+# listener {
+#     timeout = 300
+#     on-timeout = brightnessctl -sd rgb:kbd_backlight set 0
+#     on-resume = brightnessctl -rd rgb:kbd_backlight
+# }

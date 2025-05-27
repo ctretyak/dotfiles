@@ -1,0 +1,14 @@
+customCommands:
+  - key: "O"
+    context: "global"
+    command: "xdg-open $(git remote get-url --push origin | sed 's/\\.git$//')"
+    description: "Open remote repository in browser"
+  - key: "X"
+    command: "git reset --hard HEAD && git clean -fdx"
+    context: "files"
+    description: "Nuke Working Tree (including ignored files)"
+    loadingText: "Resetting and cleaning..."
+    prompts:
+      - type: "confirm"
+        title: "Nuke Working Tree"
+        body: "This will reset all changes and remove ignored files. Are you sure?"

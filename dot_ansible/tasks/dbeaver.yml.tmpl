@@ -1,0 +1,20 @@
+{{ if eq .chezmoi.osRelease.id "fedora" }}
+
+- name: Install DBeaver
+  flatpak:
+    name: io.dbeaver.DBeaverCommunity
+
+{{ else if eq .chezmoi.osRelease.id "arch" }}
+
+- name: Install DBeaver
+  kewlfft.aur.aur:
+    name: dbeaver
+
+{{ else }}
+
+- name: Install DBeaver
+  fail:
+    msg: "DBeaver is not supported on {{ .chezmoi.osRelease.id }}"
+
+{{ end }}
+

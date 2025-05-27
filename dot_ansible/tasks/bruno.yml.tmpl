@@ -1,0 +1,20 @@
+{{ if eq .os.idLike "fedora" }}
+
+- name: Install Bruno
+  community.general.flatpak:
+    name: com.usebruno.Bruno
+
+{{ else if eq .os.idLike "arch" }}
+
+- name: Install Bruno
+  kewlfft.aur.aur:
+    name: bruno
+
+{{ else }}
+
+- name: Install Bruno
+  package:
+    name: bruno
+
+{{ end }}
+

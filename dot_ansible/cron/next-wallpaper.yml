@@ -1,0 +1,5 @@
+- name: cron - Switch wallpaper every hour
+  ansible.builtin.cron:
+    name: "next_wallpaper"
+    special_time: hourly
+    job: "~/.local/bin/next-wallpaper.sh"

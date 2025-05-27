@@ -1,0 +1,26 @@
+{{ if eq .chezmoi.osRelease.id "fedora" }}
+
+- name: Install Obsidian
+  community.general.flatpak:
+    name: md.obsidian.Obsidian
+
+- name: Check if Wayland socket is still enabled for Obsidian
+  ansible.builtin.command: flatpak info --show-permissions md.obsidian.Obsidian
+  register: obsidian_flatpak_perms
+  changed_when: false
+  failed_when: false
+
+- name: Disable Wayland socket for Obsidian (flatpak override)
+  ansible.builtin.command: flatpak override --user --nosocket=wayland md.obsidian.Obsidian
+  when: '"wayland" in obsidian_flatpak_perms.stdout'
+
+{{ else }}
+
+- name: Install Obsidian
+  become: true
+  package:
+    name: obsidian
+
+{{ end }}
+
+

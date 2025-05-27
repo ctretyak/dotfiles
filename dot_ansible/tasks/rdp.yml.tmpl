@@ -1,0 +1,14 @@
+{{ if eq .chezmoi.os "windows" }}
+
+- name: Install mRemoteNG
+  win_chocolatey:
+    name: mremoteng
+
+{{ else }}
+
+- name: Install Remmina
+  become: true
+  package:
+    name: remmina
+
+{{ end }}

@@ -1,0 +1,30 @@
+{
+  "Create react functional component": {
+    "prefix": "rfc",
+    "body": [
+      "export function ${1:ComponentName}() {",
+      "    return ${2:null};",
+      "}"
+    ],
+    "description": "Create react functional component"
+  },
+  "Create component's story": {
+    "prefix": "story",
+    "body": [
+      "import { Meta, StoryObj } from \"@storybook/react\";",
+      "import { ${1:ComponentName} } from \".\";",
+      "",
+      "const meta: Meta<typeof ${1:ComponentName}> = {",
+      "    component: ${1:ComponentName},",
+      "};",
+      "",
+      "export default meta;",
+      "",
+      "type Story = StoryObj<typeof ${1:ComponentName}>;",
+      "",
+      "export const Default: Story = {};",
+      ""
+    ],
+    "description": "Create component's story"
+  }
+}

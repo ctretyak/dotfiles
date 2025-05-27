@@ -1,0 +1,24 @@
+{{ if eq .chezmoi.osRelease.id "fedora" }}
+- name: Install Google Chrome
+  become: true
+  package:
+    name: google-chrome-stable
+{{ else if eq .chezmoi.osRelease.id "arch" }}
+
+- name: Install Google Chrome
+  kewlfft.aur.aur:
+    name: google-chrome
+
+{{ else if eq .chezmoi.os "windows" }}
+
+- name: Install Google Chrome
+  win_chocolatey:
+    name: googlechrome
+
+{{ else }}
+
+- name: Install Google Chrome
+  fail:
+    msg: "Google Chrome is not supported on {{ .chezmoi.osRelease.id }}"
+
+{{ end }}

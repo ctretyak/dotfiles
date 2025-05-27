@@ -1,0 +1,14 @@
+- name: Add rpmfusion-free repo
+  become: true
+  dnf:
+    name: "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ "{{" }} ansible_facts['distribution_major_version'] {{ "}}" }}.noarch.rpm"
+    disable_gpg_check: true
+
+{{ if eq .hosttype "work" }}
+- name: Enable SSH service
+  become: true
+  systemd:
+    name: sshd
+    enabled: yes
+    state: started
+{{ end }}

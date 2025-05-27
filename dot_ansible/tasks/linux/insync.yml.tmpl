@@ -1,0 +1,39 @@
+{{ if eq .os.idLike "arch" }}
+
+- name: Install Insync
+  kewlfft.aur.aur:
+    name: insync
+
+{{ else if eq .os.idLike "fedora" }}
+
+- name: Import Insync GPG key
+  become: true
+  rpm_key:
+    key: https://d2t3ff60b2tol4.cloudfront.net/repomd.xml.key
+- name: Create insync.repo for Fedora
+  become: true
+  copy:
+    dest: /etc/yum.repos.d/insync.repo
+    content: |
+      [insync]
+      name=insync repo
+      baseurl=http://yum.insync.io/fedora/$releasever/
+      gpgcheck=1
+      gpgkey=https://d2t3ff60b2tol4.cloudfront.net/repomd.xml.key
+      enabled=1
+      metadata_expire=120m
+    owner: root
+    group: root
+    mode: '0644'
+- name: Install Insync
+  become: true
+  package:
+    name: insync
+
+{{ else }}
+
+- name: Install Insync
+  package:
+    name: insync
+
+{{ end }}

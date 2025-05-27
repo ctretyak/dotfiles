@@ -1,0 +1,56 @@
+key.txt.age
+secrets.yaml.age
+.archive/
+
+README.md
+.prettierrc
+
+old_*/**
+*.age
+
+{{ if ne .chezmoi.os "windows" }}
+
+    .chezmoiscripts/windows/**
+    AppData/**
+    .ansible/tasks/windows
+
+{{ end }}
+
+{{ if ne .chezmoi.os "linux" }}
+
+    .ansible/tasks/linux
+    .chezmoiscripts/linux/**
+    .p10k.zsh
+    .tmux
+    .zshrc
+
+{{ end }}
+
+{{ if eq .chezmoi.os "linux" }}
+
+    .nvm/.cache/**
+    .nvm/alias/**
+    .nvm/versions/**
+    .oh-my-zsh/cache/**
+    .oh-my-zsh/custom/themes/powerlevel10k/gitstatus/gitstatus.plugin.zsh.zwc
+    .oh-my-zsh/custom/themes/powerlevel10k/gitstatus/install.zwc
+    .oh-my-zsh/custom/themes/powerlevel10k/internal/configure.zsh.zwc
+    .oh-my-zsh/custom/themes/powerlevel10k/internal/icons.zsh.zwc
+    .oh-my-zsh/custom/themes/powerlevel10k/internal/p10k.zsh.zwc
+    .oh-my-zsh/custom/themes/powerlevel10k/internal/parser.zsh.zwc
+    .oh-my-zsh/custom/themes/powerlevel10k/internal/worker.zsh.zwc
+    .oh-my-zsh/custom/themes/powerlevel10k/powerlevel10k.zsh-theme.zwc
+    .oh-my-zsh/custom/themes/powerlevel10k/powerlevel9k.zsh-theme.zwc
+
+
+{{ end }}
+
+{{ if ne (env "XDG_CURRENT_DESKTOP") "GNOME" }}
+
+    .chezmoiscripts/linux/gnome
+
+{{ end }}
+
+{{ if not .wsl }}
+    .gnupg/**
+{{ end }}

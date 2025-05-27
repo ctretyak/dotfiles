@@ -1,0 +1,3 @@
+- name: Install AutoDarkMode
+  win_chocolatey:
+    name: auto-dark-mode

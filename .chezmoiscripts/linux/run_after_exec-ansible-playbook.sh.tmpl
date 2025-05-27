@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e
+
+ansible-playbook "{{ .chezmoi.homeDir }}/.ansible/playbook.yml" -i localhost, --ask-become-pass

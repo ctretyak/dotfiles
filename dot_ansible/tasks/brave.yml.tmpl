@@ -1,0 +1,29 @@
+{{ if eq .chezmoi.osRelease.id "fedora" }}
+
+- name: Add Brave repo
+  become: true
+  get_url:
+    url: https://brave-browser-rpm-release.s3.brave.com/brave-browser.repo
+    dest: /etc/yum.repos.d/brave-browser.repo
+    mode: "0644"
+
+- name: Install Brave
+  become: true
+  package:
+    name:
+      - dnf-plugins-core
+      - brave-browser
+
+{{ else if eq .chezmoi.osRelease.id "arch" }}
+
+- name: Install Brave
+  kewlfft.aur.aur:
+    name: brave-bin
+
+{{ else }}
+
+- name: Install Brave
+  fail:
+    msg: "Brave is not supported on {{ .chezmoi.osRelease.id }}"
+
+{{ end }}

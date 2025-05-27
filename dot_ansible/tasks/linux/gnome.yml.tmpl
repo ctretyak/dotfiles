@@ -1,0 +1,43 @@
+{{ if eq .chezmoi.osRelease.id "fedora"}}
+
+- name: Install GNOME extensions
+  become: true
+  package:
+    name:
+      - gnome-pomodoro
+      - gnome-shell-extension-appindicator
+      - gnome-shell-extension-auto-move-windows
+      - gnome-shell-extension-openweather
+#      - gnome-shell-extension-unblank # install manually
+#      - gnome-shell-extension-weather-oclock # install manually
+- name: Install GNOME Extensions Manager
+  community.general.flatpak:
+    name: com.mattjakeman.ExtensionManager
+
+{{ else if eq .chezmoi.osRelease.id "arch"}}
+
+- name: Install GNOME extensions
+  become: true
+  package:
+    name:
+      - gnome-shell-extension-weather-oclock
+- name: Install GNOME extensions [aur]
+  kewlfft.aur.aur:
+    name:
+      - gnome-shell-extension-appindicator-git
+      - gnome-shell-extension-arch-update
+      - gnome-shell-extension-bluetooth-quick-connect
+      - gnome-shell-extension-openweather-git
+      - gnome-shell-extension-unblank-git
+      - gnome-shell-extension-unite
+      - gnome-shell-pomodoro
+
+{{ else }}
+
+- name: Install GNOME extensions
+  fail:
+    msg: "GNOME extensions are not supported on {{ .chezmoi.osRelease.prettyName }}"
+
+{{ end }}
+
+

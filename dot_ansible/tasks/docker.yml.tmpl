@@ -1,0 +1,40 @@
+{{ if eq .chezmoi.osRelease.id "fedora" }}
+
+- name: Install Docker # https://docs.fedoraproject.org/en-US/quick-docs/installing-docker/
+  become: true
+  package:
+    name:
+      - containerd
+      - docker-cli
+      - docker-compose
+
+{{ else if eq .chezmoi.osRelease.id "arch" }}
+
+- name: Install Docker
+  become: true
+  package:
+    name:
+      - docker.io
+      - docker-compose
+
+- name: Install Docker
+  become: true
+  package:
+    name:
+      - docker
+      - docker-compose
+
+- name: Enable Docker service
+  become: true
+  systemd:
+    name: docker
+    enabled: true
+    state: started
+
+{{ else }}
+
+- name: Install Docker
+  fail:
+    msg: "Docker is not supported on {{ .chezmoi.osRelease.id }}"
+
+{{ end }}

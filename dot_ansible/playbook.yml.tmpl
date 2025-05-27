@@ -1,0 +1,45 @@
+- name: Install packages
+  hosts: localhost
+  connection: local
+
+  tasks:
+    - import_tasks: tasks/{{ .os.idLike }}/_main.yml
+    - import_tasks: tasks/{{ .chezmoi.os }}/_main.yml
+
+    - import_tasks: tasks/brave.yml
+    - import_tasks: tasks/docker.yml
+    - import_tasks: tasks/git.yml
+    - import_tasks: tasks/google-chrome.yml
+    - import_tasks: tasks/gpg.yml
+    - import_tasks: tasks/keepassxc.yml
+    - import_tasks: tasks/neovim.yml
+    - import_tasks: tasks/obsidian.yml
+    - import_tasks: tasks/screenshot.yml
+    - import_tasks: tasks/telegram.yml
+    - import_tasks: tasks/ticktick.yml
+    - import_tasks: tasks/vlc.yml
+#    - import_tasks: tasks/openvpn.yml
+
+    - import_tasks: cron/cleanup.yml
+    - import_tasks: cron/dark-mode.yml
+    - import_tasks: cron/next-wallpaper.yml
+
+{{ if eq .hosttype "work" }}
+
+    - import_tasks: tasks/bruno.yml
+    - import_tasks: tasks/dbeaver.yml
+    - import_tasks: tasks/firefox.yml
+    - import_tasks: tasks/linux/gimp.yml
+    - import_tasks: tasks/s3browser.yml
+    - import_tasks: tasks/winmerge.yml
+#    - import_tasks: tasks/studio3t.yml
+
+    - import_tasks: cron/notify-workday.yml
+
+{{ else if eq .hosttype "home" }}
+
+    - import_tasks: tasks/discord.yml
+    - import_tasks: tasks/rdp.yml
+    - import_tasks: tasks/steam.yml
+
+{{ end }}

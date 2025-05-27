@@ -1,0 +1,21 @@
+- name: cron - Notify on reboot — start/end work day
+  ansible.builtin.cron:
+    name: "notify_reboot_start_or_end"
+    special_time: reboot
+    job: 'XDG_RUNTIME_DIR=/run/user/$(id -u) notify-send --urgency=critical "А ТЫ НЕ ЗАБЫЛ?" "НАЧАТЬ/ЗАКОНЧИТЬ РАБОЧИЙ ДЕНЬ\!"'
+
+- name: cron - Notify to start workday on weekdays
+  ansible.builtin.cron:
+    name: "notify_workday_start"
+    minute: "15"
+    hour: "8"
+    weekday: "1-5"
+    job: 'XDG_RUNTIME_DIR=/run/user/$(id -u) notify-send --urgency=critical "А ТЫ НЕ ЗАБЫЛ?" "НАЧАТЬ РАБОЧИЙ ДЕНЬ\!"'
+
+- name: cron - Notify to end workday on weekdays
+  ansible.builtin.cron:
+    name: "notify_workday_end"
+    minute: "30"
+    hour: "17"
+    weekday: "1-5"
+    job: 'XDG_RUNTIME_DIR=/run/user/$(id -u) notify-send --urgency=critical "А ТЫ НЕ ЗАБЫЛ?" "ЗАКОНЧИТЬ РАБОЧИЙ ДЕНЬ\!"'

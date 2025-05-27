@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Annotated Screenshot
+Comment=Take a screenshot and open for annotation
+Exec=/home/ktretyak/.local/bin/annotated-screenshot.sh
+Icon=applets-screenshooter
+Terminal=false
+Type=Application
+Categories=Utility;
+StartupNotify=true

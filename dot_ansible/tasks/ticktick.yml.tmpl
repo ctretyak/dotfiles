@@ -1,0 +1,18 @@
+{{ if eq .chezmoi.osRelease.id "arch" }}
+- name: Install TickTick
+  kewlfft.aur.aur:
+    name: ticktick
+
+{{ else if eq .chezmoi.osRelease.id "fedora" }}
+
+- name: Install TickTick
+  community.general.flatpak:
+    name: com.ticktick.TickTick
+
+{{ else }}
+
+- name: Install TickTick
+  fail:
+    msg: "TickTick installation is not supported on {{ .chezmoi.osRelease.prettyName }}"
+
+{{ end }}

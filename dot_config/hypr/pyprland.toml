@@ -1,0 +1,20 @@
+[pyprland]
+plugins = ["monitors", "toggle_dpms", "wallpapers", "layout_center", "expose"]
+
+# Honor laptop
+[monitors.placement."Chimei Innolux Corporation 0x1604"]
+scale = 1.2
+# PGT
+[monitors.placement."Dell Inc. DELL P2723D J43FFZ3"]
+leftOf = "Dell Inc. DELL P2721Q HFXVKD3"
+scale = 1.6
+[monitors.placement."Dell Inc. DELL P2721Q HFXVKD3"]
+scale = 2
+[monitors.placement."Dell Inc. DELL U2718Q FN84K99Q1DKL"]
+rightOf = "Dell Inc. DELL P2721Q HFXVKD3"
+scale = 2
+
+[wallpapers]
+path = "~/.local/share/backgrounds/wallpapers"
+command = 'hyprctl hyprpaper reload ,"[file]"'
+interval = 60

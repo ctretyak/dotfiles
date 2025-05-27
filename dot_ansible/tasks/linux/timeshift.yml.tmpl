@@ -1,0 +1,14 @@
+{{ if eq .chezmoi.osRelease.id "arch" }}
+
+- name: Install Timeshift
+  kewlfft.aur.aur:
+    name: timeshift
+
+{{ else }}
+
+- name: Install Timeshift
+  become: true
+  package:
+    name: timeshift
+
+{{ end }}

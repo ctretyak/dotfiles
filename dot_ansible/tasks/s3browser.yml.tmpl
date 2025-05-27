@@ -1,0 +1,15 @@
+{{ if eq .chezmoi.os "windows" }}
+
+- name: Install S3 Browser
+  win_chocolatey:
+    name: s3browser
+
+{{ else if eq .chezmoi.osRelease.id "fedora" }}
+# is not supported on {{ .chezmoi.osRelease.id }}
+{{ else }}
+
+- name: Install S3 Browser
+  fail:
+    msg: "S3 Browser is not supported on {{ .chezmoi.osRelease.id }}"
+
+{{ end }}

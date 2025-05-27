@@ -1,0 +1,83 @@
+{{ if eq .os.idLike "fedora" }}
+
+- name: Enable hyprland COPR
+  become: true
+  community.general.copr:
+    name: solopasha/hyprland
+
+{{ end }}
+
+{{ if eq .os.idLike "arch" }}
+
+- name: Install hyprland dependencies
+  become: true
+  package:
+    name:
+      - swaync
+
+- name: Install hyprland dependencies
+  kewlfft.aur.aur:
+    name:
+      - hyprswitch
+      - pyprland
+      - rose-pine-hyprcursor
+      - spotify # for playerctl
+      - swayosd-git
+      - ttf-material-design-icons-extended # Search icons here: https://pictogrammers.com/library/mdi/
+
+{{ else }}
+
+- name: Install hyprland dependencies 
+  become: true
+  package:
+    name:
+      - SwayNotificationCenter
+
+{{ end }}
+
+- name: Install Hyprland
+  become: true
+  package:
+    name:
+      - hyprland
+
+- name: Install hyprland dependencies
+  become: true
+  package:
+    name:
+      - blueman
+      - bluez
+      - bluez-utils
+      - brightnessctl
+      - cava # for waybar
+      - easyeffects
+      - gnome-calendar
+      - hypridle
+      - hyprland-qtutils
+      - hyprlock
+      - hyprpaper
+      - hyprpicker
+      - hyprpolkitagent # permissions modal
+      - jq # for hyprlock and night theme switcher script
+      - network-manager-applet
+      - networkmanager
+      - networkmanager-openvpn
+      - pamixer # for waybar
+      - rofi-wayland
+      - waybar
+      - xdg-desktop-portal-gtk # filepicker
+      - xdg-desktop-portal-hyprland # screensharing
+
+- name: Enable blueman service
+  become: true
+  systemd:
+    name: bluetooth.service
+    enabled: yes
+    state: started
+
+- name: Enable SwayOSD service
+  become: true
+  systemd:
+    name: swayosd-libinput-backend.service
+    enabled: yes
+    state: started

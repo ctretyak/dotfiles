@@ -1,0 +1,80 @@
+{{ if eq .chezmoi.osRelease.id "popos" }}
+
+- name: Install Neovim
+  community.general.snap:
+    name: nvim
+    classic: true
+
+{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+
+- name: Install Neovim
+  community.general.flatpak:
+    name: io.neovim.nvim
+
+{{ else }}
+
+- name: Install Neovim
+  become: true
+  package:
+    name: neovim
+
+{{ end }}
+
+{{ if eq .chezmoi.osRelease.id "fedora" }}
+
+- name: Enable lazygit COPR
+  become: true
+  command: dnf copr enable atim/lazygit -y
+  args:
+    creates: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:atim:lazygit.repo
+
+- name: Install development-tools group
+  become: true
+  shell: dnf group install -y development-tools
+  args:
+    creates: /usr/bin/gcc
+
+- name: Install development tools
+  become: true
+  package:
+    name:
+      - gcc
+      - make
+      - kernel-devel
+      - glibc-devel
+      - autoconf
+      - automake
+      - libtool
+      - which
+    state: present
+
+{{ end }}
+
+
+{{ if eq .chezmoi.osRelease.id "arch" }}
+
+- name: Install Neovim dependencies
+  become: true
+  package:
+    name:
+      - fd
+      - wl-clipboard
+
+{{ else }}
+
+- name: Install Neovim dependencies
+  become: true
+  package:
+    name:
+      - fd-find
+
+{{ end }}
+
+- name: Install Neovim dependencies
+  become: true
+  package:
+    name:
+      - lazygit
+      - ripgrep
+      - fzf
+

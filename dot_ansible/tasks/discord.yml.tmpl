@@ -1,0 +1,14 @@
+{{ if eq .os.idLike "fedora" }}
+
+- name: Install Discord
+  community.general.flatpak:
+    name: com.discordapp.Discord
+
+{{ else }}
+
+- name: Install Discord
+  become: true
+  package:
+    name: discord
+
+{{ end }}

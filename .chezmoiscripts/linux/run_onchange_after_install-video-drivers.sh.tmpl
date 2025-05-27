@@ -1,0 +1,19 @@
+#!/bin/bash
+
+{{ if eq .chezmoi.osRelease.id "arch" }}
+
+if lspci -nn | grep -i 'vga' | grep -iqE 'amd|radeon|vega'; then
+  sudo pacman -S --noconfirm --needed xf86-video-amdgpu mesa libva-mesa-driver vulkan-radeon vulkan-icd-loader libva-utils
+elif lspci -nn | grep -i 'vga' | grep -iqE 'nvidia|geforce'; then
+  sudo pacman -S --noconfirm --needed nvidia nvidia-utils nvidia-settings libva-utils ffnvcodec-headers
+else
+  echo "No supported GPU (AMD or NVIDIA) detected."
+fi
+
+{{ else if eq .chezmoi.osRelease.id "fedora" }}
+
+{{ else }}
+
+  echo "Video driver installation is not supported on {{ .chezmoi.osRelease.prettyName }}"
+
+{{ end }}

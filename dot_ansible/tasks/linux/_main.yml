@@ -1,0 +1,10 @@
+- import_tasks: tasks/linux/gnome.yml
+- import_tasks: tasks/linux/htop.yml
+- import_tasks: tasks/linux/insync.yml
+- import_tasks: tasks/linux/fastfetch.yml
+- import_tasks: tasks/linux/terminal.yaml
+- import_tasks: tasks/linux/timeshift.yml
+- import_tasks: tasks/linux/tmux.yml
+- import_tasks: tasks/linux/zoxide.yml
+- import_tasks: tasks/linux/zsh.yml
+#    - import_tasks: tasks/linux/hyprland.yml

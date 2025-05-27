@@ -1,0 +1,12 @@
+{{- $secrets := ( include "secrets.yaml.age" | decrypt | fromYaml ) -}}
+- name: cron - Theme switch every 15 minutes
+  ansible.builtin.cron:
+    name: "theme_switcher_interval"
+    minute: "2-59/15"
+    job: "~/.local/bin/night_theme_switcher.sh --location Limassol --api-key {{ $secrets.weather_api_key }} >> /tmp/night_theme_switcher.log 2>&1"
+
+- name: cron - Theme switch on reboot
+  ansible.builtin.cron:
+    name: "theme_switcher_reboot"
+    special_time: reboot
+    job: "~/.local/bin/night_theme_switcher.sh --location Limassol --api-key {{ $secrets.weather_api_key }} >> /tmp/night_theme_switcher.log 2>&1"

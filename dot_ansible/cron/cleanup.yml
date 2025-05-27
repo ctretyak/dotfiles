@@ -1,0 +1,5 @@
+- name: cron - Daily cleanup of Downloads
+  ansible.builtin.cron:
+    name: "cleanup_downloads"
+    special_time: daily
+    job: "find ~/Downloads/** -ctime +60 -delete"

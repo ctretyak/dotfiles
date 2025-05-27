@@ -1,0 +1,12 @@
+{
+  "Immediately Invoked Function Expression": {
+    "prefix": "iife",
+    "body": ["(() => {$0})()"],
+    "description": "Immediately Invoked Function Expression"
+  },
+  "Async Immediately Invoked Function Expression": {
+    "prefix": "aiife",
+    "body": ["(async () => {$0})()"],
+    "description": "Async Immediately Invoked Function Expression"
+  }
+}

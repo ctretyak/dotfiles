@@ -1,0 +1,21 @@
+{{ if eq .os.idLike "arch" }}
+
+- name: Install GnuPG
+  become: true
+  package:
+    name: gnupg
+
+{{ else if eq .os.idLike "windows" }}
+
+- name: Install Gpg4win
+  win_chocolatey:
+    name: gpg4win
+
+{{ else }}
+
+- name: Install GnuPG
+  become: true
+  package:
+    name: gpg
+
+{{ end }}

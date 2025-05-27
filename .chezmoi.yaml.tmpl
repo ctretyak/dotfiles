@@ -1,0 +1,17 @@
+{{- $choices := list "home" "work" -}}
+{{- $hosttype := promptChoice "What type of host are you on" $choices -}}
+
+diff:
+  exclude:
+    - scripts
+
+encryption: age
+age:
+  identity: "~/.config/chezmoi/key.txt"
+  recipient: "age1vw9nz2fmkpgmqsnpdtuxmnvkfnln7u9u5rmty9q8796entam69zsygjtkl"
+
+data:
+  os:
+    idLike: {{ or (get .chezmoi.osRelease "idLike") .chezmoi.osRelease.id }}
+  hosttype: {{ $hosttype }}
+  wsl: false

@@ -1,0 +1,35 @@
+{{- if eq .chezmoi.os "linux" -}}
+.nvm:
+  type: archive
+  url: https://github.com/nvm-sh/nvm/archive/{{ (gitHubLatestRelease "nvm-sh/nvm").TagName }}.tar.gz
+  exact: true
+  stripComponents: 1
+  refreshPeriod: 168h
+.tmux/plugins/tpm:
+  type: git-repo
+  url: https://github.com/tmux-plugins/tpm
+  refreshPeriod: 168h
+.nerd-fonts/install.sh:
+  type: file
+  url: https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/install.sh
+  executable: true
+.nerd-fonts/patched-fonts/meslo:
+  type: archive
+  url: https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.tar.xz
+  executable: true
+  refreshPeriod: 168h
+.nerd-fonts/patched-fonts/JetBrainsMono:
+  type: archive
+  url: https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip
+  executable: true
+  refreshPeriod: 168h
+.tokyonight:
+  type: git-repo
+  url: https://github.com/folke/tokyonight.nvim
+  refreshPeriod: 168h
+.config/waybar/themes/catppuccin-mocha.css:
+  type: file
+  url: https://github.com/catppuccin/waybar/releases/latest/download/mocha.css
+  executable: true
+  refreshPeriod: 168h
+{{- end -}}

@@ -1,0 +1,4 @@
+- name: Install htop
+  become: true
+  package:
+    name: htop

@@ -1,0 +1,8 @@
+- name: Install tmux
+  become: true
+  package:
+    name:
+      - tmux
+      - fzf
+      - bat
+      - psmisc
