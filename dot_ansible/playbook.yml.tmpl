@@ -6,7 +6,6 @@
     - import_tasks: tasks/{{ .os.idLike }}/_main.yml
     - import_tasks: tasks/{{ .chezmoi.os }}/_main.yml
 
-    - import_tasks: tasks/brave.yml
     - import_tasks: tasks/docker.yml
     - import_tasks: tasks/git.yml
     - import_tasks: tasks/google-chrome.yml
@@ -19,6 +18,7 @@
     - import_tasks: tasks/ticktick.yml
     - import_tasks: tasks/vlc.yml
     - import_tasks: tasks/vscode.yml
+#    - import_tasks: tasks/brave.yml
 #    - import_tasks: tasks/openvpn.yml
 
     - import_tasks: cron/cleanup.yml
