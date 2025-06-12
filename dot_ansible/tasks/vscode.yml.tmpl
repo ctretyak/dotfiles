@@ -1,0 +1,31 @@
+{{ if eq .chezmoi.osRelease.id "fedora" }}
+
+- name: Import Microsoft GPG key
+  become: true
+  rpm_key:
+    key: https://packages.microsoft.com/keys/microsoft.asc
+    state: present
+
+- name: Add VS Code repository
+  become: true
+  copy:
+    dest: /etc/yum.repos.d/vscode.repo
+    content: |
+      [code]
+      name=Visual Studio Code
+      baseurl=https://packages.microsoft.com/yumrepos/vscode
+      enabled=1
+      autorefresh=1
+      type=rpm-md
+      gpgcheck=1
+      gpgkey=https://packages.microsoft.com/keys/microsoft.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install Visual Studio Code
+  become: true
+  package:
+    name: code
+
+{{ end }}
