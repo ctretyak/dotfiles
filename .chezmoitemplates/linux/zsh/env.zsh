@@ -4,7 +4,7 @@
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:/snap/bin:$PATH
 export GPG_TTY=$TTY
 export EDITOR='nvim'
-export BROWSER='brave'
+export BROWSER='google-chrome-stable'
 if [[ "$TERM_PROGRAM" == "vscode" ]]; then
   export ZSH_TMUX_AUTOSTART=false
 else

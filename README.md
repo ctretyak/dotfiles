@@ -37,6 +37,8 @@ echo "done"
 
 ### Obsidian wayland support
 
+It doesn't necessary if you don't have fractional scaling
+
 ```sh
 flatpak override --user --socket=wayland md.obsidian.Obsidian
 ```
