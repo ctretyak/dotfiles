@@ -53,5 +53,10 @@ if vim.g.vscode then
     -- map("n", "<leader>gg", "gitlens.showHomeView", "Open GitLens")
 
     map("n", "<leader>e", "workbench.files.action.focusFilesExplorer", "Toggle Sidebar")
+
+    local keys_to_remove = {"grn", "grr", "gra", "gri"}
+    for _, key in ipairs(keys_to_remove) do
+        pcall(vim.keymap.del, "n", key)
+    end
 end
 
