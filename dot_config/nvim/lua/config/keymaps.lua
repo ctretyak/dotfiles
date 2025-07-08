@@ -6,7 +6,15 @@ if vim.g.vscode then
 
     local map = function(mode, lhs, cmd, desc)
         vim.keymap.set(mode, lhs, function()
-            vscode.call(cmd)
+            if type(cmd) == "string" then
+                vscode.call(cmd)
+            elseif type(cmd) == "table" then
+                for _, c in ipairs(cmd) do
+                    vscode.call(c)
+                end
+            else
+                error("Invalid type for cmd: expected string or table")
+            end
         end, {
             desc = desc,
             silent = true
@@ -53,6 +61,10 @@ if vim.g.vscode then
     -- map("n", "<leader>gg", "gitlens.showHomeView", "Open GitLens")
 
     map("n", "<leader>e", "workbench.files.action.focusFilesExplorer", "Toggle Sidebar")
+
+    vim.api.nvim_create_user_command("Ws", function()
+        require("vscode").call("workbench.action.files.saveAll")
+    end, {})
 
     local keys_to_remove = {"grn", "grr", "gra", "gri"}
     for _, key in ipairs(keys_to_remove) do
