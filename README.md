@@ -2,6 +2,13 @@
 
 ## Initialization
 
+### Ubuntu
+
+```sh
+sudo snap install chezmoi --classic
+chezmoi init --apply ctretyak
+```
+
 ### Fedora
 
 ```sh
