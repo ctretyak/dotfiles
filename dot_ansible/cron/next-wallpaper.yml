@@ -2,4 +2,4 @@
   ansible.builtin.cron:
     name: "next_wallpaper"
     special_time: hourly
-    job: "~/.local/bin/next-wallpaper.sh"
+    job: "XDG_RUNTIME_DIR=/run/user/$(id -u) ~/.local/bin/next-wallpaper.sh"
