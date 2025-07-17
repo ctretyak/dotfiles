@@ -30,7 +30,54 @@
 
 {{ else if eq .chezmoi.osRelease.id "ubuntu" }}
 
-# install manully or automate it in feature. When you install it manully it automatically adds the repository
+- name: Install Visual Studio Code via .deb if not already installed
+  become: true
+  block:
+    - name: Check if VS Code is already installed
+      ansible.builtin.command: which code
+      register: vscode_installed
+      ignore_errors: true
+      failed_when: false
+
+
+    - name: Ensure required packages are installed
+      apt:
+        name:
+          - wget
+          - gpg
+          - apt-transport-https
+        state: present
+        update_cache: yes
+      when: vscode_installed.rc != 0
+
+    - name: Preseed debconf to allow Microsoft repo auto-add
+      ansible.builtin.debconf:
+        name: code
+        question: code/add-microsoft-repo
+        value: "true"
+        vtype: boolean
+      when: vscode_installed.rc != 0
+
+    - name: Download VS Code .deb package
+      get_url:
+        url: https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-x64
+        dest: /tmp/vscode.deb
+        mode: '0644'
+      when: vscode_installed.rc != 0
+
+    - name: Install VS Code from .deb file
+      apt:
+        deb: /tmp/vscode.deb
+      when: vscode_installed.rc != 0
+
+    - name: Remove downloaded .deb package
+      file:
+        path: /tmp/vscode.deb
+        state: absent
+      when: vscode_installed.rc != 0
+
+{{ else }}
+
 - name: Install VS Code
   become: true
   package:
