@@ -1,24 +1,9 @@
 {{ if eq (env "XDG_SESSION_TYPE") "wayland" }}
 
+# cannot find good tool 
+
   {{ if eq (env "XDG_CURRENT_DESKTOP") "GNOME" }}
 
-- name: Install Swappy
-  become: true
-  package:
-    name:
-      - swappy
-      - gnome-screenshot
-
-  {{ else }}
-
-- name: Install Swappy
-  become: true
-  package:
-    name:
-      - swappy
-      - grim
-      - slurp
-      - wl-clipboard
 
   {{ end }}
 

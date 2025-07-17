@@ -4,6 +4,13 @@
   flatpak:
     name: io.dbeaver.DBeaverCommunity
 
+{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+
+- name: Install DBeaver
+  become: true
+  snap:
+    name: dbeaver-ce
+
 {{ else if eq .chezmoi.osRelease.id "arch" }}
 
 - name: Install DBeaver

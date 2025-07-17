@@ -4,6 +4,14 @@
   community.general.flatpak:
     name: md.obsidian.Obsidian
 
+{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+
+- name: Install Obsidian
+  become: true
+  snap:
+    name: obsidian
+    classic: true
+
 {{ else }}
 
 - name: Install Obsidian

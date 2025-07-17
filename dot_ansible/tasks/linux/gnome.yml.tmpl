@@ -32,6 +32,21 @@
       - gnome-shell-extension-unite
       - gnome-shell-pomodoro
 
+{{ else if eq .chezmoi.osRelease.id "ubuntu"}}
+
+- name: Install GNOME extensions
+  become: true
+  package:
+    name:
+        - gnome-shell-extension-manager
+# install it manually
+#      - gnome-pomodoro
+#      - gnome-shell-extension-appindicator
+#      - gnome-shell-extension-auto-move-windows
+#      - gnome-shell-extension-openweather
+#      - gnome-shell-extension-unblank # install manually
+#      - gnome-shell-extension-weather-oclock # install manually
+
 {{ else }}
 
 - name: Install GNOME extensions

@@ -28,4 +28,12 @@
   package:
     name: code
 
+{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+
+# install manully or automate it in feature. When you install it manully it automatically adds the repository
+- name: Install VS Code
+  become: true
+  package:
+    name: code
+
 {{ end }}

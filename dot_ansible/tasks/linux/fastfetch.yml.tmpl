@@ -1,0 +1,15 @@
+{{  if eq .os.idLike "debian" }}
+
+- name: Install Neofetch
+  become: true
+  package:
+    name: neofetch
+
+{{ else }}
+
+- name: Install Fastfetch
+  become: true
+  package:
+    name: fastfetch
+    
+{{ end }}

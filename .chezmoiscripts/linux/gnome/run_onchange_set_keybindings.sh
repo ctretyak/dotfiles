@@ -37,6 +37,12 @@ gsettings set org.gnome.shell.keybindings switch-to-application-8 "[]"
 gsettings set org.gnome.shell.keybindings switch-to-application-9 "[]"
 gsettings set org.gnome.shell.keybindings toggle-message-tray "['<Super>v']"
 
+for i in {1..10}; do
+  gsettings set org.gnome.shell.extensions.dash-to-dock app-hotkey-$i "[]"
+  gsettings set org.gnome.shell.extensions.dash-to-dock app-ctrl-hotkey-$i "[]"
+  gsettings set org.gnome.shell.extensions.dash-to-dock app-shift-hotkey-$i "[]"
+done
+
 add_custom_gnome_shortcut() {
   if [ "$#" -ne 4 ]; then
     echo "Usage: add_custom_gnome_shortcut <index> \"<Name>\" \"<Command>\" \"<Binding>\""

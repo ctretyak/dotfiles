@@ -4,6 +4,13 @@
   community.general.flatpak:
     name: com.usebruno.Bruno
 
+{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+
+- name: Install Bruno
+  become: true
+  snap:
+    name: bruno
+
 {{ else if eq .os.idLike "arch" }}
 
 - name: Install Bruno

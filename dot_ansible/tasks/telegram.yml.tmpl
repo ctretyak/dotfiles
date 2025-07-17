@@ -1,4 +1,15 @@
+{{ if eq .chezmoi.osRelease.id "ubuntu" }}
+
+- name: Install Telegram
+  become: true
+  snap:
+    name: telegram-desktop
+
+{{ else }}
+
 - name: Install Telegram
   become: true
   package:
     name: telegram-desktop
+
+{{ end }}

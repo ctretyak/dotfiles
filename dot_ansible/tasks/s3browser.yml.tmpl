@@ -6,6 +6,8 @@
 
 {{ else if eq .chezmoi.osRelease.id "fedora" }}
 # is not supported on {{ .chezmoi.osRelease.id }}
+{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+# is not supported on {{ .chezmoi.osRelease.id }}
 {{ else }}
 
 - name: Install S3 Browser

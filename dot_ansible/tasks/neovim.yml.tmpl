@@ -1,15 +1,17 @@
-{{ if eq .chezmoi.osRelease.id "popos" }}
+{{ if or (eq .chezmoi.osRelease.id "popos") (eq .chezmoi.osRelease.id "ubuntu") }}
 
 - name: Install Neovim
-  community.general.snap:
+  become: true
+  snap:
     name: nvim
     classic: true
 
-{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
-
-- name: Install Neovim
-  community.general.flatpak:
-    name: io.neovim.nvim
+- name: Install Neovim - Build essential
+  become: true
+  package:
+    name: 
+      - build-essential
+      - wl-clipboard
 
 {{ else }}
 
@@ -74,7 +76,9 @@
   become: true
   package:
     name:
+{{ if ne .chezmoi.osRelease.versionCodename "noble" }} # it available after ubuntu 25
       - lazygit
+{{ end }}
       - ripgrep
       - fzf
 

@@ -9,6 +9,13 @@
   community.general.flatpak:
     name: com.ticktick.TickTick
 
+{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+
+- name: Install TickTick
+  become: true
+  snap:
+    name: ticktick
+
 {{ else }}
 
 - name: Install TickTick

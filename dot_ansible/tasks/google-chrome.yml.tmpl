@@ -1,8 +1,18 @@
 {{ if eq .chezmoi.osRelease.id "fedora" }}
+
 - name: Install Google Chrome
   become: true
   package:
     name: google-chrome-stable
+    
+{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+
+# install it manually. It automatically adds repo for updates
+- name: Install Google Chrome
+  become: true
+  package:
+    name: google-chrome-stable
+
 {{ else if eq .chezmoi.osRelease.id "arch" }}
 
 - name: Install Google Chrome

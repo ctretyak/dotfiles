@@ -1,0 +1,32 @@
+{{ if eq .chezmoi.osRelease.id "ubuntu" }}
+
+- name: Install and enable SSH on Ubuntu
+  hosts: all
+  become: true
+
+  block:
+    - name: Install openssh-server
+      apt:
+        name: openssh-server
+        state: present
+        update_cache: yes
+
+    - name: Ensure SSH service is running and enabled
+      systemd:
+        name: ssh
+        state: started
+        enabled: true
+
+    - name: Allow SSH through UFW (if enabled)
+      ufw:
+        rule: allow
+        name: OpenSSH
+      ignore_errors: yes # In case UFW is not installed or inactive
+      
+{{ else }}
+
+- name: Install and enable SSH on Ubuntu
+  fail:
+    msg: "SSH server is not supported on {{ .chezmoi.osRelease.id }}"
+
+{{ end }}
