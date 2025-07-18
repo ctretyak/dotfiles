@@ -36,12 +36,14 @@
 - name: Install Docker on Ubuntu
   become: yes
   block:
+
+  {{ if not ( isExecutable "/usr/bin/docker" ) }}
+
     - name: Install Docker - Ensure dependencies are installed
       apt:
         name:
           - ca-certificates
           - curl
-        state: present
 
     - name: Install Docker - Create keyrings directory
       file:
@@ -68,6 +70,8 @@
         update_cache: yes
       when: add_docker_repo.changed
 
+  {{ end }}
+
     - name: Install Docker
       apt:
         name:
@@ -76,7 +80,6 @@
           - containerd.io
           - docker-buildx-plugin
           - docker-compose-plugin
-        state: present
 
 {{ else }}
 

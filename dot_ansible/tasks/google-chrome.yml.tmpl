@@ -12,6 +12,9 @@
 - name: Install Google Chrome with signed-by GPG key
   become: true
   block:
+  
+  {{ if not (isExecutable "/usr/bin/google-chrome-stable" )}}
+  
     - name: Ensure required packages are installed
       apt:
         name:
@@ -36,6 +39,8 @@
     - name: Update APT cache
       apt:
         update_cache: yes
+        
+  {{ end }}
 
     - name: Install Google Chrome Stable
       apt:
