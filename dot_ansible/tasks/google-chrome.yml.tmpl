@@ -7,42 +7,37 @@
     
 {{ else if eq .chezmoi.osRelease.id "ubuntu" }}
 
-# install it manually. It automatically adds repo for updates
-
-- name: Install Google Chrome with signed-by GPG key
+- name: Install Google Chrome
   become: true
   block:
   
   {{ if not (isExecutable "/usr/bin/google-chrome-stable" )}}
-  
-    - name: Ensure required packages are installed
+
+    - name: Install Google Chrome - Ensure required packages are installed
       apt:
         name:
-          - curl
-          - gnupg
-        state: present
+          - wget
+          - gpg
+          - apt-transport-https
 
-    - name: Download and dearmor Google public key
-      shell: |
-        curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | \
-        gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
-      args:
-        creates: /usr/share/keyrings/google-chrome.gpg
-
-    - name: Add Google Chrome APT repository
-      copy:
-        dest: /etc/apt/sources.list.d/google-chrome.list
-        content: |
-          deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main
+    - name: Install Google Chrome - Download Google Chrome .deb package
+      get_url:
+        url: https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        dest: /tmp/google-chrome.deb
         mode: '0644'
 
-    - name: Update APT cache
+    - name: Install Google Chrome - Install Google Chrome from .deb file
       apt:
-        update_cache: yes
+        deb: /tmp/google-chrome.deb
+
+    - name: Install Google Chrome - Remove downloaded .deb package
+      file:
+        path: /tmp/google-chrome.deb
+        state: absent
         
   {{ end }}
 
-    - name: Install Google Chrome Stable
+    - name: Install Google Chrome
       apt:
         name: google-chrome-stable
         state: latest
