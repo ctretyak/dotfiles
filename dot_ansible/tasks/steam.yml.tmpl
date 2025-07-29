@@ -1,0 +1,15 @@
+{{ if eq .chezmoi.osRelease.id "ubuntu" }}
+
+- name: Install Steam
+  become: true
+  snap:
+    name: steam
+
+{{ else }}
+
+- name: Install Steam
+  become: true
+  package:
+    name: steam
+
+{{ end }}
