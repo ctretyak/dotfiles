@@ -1,0 +1,5 @@
+- name: cron - Update Cursor AI IDE
+  ansible.builtin.cron:
+    name: "update_cursor"
+    special_time: daily
+    job: "XDG_RUNTIME_DIR=/run/user/$(id -u) ~/.local/bin/install_cursor.sh"
