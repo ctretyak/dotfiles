@@ -3,8 +3,8 @@
     name: "cleanup_downloads"
     special_time: daily
     job: "find ~/Downloads/** -ctime +60 -delete"
-- name: cron - Clean chrome GPUCache
-  ansible.builtin.cron:
-    name: "cleanup_chrome_gpu_cache"
-    special_time: reboot
-    job: "XDG_RUNTIME_DIR=/run/user/$(id -u) rm -rf ~/.config/google-chrome/*/GPUCache"
+# - name: cron - Clean chrome GPUCache
+#   ansible.builtin.cron:
+#     name: "cleanup_chrome_gpu_cache"
+#     special_time: reboot
+#     job: "XDG_RUNTIME_DIR=/run/user/$(id -u) rm -rf ~/.config/google-chrome/*/GPUCache"
