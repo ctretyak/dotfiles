@@ -4,7 +4,6 @@ gsettings set org.gnome.GWeather4 temperature-unit "centigrade"
 gsettings set org.gnome.desktop.input-sources sources "[('xkb', 'us'), ('xkb', 'ru')]"
 gsettings set org.gnome.desktop.interface clock-format '24h'
 gsettings set org.gnome.desktop.peripherals.touchpad disable-while-typing false
-gsettings set org.gnome.desktop.peripherals.touchpad natural-scroll false
 gsettings set org.gnome.desktop.privacy old-files-age "uint32 60"
 gsettings set org.gnome.desktop.privacy remove-old-trash-files true
 gsettings set org.gnome.desktop.wm.preferences num-workspaces 4
