@@ -27,9 +27,4 @@
   type: git-repo
   url: https://github.com/folke/tokyonight.nvim
   refreshPeriod: 168h
-.config/waybar/themes/catppuccin-mocha.css:
-  type: file
-  url: https://github.com/catppuccin/waybar/releases/latest/download/mocha.css
-  executable: true
-  refreshPeriod: 168h
 {{- end -}}

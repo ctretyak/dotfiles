@@ -94,6 +94,4 @@ add_custom_gnome_shortcut() {
   gsettings set "$schema" binding "$binding"
 }
 
-add_custom_gnome_shortcut 100 "Open Foot" "foot -m" "<Super>Return"
 # add_custom_gnome_shortcut 101 "Open Brave" "brave-browser" "<Super>b"
-add_custom_gnome_shortcut 101 "Take annotated screenshot" "gtk-launch annotated-screenshot" "<Shift><Super>s"

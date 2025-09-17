@@ -6,5 +6,4 @@
 - import_tasks: tasks/linux/tmux.yml
 - import_tasks: tasks/linux/zoxide.yml
 - import_tasks: tasks/linux/zsh.yml
-#- import_tasks: tasks/linux/hyprland.yml
 #- import_tasks: tasks/linux/terminal.yaml
