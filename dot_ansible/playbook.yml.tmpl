@@ -35,8 +35,6 @@
     - import_tasks: tasks/winmerge.yml
 #    - import_tasks: tasks/studio3t.yml
 
-    - import_tasks: cron/notify-workday.yml
-
 {{ else if eq .hosttype "home" }}
 
     - import_tasks: tasks/discord.yml
