@@ -13,12 +13,10 @@
     - import_tasks: tasks/keepassxc.yml
     - import_tasks: tasks/neovim.yml
     - import_tasks: tasks/obsidian.yml
-    - import_tasks: tasks/screenshot.yml
     - import_tasks: tasks/telegram.yml
     - import_tasks: tasks/ticktick.yml
     - import_tasks: tasks/vlc.yml
-    - import_tasks: tasks/vscode.yml
-#    - import_tasks: tasks/openvpn.yml
+#    - import_tasks: tasks/vscode.yml
 
     - import_tasks: cron/cleanup.yml
     - import_tasks: cron/dark-mode.yml
@@ -30,15 +28,11 @@
     - import_tasks: tasks/bruno.yml
     - import_tasks: tasks/dbeaver.yml
     - import_tasks: tasks/firefox.yml
-    - import_tasks: tasks/linux/gimp.yml
-    - import_tasks: tasks/s3browser.yml
-    - import_tasks: tasks/winmerge.yml
 #    - import_tasks: tasks/studio3t.yml
 
 {{ else if eq .hosttype "home" }}
 
     - import_tasks: tasks/discord.yml
-    - import_tasks: tasks/rdp.yml
     - import_tasks: tasks/steam.yml
 
 {{ end }}

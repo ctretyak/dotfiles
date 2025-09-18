@@ -1,3 +1,0 @@
-{{- if (output "gsettings" "get" "org.gnome.mutter" "experimental-features") | contains "scale-monitor-framebuffer" -}}
-ELECTRON_OZONE_PLATFORM_HINT=auto
-{{- end }}
