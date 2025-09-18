@@ -18,11 +18,6 @@
     - import_tasks: tasks/vlc.yml
 #    - import_tasks: tasks/vscode.yml
 
-    - import_tasks: cron/cleanup.yml
-    - import_tasks: cron/dark-mode.yml
-    - import_tasks: cron/next-wallpaper.yml
-    - import_tasks: cron/update_cursor.yml
-
 {{ if eq .hosttype "work" }}
 
     - import_tasks: tasks/bruno.yml

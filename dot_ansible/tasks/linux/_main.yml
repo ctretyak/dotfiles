@@ -6,3 +6,8 @@
 - import_tasks: tasks/linux/tmux.yml
 - import_tasks: tasks/linux/zoxide.yml
 - import_tasks: tasks/linux/zsh.yml
+
+- import_tasks: tasks/linux/cron/cleanup.yml
+- import_tasks: tasks/linux/cron/dark-mode.yml
+- import_tasks: tasks/linux/cron/next-wallpaper.yml
+- import_tasks: tasks/linux/cron/update_cursor.yml
