@@ -21,7 +21,6 @@ old_*/**
     .ansible/tasks/linux
     .chezmoiscripts/linux/**
     .p10k.zsh
-    .tmux
     .zshrc
 
 {{ end }}

@@ -3,7 +3,6 @@
 - import_tasks: tasks/linux/gnome.yml
 - import_tasks: tasks/linux/htop.yml
 - import_tasks: tasks/linux/insync.yml
-- import_tasks: tasks/linux/tmux.yml
 - import_tasks: tasks/linux/zoxide.yml
 - import_tasks: tasks/linux/zsh.yml
 

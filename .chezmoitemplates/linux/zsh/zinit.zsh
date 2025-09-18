@@ -25,8 +25,6 @@ zinit ice depth"1" pick"plugins/git/*.plugin.zsh"
 zinit light ohmyzsh/ohmyzsh
 zinit ice depth"1" pick"plugins/npm/*.plugin.zsh"
 zinit light ohmyzsh/ohmyzsh
-zinit ice depth"1" pick"plugins/tmux/*.plugin.zsh"
-zinit light ohmyzsh/ohmyzsh
 
 zinit snippet OMZL::async_prompt.zsh
 zinit snippet OMZL::completion.zsh

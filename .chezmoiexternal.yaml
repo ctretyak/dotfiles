@@ -5,10 +5,6 @@
   exact: true
   stripComponents: 1
   refreshPeriod: 168h
-.tmux/plugins/tpm:
-  type: git-repo
-  url: https://github.com/tmux-plugins/tpm
-  refreshPeriod: 168h
 .nerd-fonts/install.sh:
   type: file
   url: https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/install.sh
