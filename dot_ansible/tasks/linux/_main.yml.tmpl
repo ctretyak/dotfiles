@@ -1,11 +1,12 @@
 - import_tasks: tasks/linux/fastfetch.yml
-- import_tasks: tasks/linux/gimp.yml
 - import_tasks: tasks/linux/gnome.yml
 - import_tasks: tasks/linux/htop.yml
 - import_tasks: tasks/linux/insync.yml
 - import_tasks: tasks/linux/zoxide.yml
 - import_tasks: tasks/linux/zsh.yml
-
+{{ if eq .hosttype "work" }}
+- import_tasks: tasks/linux/gimp.yml
+{{ end }}
 - import_tasks: tasks/linux/cron/cleanup.yml
 - import_tasks: tasks/linux/cron/dark-mode.yml
 - import_tasks: tasks/linux/cron/next-wallpaper.yml
