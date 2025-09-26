@@ -20,9 +20,15 @@ old_*/**
 
     .ansible/tasks/linux
     .chezmoiscripts/linux/**
+    .local/bin/install_cursor.sh
+    .local/bin/next-wallpaper.sh
+    .local/bin/night_theme_switcher.sh
+
+{{ end }}
+
+{{ if not (or (eq .chezmoi.os "darwin") (eq .chezmoi.os "linux")) }}
     .p10k.zsh
     .zshrc
-
 {{ end }}
 
 {{ if eq .chezmoi.os "linux" }}
