@@ -1,6 +1,6 @@
 #!/bin/bash
 
-WALLPAPER_DIR="$HOME/.local/share/backgrounds/wallpapers"
+WALLPAPER_DIR="$HOME/.local/share/wallpapers"
 
 # Проверка: существует ли папка
 if [ ! -d "$WALLPAPER_DIR" ]; then
