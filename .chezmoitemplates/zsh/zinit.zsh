@@ -21,10 +21,16 @@ zinit light zdharma-continuum/fast-syntax-highlighting
 
 zinit ice depth"1" pick"plugins/command-not-found/*.plugin.zsh"
 zinit light ohmyzsh/ohmyzsh
-zinit ice depth"1" pick"plugins/git/*.plugin.zsh"
-zinit light ohmyzsh/ohmyzsh
+# zinit ice depth"1" pick"plugins/git/*.plugin.zsh"
+# zinit light ohmyzsh/ohmyzsh
 zinit ice depth"1" pick"plugins/npm/*.plugin.zsh"
 zinit light ohmyzsh/ohmyzsh
+
+# zstyle ':omz:plugins:nvm' lazy yes
+# zstyle ':omz:plugins:nvm' autoload yes
+# zstyle ':omz:plugins:nvm' silent-autoload yes
+# zinit ice depth"1" pick"plugins/nvm/*.plugin.zsh"
+# zinit light ohmyzsh/ohmyzsh
 
 zinit snippet OMZL::async_prompt.zsh
 zinit snippet OMZL::completion.zsh
