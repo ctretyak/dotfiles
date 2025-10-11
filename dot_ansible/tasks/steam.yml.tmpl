@@ -1,4 +1,4 @@
-{{ if eq .chezmoi.osRelease.id "ubuntu" }}
+{{ if eq (get .chezmoi.osRelease "id") "ubuntu" }}
 
 - name: Install Steam
   become: true

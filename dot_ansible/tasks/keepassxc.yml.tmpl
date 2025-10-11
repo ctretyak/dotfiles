@@ -1,4 +1,11 @@
-{{ if eq .chezmoi.os "windows" }}
+{{ if eq .chezmoi.os "darwin" }}
+
+- name: Install KeePassXC
+  homebrew:
+    name: keepassxc
+    state: present
+
+{{ else if eq .chezmoi.os "windows" }}
 
 - name: Install KeePass plugin KeeAnywhere
   win_chocolatey:

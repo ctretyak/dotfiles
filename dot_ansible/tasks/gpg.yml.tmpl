@@ -5,6 +5,13 @@
   package:
     name: gnupg
 
+{{ else if eq .chezmoi.os "darwin" }}
+
+- name: Install GnuPG
+  homebrew:
+    name: gnupg
+    state: present
+
 {{ else if eq .os.idLike "windows" }}
 
 - name: Install Gpg4win

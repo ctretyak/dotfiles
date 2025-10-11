@@ -1,4 +1,4 @@
-{{ if or (eq .chezmoi.osRelease.id "popos") (eq .chezmoi.osRelease.id "ubuntu") }}
+{{ if or (eq (get .chezmoi.osRelease "id") "popos") (eq (get .chezmoi.osRelease "id") "ubuntu") }}
 
 - name: Install Neovim
   become: true
@@ -13,6 +13,13 @@
       - build-essential
       - wl-clipboard
 
+{{ else if eq .chezmoi.os "darwin" }}
+
+- name: Install Neovim
+  homebrew:
+    name: neovim
+    state: present
+
 {{ else }}
 
 - name: Install Neovim
@@ -22,7 +29,7 @@
 
 {{ end }}
 
-{{ if eq .chezmoi.osRelease.id "fedora" }}
+{{ if eq (get .chezmoi.osRelease "id") "fedora" }}
 
 - name: Enable lazygit COPR
   become: true
@@ -53,7 +60,7 @@
 {{ end }}
 
 
-{{ if eq .chezmoi.osRelease.id "arch" }}
+{{ if eq (get .chezmoi.osRelease "id") "arch" }}
 
 - name: Install Neovim dependencies
   become: true
@@ -61,6 +68,16 @@
     name:
       - fd
       - wl-clipboard
+
+{{ else if eq .chezmoi.os "darwin" }}
+
+- name: Install Neovim dependencies
+  homebrew:
+    name:
+      - fd
+      - ripgrep
+      - fzf
+    state: present
 
 {{ else }}
 
@@ -72,13 +89,25 @@
 
 {{ end }}
 
+{{ if eq .chezmoi.os "darwin" }}
+
+- name: Install Neovim dependencies
+  homebrew:
+    name:
+      - lazygit
+    state: present
+
+{{ else }}
+
 - name: Install Neovim dependencies
   become: true
   package:
     name:
-{{ if ne .chezmoi.osRelease.versionCodename "noble" }} # it available after ubuntu 25
+{{ if ne (get .chezmoi.osRelease "versionCodename") "noble" }} # it available after ubuntu 25
       - lazygit
 {{ end }}
       - ripgrep
       - fzf
+
+{{ end }}
 

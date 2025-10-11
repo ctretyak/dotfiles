@@ -1,4 +1,4 @@
-{{ if eq .chezmoi.osRelease.id "fedora" }}
+{{ if eq (get .chezmoi.osRelease "id") "fedora" }}
 
 - name: Install Docker # https://docs.fedoraproject.org/en-US/quick-docs/installing-docker/
   become: true
@@ -8,7 +8,7 @@
       - docker-cli
       - docker-compose
 
-{{ else if eq .chezmoi.osRelease.id "arch" }}
+{{ else if eq (get .chezmoi.osRelease "id") "arch" }}
 
 - name: Install Docker
   become: true
@@ -31,7 +31,7 @@
     enabled: true
     state: started
     
-{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+{{ else if eq (get .chezmoi.osRelease "id") "ubuntu" }}
 
 - name: Install Docker on Ubuntu
   become: yes
@@ -81,10 +81,17 @@
           - docker-buildx-plugin
           - docker-compose-plugin
 
+{{ else if eq .chezmoi.os "darwin" }}
+
+- name: Install Docker Desktop
+  homebrew:
+    name: docker
+    state: present
+
 {{ else }}
 
 - name: Install Docker
   fail:
-    msg: "Docker is not supported on {{ .chezmoi.osRelease.id }}"
+    msg: "Docker is not supported on {{ get .chezmoi.osRelease "id" }}"
 
 {{ end }}

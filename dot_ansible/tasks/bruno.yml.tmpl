@@ -4,7 +4,7 @@
   community.general.flatpak:
     name: com.usebruno.Bruno
 
-{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+{{ else if eq (get .chezmoi.osRelease "id") "ubuntu" }}
 
 - name: Install Bruno
   become: true

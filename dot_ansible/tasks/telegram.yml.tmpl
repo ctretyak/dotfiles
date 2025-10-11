@@ -1,9 +1,16 @@
-{{ if eq .chezmoi.osRelease.id "ubuntu" }}
+{{ if eq (get .chezmoi.osRelease "id") "ubuntu" }}
 
 - name: Install Telegram
   become: true
   snap:
     name: telegram-desktop
+
+{{ else if eq .chezmoi.os "darwin" }}
+
+- name: Install Telegram
+  homebrew:
+    name: telegram
+    state: present
 
 {{ else }}
 

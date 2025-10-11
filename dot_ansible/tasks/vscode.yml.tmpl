@@ -1,4 +1,4 @@
-{{ if eq .chezmoi.osRelease.id "fedora" }}
+{{ if eq (get .chezmoi.osRelease "id") "fedora" }}
 
 - name: Install Visual Studio Code - Import Microsoft GPG key
   become: true
@@ -28,7 +28,7 @@
   package:
     name: code
 
-{{ else if and ( eq .chezmoi.osRelease.id "ubuntu" ) ( not (isExecutable "/usr/bin/code") ) }}
+{{ else if and ( eq (get .chezmoi.osRelease "id") "ubuntu" ) ( not (isExecutable "/usr/bin/code") ) }}
 
 - name: Install Visual Studio Code via .deb if not already installed
   become: true

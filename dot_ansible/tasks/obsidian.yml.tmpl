@@ -1,16 +1,23 @@
-{{ if eq .chezmoi.osRelease.id "fedora" }}
+{{ if eq (get .chezmoi.osRelease "id") "fedora" }}
 
 - name: Install Obsidian
   community.general.flatpak:
     name: md.obsidian.Obsidian
 
-{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+{{ else if eq (get .chezmoi.osRelease "id") "ubuntu" }}
 
 - name: Install Obsidian
   become: true
   snap:
     name: obsidian
     classic: true
+
+{{ else if eq .chezmoi.os "darwin" }}
+
+- name: Install Obsidian
+  homebrew:
+    name: obsidian
+    state: present
 
 {{ else }}
 

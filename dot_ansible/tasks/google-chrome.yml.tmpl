@@ -1,11 +1,11 @@
-{{ if eq .chezmoi.osRelease.id "fedora" }}
+{{ if eq (get .chezmoi.osRelease "id") "fedora" }}
 
 - name: Install Google Chrome
   become: true
   package:
     name: google-chrome-stable
     
-{{ else if eq .chezmoi.osRelease.id "ubuntu" }}
+{{ else if eq (get .chezmoi.osRelease "id") "ubuntu" }}
 
 - name: Install Google Chrome
   become: true
@@ -42,11 +42,18 @@
         name: google-chrome-stable
         state: latest
 
-{{ else if eq .chezmoi.osRelease.id "arch" }}
+{{ else if eq (get .chezmoi.osRelease "id") "arch" }}
 
 - name: Install Google Chrome
   kewlfft.aur.aur:
     name: google-chrome
+
+{{ else if eq .chezmoi.os "darwin" }}
+
+- name: Install Google Chrome
+  homebrew:
+    name: google-chrome
+    state: present
 
 {{ else if eq .chezmoi.os "windows" }}
 
@@ -58,6 +65,6 @@
 
 - name: Install Google Chrome
   fail:
-    msg: "Google Chrome is not supported on {{ .chezmoi.osRelease.id }}"
+    msg: "Google Chrome is not supported on {{ get .chezmoi.osRelease "id" }}"
 
 {{ end }}

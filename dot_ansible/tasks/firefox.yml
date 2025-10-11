@@ -1,4 +1,0 @@
-- name: Install Firefox
-  become: true
-  package:
-    name: firefox

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+{{ if eq .chezmoi.os "darwin" }}
+ansible-playbook "{{ .chezmoi.homeDir }}/.ansible/playbook.yml" -i localhost,
+{{ else }}
+ansible-playbook "{{ .chezmoi.homeDir }}/.ansible/playbook.yml" -i localhost, --ask-become-pass
+{{ end }}

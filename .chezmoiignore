@@ -26,6 +26,12 @@ old_*/**
 
 {{ end }}
 
+{{ if ne .chezmoi.os "darwin" }}
+
+    .chezmoiscripts/darwin/**
+
+{{ end }}
+
 {{ if not (or (eq .chezmoi.os "darwin") (eq .chezmoi.os "linux")) }}
     .p10k.zsh
     .zshrc

@@ -1,0 +1,11 @@
+{{ if eq .chezmoi.os "darwin" }}
+- name: Install Git
+  homebrew:
+    name: git
+    state: present
+{{ else }}
+- name: Install Git
+  become: true
+  package:
+    name: git
+{{ end }}
