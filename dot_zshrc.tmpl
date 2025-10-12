@@ -1,6 +1,7 @@
-{{ if eq .chezmoi.os "linux" }}
 {{ template "zsh/p10k_init.zsh" . }}
+{{ if eq .chezmoi.os "linux" }}
 {{ template "zsh/env.zsh" . }}
+{{ end }}
 {{ template "zsh/zinit.zsh" . }}
 {{ template "zsh/keybindings.zsh" . }}
 {{ template "zsh/nvm.zsh" . }}
@@ -8,4 +9,3 @@
 {{ template "zsh/p10k.zsh" . }}
 {{ template "zsh/zoxide.zsh" . }}
 {{ template "zsh/fzf.zsh" . }}
-{{ end }}

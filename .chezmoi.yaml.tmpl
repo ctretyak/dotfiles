@@ -12,6 +12,6 @@ age:
 
 data:
   os:
-    idLike: {{ or (get .chezmoi.osRelease "idLike") (get .chezmoi.osRelease "id") .chezmoi.os }}
+    idLike: {{ or (get .chezmoi.osRelease "idLike") (get .chezmoi.osRelease "id") }}
   hosttype: {{ $hosttype }}
   wsl: false

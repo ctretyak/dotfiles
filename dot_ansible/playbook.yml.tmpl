@@ -3,7 +3,9 @@
   connection: local
 
   tasks:
+{{ if .os.idLike }}
     - import_tasks: tasks/{{ .os.idLike }}/_main.yml
+{{ end }}
     - import_tasks: tasks/{{ .chezmoi.os }}/_main.yml
 
     - import_tasks: tasks/docker.yml

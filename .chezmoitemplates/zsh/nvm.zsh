@@ -6,8 +6,16 @@ export NVM_DIR="$HOME/.nvm"
 # export AUTO_LOAD_NVMRC_FILES=true
 export LOAD_NVMRC_ON_INIT=true
 function load_nvm() {
+    {{ if eq .chezmoi.os "darwin" }}
+    # macOS - use Homebrew version
+    local HOMEBREW_PREFIX=${HOMEBREW_PREFIX:-$(brew --prefix 2>/dev/null)}
+    [ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ] && \. "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
+    [ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \. "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
+    {{ else }}
+    # Linux/other - use standard installation
     [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
     [ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"
+    {{ end }}
 
     load-nvmrc() {
         if [[ -f .nvmrc && -r .nvmrc ]]; then
