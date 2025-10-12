@@ -1,0 +1,5 @@
+- name: cron - Update Homebrew packages
+  ansible.builtin.cron:
+    name: "update_homebrew"
+    special_time: daily
+    job: "brew update && brew upgrade && brew cleanup"
