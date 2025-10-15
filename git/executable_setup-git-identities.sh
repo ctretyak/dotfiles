@@ -23,7 +23,7 @@ else
   read -p "  Email: " email
   read -p "  Name: " name
   read -p "  Use GPG signing for this identity? [y/N]: " use_gpg
-  use_gpg=${use_gpg,,} # lowercase
+  use_gpg=$(echo "$use_gpg" | tr '[:upper:]' '[:lower:]') # lowercase
 
   if [[ "$use_gpg" == "y" ]]; then
     read -s -p "  GPG Passphrase (input hidden): " passphrase
