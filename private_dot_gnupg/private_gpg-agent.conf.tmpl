@@ -1,0 +1,6 @@
+
+{{- if .wsl }}
+pinentry-program "/mnt/c/Program Files (x86)/Gpg4win/bin/pinentry.exe"
+{{ else if eq .chezmoi.os "darwin" -}}
+pinentry-program /opt/homebrew/bin/pinentry-mac
+{{ end }}

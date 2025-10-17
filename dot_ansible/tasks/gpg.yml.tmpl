@@ -12,6 +12,11 @@
     name: gnupg
     state: present
 
+- name: Install GPG Pinentry
+  homebrew:
+    name: pinentry-mac
+    state: present
+
 {{ else if eq .os.idLike "windows" }}
 
 - name: Install Gpg4win

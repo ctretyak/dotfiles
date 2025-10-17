@@ -61,7 +61,3 @@ old_*/**
     .chezmoiscripts/linux/gnome
 
 {{ end }}
-
-{{ if not .wsl }}
-    .gnupg/**
-{{ end }}
