@@ -4,33 +4,20 @@
 
 ### Windows
 
+Run as admin
 ```powershell
-$isAdmin = ([Security.Principal.WindowsPrincipal] `
-    [Security.Principal.WindowsIdentity]::GetCurrent()
-).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
-if (-not $isAdmin) {
-    Write-Host "This script must be run as Administrator." -ForegroundColor Red
-    exit 1
-}
-
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { Write-Host "This script must be run as Administrator." -ForegroundColor Red; exit 1 }
 Set-ExecutionPolicy RemoteSigned; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'));
+choco install chezmoi -y;
+
 ```
 
-and after in non-admin terminal
+and after as non-admin
 
 ```powershell
-$isAdmin = ([Security.Principal.WindowsPrincipal] `
-    [Security.Principal.WindowsIdentity]::GetCurrent()
-).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
-if ($isAdmin) {
-    Write-Host "This script must NOT be run as Administrator." -ForegroundColor Red
-    exit 1
-}
-
-choco install chezmoi -y;
+if (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { Write-Host "This script must NOT be run as Administrator." -ForegroundColor Red; exit 1 }
 chezmoi init --apply ctretyak
+
 ```
 
 ### Ubuntu
