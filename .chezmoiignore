@@ -8,6 +8,7 @@ README.md
 old_*/**
 *.age
 
+# Windows only
 {{ if ne .chezmoi.os "windows" }}
 
     .chezmoiscripts/windows/**
@@ -16,6 +17,21 @@ old_*/**
 
 {{ end }}
 
+# Unix-like only
+{{ if not (or (eq .chezmoi.os "darwin") (eq .chezmoi.os "linux")) }}
+    .ansible
+    .chezmoiscripts/*.sh
+    .config
+    .gitconfig
+    .gnupg
+    .local
+    .p10k.zsh
+    .zshrc
+    .zshrc_custom
+    git
+{{ end }}
+
+# Linux only
 {{ if ne .chezmoi.os "linux" }}
 
     .ansible/tasks/linux
@@ -26,15 +42,11 @@ old_*/**
 
 {{ end }}
 
+# macOS only
 {{ if ne .chezmoi.os "darwin" }}
 
     .chezmoiscripts/darwin/**
 
-{{ end }}
-
-{{ if not (or (eq .chezmoi.os "darwin") (eq .chezmoi.os "linux")) }}
-    .p10k.zsh
-    .zshrc
 {{ end }}
 
 {{ if eq .chezmoi.os "linux" }}
@@ -56,6 +68,7 @@ old_*/**
 
 {{ end }}
 
+# GNOME only
 {{ if ne (env "XDG_CURRENT_DESKTOP") "GNOME" }}
 
     .chezmoiscripts/linux/gnome

@@ -55,12 +55,6 @@
     name: google-chrome
     state: present
 
-{{ else if eq .chezmoi.os "windows" }}
-
-- name: Install Google Chrome
-  win_chocolatey:
-    name: googlechrome
-
 {{ else }}
 
 - name: Install Google Chrome

@@ -1,9 +1,0 @@
-{{ if eq .chezmoi.os "windows" }}
-
-- name: Install WinMerge
-  win_chocolatey:
-    name: winmerge
-
-{{ else }}
-# is not supported on {{ .chezmoi.osRelease.id }}
-{{ end }}

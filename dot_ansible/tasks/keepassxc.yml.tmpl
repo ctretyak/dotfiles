@@ -5,12 +5,6 @@
     name: keepassxc
     state: present
 
-{{ else if eq .chezmoi.os "windows" }}
-
-- name: Install KeePass plugin KeeAnywhere
-  win_chocolatey:
-    name: keepass-plugin-keeanywhere
-
 {{ else }}
 
 - name: Install KeePassXC

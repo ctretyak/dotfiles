@@ -1,0 +1,23 @@
+if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { Write-Host "This script must be run as Administrator." -ForegroundColor Red; exit 1 }
+
+$packages = @(
+    "7zip"
+    "auto-dark-mode"
+    "cursoride"
+    "git"
+    "googlechrome"
+    "googledrive"
+    "keepassxc"
+    "neovim"
+    "obsidian"
+    "telegram"
+{{ if eq .hosttype "work" }}
+    "bruno"
+    "dbeaver"
+{{ else if eq .hosttype "home" }}
+    "discord"
+    "steam"
+{{ end }}
+)
+
+choco install $packages -y --no-progress --ignore-checksums
