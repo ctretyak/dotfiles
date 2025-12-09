@@ -22,7 +22,6 @@ old_*/**
     .ansible
     .chezmoiscripts/*.sh
     .config
-    .gitconfig
     .gnupg
     .local
     .p10k.zsh
