@@ -23,4 +23,10 @@
   type: git-repo
   url: https://github.com/folke/tokyonight.nvim
   refreshPeriod: 168h
-{{- end -}}
+{{- end }}
+{{- if ne .chezmoi.os "windows" }}
+.tmux/plugins/tpm:
+  type: git-repo
+  url: https://github.com/tmux-plugins/tpm
+  refreshPeriod: 168h
+{{- end }}

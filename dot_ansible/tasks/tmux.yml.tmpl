@@ -1,0 +1,15 @@
+{{ if eq .chezmoi.os "darwin" }}
+
+- name: Install tmux
+  homebrew:
+    name: tmux
+    state: present
+
+{{ else }}
+
+- name: Install tmux
+  become: true
+  package:
+    name: tmux
+
+{{ end }}

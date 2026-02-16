@@ -1,4 +1,5 @@
 {{ template "zsh/p10k_init.zsh" . }}
+{{ template "zsh/path.zsh" . }}
 {{ if eq .chezmoi.os "linux" }}
 {{ template "zsh/env.zsh" . }}
 {{ end }}
