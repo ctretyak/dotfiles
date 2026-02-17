@@ -1,8 +1,5 @@
 {{ template "zsh/p10k_init.zsh" . }}
-{{ template "zsh/path.zsh" . }}
-{{ if eq .chezmoi.os "linux" }}
 {{ template "zsh/env.zsh" . }}
-{{ end }}
 {{ template "zsh/zinit.zsh" . }}
 {{ template "zsh/keybindings.zsh" . }}
 {{ template "zsh/nvm.zsh" . }}
