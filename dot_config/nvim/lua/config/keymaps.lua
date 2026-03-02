@@ -39,6 +39,9 @@ if vim.g.vscode then
     map("n", "[e", "editor.action.marker.prevInFiles", "Previous Error (VSCode)")
     map("n", "]e", "editor.action.marker.nextInFiles", "Next Error (VSCode)")
 
+    map("n", "]h", "workbench.action.editor.nextChange", "Next Hunk (VSCode)")
+    map("n", "[h", "workbench.action.editor.previousChange", "Previous Hunk (VSCode)")
+
     map("n", "<leader>ft", "workbench.action.terminal.toggleTerminal", "Toggle Terminal")
 
     map("n", "<leader>gb", "gitlens.toggleFileBlame", "Git Blame (GitLens)")
