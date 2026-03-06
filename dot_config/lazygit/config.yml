@@ -1,7 +1,13 @@
+keybinding:
+  universal:
+    openRecentRepos: "<disabled>"
+  branches:
+    createPullRequest: "<disabled>"
+    viewPullRequestOptions: "<disabled>"
 customCommands:
   - key: "O"
     context: "global"
-    command: "xdg-open $(git remote get-url --push origin | sed 's/\\.git$//')"
+    command: "open $(git remote get-url --push origin | sed -e 's|git@\\([^:]*\\):\\(.*\\)|https://\\1/\\2|' -e 's/\\.git$//')"
     description: "Open remote repository in browser"
   - key: "X"
     command: "git reset --hard HEAD && git clean -fdx"
