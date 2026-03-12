@@ -16,5 +16,12 @@
 - CLI выводит loading-сообщения в stderr — фильтровать при парсинге вывода
 - Новые заметки всегда создавать в `00 INBOX`. Не создавать заметки в корне волта или других папках — сортировка при триаже через `/pkm-inbox`.
 
+## Workflow
+
+### opsx:apply
+- Выполнять скоупы задач (1, 2, 3, ...) последовательно, каждый скоуп — через отдельного субагента
+- Не выполнять отдельные подзадачи (1.2, 1.3) в основном контексте — это засоряет контекст
+- Основной контекст только координирует: запускает субагента на скоуп, получает результат, запускает следующий
+
 ## Quality
 - Do NOT state facts (performance improvements, feature claims, library capabilities, etc.) without verifying them first. Check changelogs, docs, or source code before making claims in specs, proposals, commit messages, or any artifacts.
