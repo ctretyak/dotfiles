@@ -33,6 +33,7 @@ else
   ctx_part="[░░░░░░░░░░] -"
 fi
 
+BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
@@ -68,7 +69,10 @@ fmt_rate_limit() {
     delta=0
   fi
 
-  if [ "$delta" -le 0 ]; then
+  if [ "$delta" -le -5 ]; then
+    color="$BLUE"
+    delta_fmt="${delta}%"
+  elif [ "$delta" -le 0 ]; then
     color="$GREEN"
     delta_fmt="${delta}%"
   elif [ "$delta" -le 15 ]; then
