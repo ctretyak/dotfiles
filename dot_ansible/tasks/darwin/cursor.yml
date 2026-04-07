@@ -1,4 +1,0 @@
-- name: Install Cursor IDE
-  homebrew:
-    name: cursor
-    state: present

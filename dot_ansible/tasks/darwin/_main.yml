@@ -1,4 +1,2 @@
-- import_tasks: cursor.yml
 - import_tasks: nvm.yml
-- import_tasks: zoxide.yml
 - import_tasks: homebrew-update.yml
