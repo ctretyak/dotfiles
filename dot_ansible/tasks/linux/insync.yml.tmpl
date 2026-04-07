@@ -1,6 +1,8 @@
 {{ if eq .os.idLike "arch" }}
 
 - name: Install Insync
+  become: true
+  become_user: aur_builder
   kewlfft.aur.aur:
     name: insync
 

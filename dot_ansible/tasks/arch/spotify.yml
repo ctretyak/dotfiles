@@ -1,5 +1,5 @@
 - name: Install Spotify
   become: true
   package:
-    name: spotify
+    name: spotify-launcher
     state: present

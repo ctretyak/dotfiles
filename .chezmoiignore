@@ -44,6 +44,7 @@ old_*/**
 # macOS only
 {{ if ne .chezmoi.os "darwin" }}
 
+    .ansible/tasks/darwin
     .chezmoiscripts/darwin/**
     .config/iterm2
 

@@ -1,3 +1,4 @@
-- name: Install DBeaver (AUR)
-  kewlfft.aur.aur:
+- name: Install DBeaver
+  become: true
+  package:
     name: dbeaver

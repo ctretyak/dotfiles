@@ -1,0 +1,29 @@
+- name: Install AppArmor
+  become: true
+  package:
+    name: apparmor
+    state: present
+
+- name: Enable AppArmor service
+  become: true
+  systemd:
+    name: apparmor
+    enabled: true
+    state: started
+
+- name: Add AppArmor LSM to kernel parameters in systemd-boot entries
+  become: true
+  shell: |
+    for entry in /boot/loader/entries/*.conf; do
+      if grep -q '^options' "$entry" && ! grep -q 'apparmor' "$entry"; then
+        sed -i 's/^options.*/& lsm=landlock,lockdown,yama,integrity,apparmor,bpf/' "$entry"
+        echo "modified: $entry"
+      fi
+    done
+  register: boot_entries
+  changed_when: "'modified' in boot_entries.stdout"
+
+- name: Reboot reminder
+  debug:
+    msg: "Kernel parameters updated. Reboot required to activate AppArmor."
+  when: boot_entries.changed
