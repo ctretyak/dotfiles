@@ -1,0 +1,35 @@
+# macOS packages
+- name: Install packages
+  homebrew:
+    update_homebrew: no
+    name:
+      - claude-code
+      - cleanshot
+      - git
+      - google-chrome
+      - google-drive
+      - keepassxc
+      - obsidian
+      - spotify
+      - telegram
+      - ticktick
+      - viscosity
+    state: present
+
+- import_tasks: darkmodebuddy.yml
+- import_tasks: docker.yml
+- import_tasks: gpg.yml
+- import_tasks: nvm.yml
+- import_tasks: neovim.yml
+- import_tasks: tmux.yml
+- import_tasks: homebrew-update.yml
+
+{{ if eq .hosttype "work" }}
+- name: Install work packages
+  homebrew:
+    update_homebrew: no
+    name:
+      - bruno
+      - dbeaver-community
+    state: present
+{{ end }}

@@ -1,0 +1,7 @@
+- name: Install GnuPG
+  homebrew:
+    update_homebrew: no
+    name:
+      - gnupg
+      - pinentry-mac
+    state: present

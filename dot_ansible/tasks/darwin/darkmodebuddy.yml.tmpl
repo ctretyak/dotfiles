@@ -1,0 +1,9 @@
+{{ if eq .chezmoi.os "darwin" }}
+{{ if output "bash" "-c" "system_profiler SPHardwareDataType | grep 'Model Name'" | lower | contains "macbook" }}
+- name: Install DarkModeBuddy
+  homebrew:
+    update_homebrew: no
+    name: darkmodebuddy
+    state: present
+{{ end }}
+{{ end }}

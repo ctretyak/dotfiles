@@ -1,35 +1,11 @@
 - name: Install packages
   hosts: localhost
   connection: local
-
+{{ if eq .chezmoi.os "darwin" }}
+  gather_facts: false
+{{ end }}
   tasks:
 {{ if .os.idLike }}
     - import_tasks: tasks/{{ .os.idLike }}/_main.yml
 {{ end }}
     - import_tasks: tasks/{{ .chezmoi.os }}/_main.yml
-
-    - import_tasks: tasks/docker.yml
-    - import_tasks: tasks/git.yml
-    - import_tasks: tasks/google-chrome.yml
-    - import_tasks: tasks/gpg.yml
-    - import_tasks: tasks/keepassxc.yml
-    - import_tasks: tasks/neovim.yml
-    - import_tasks: tasks/obsidian.yml
-    - import_tasks: tasks/telegram.yml
-    - import_tasks: tasks/ticktick.yml
-    - import_tasks: tasks/tmux.yml
-#    - import_tasks: tasks/vscode.yml
-
-{{ if eq .hosttype "work" }}
-
-    - import_tasks: tasks/bruno.yml
-    - import_tasks: tasks/dbeaver.yml
-    - import_tasks: tasks/firefox.yml
-#    - import_tasks: tasks/studio3t.yml
-
-{{ else if eq .hosttype "home" }}
-
-    - import_tasks: tasks/discord.yml
-    - import_tasks: tasks/steam.yml
-
-{{ end }}

@@ -5,11 +5,6 @@ diff:
   exclude:
     - scripts
 
-encryption: age
-age:
-  identity: "~/.config/chezmoi/key.txt"
-  recipient: "age1vw9nz2fmkpgmqsnpdtuxmnvkfnln7u9u5rmty9q8796entam69zsygjtkl"
-
 data:
   os:
     idLike: {{ or (get .chezmoi.osRelease "idLike") (get .chezmoi.osRelease "id") }}

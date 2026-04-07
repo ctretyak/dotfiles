@@ -1,12 +1,9 @@
-key.txt.age
-secrets.yaml.age
 .archive/
 
 README.md
 .prettierrc
 
 old_*/**
-*.age
 
 # Windows only
 {{ if ne .chezmoi.os "windows" }}
@@ -34,10 +31,11 @@ old_*/**
 {{ if ne .chezmoi.os "linux" }}
 
     .ansible/tasks/linux
+    .ansible/tasks/arch
+    .ansible/tasks/debian
+    .ansible/tasks/fedora
     .chezmoiscripts/linux/**
-    .local/bin/install_cursor.sh
     .local/bin/next-wallpaper.sh
-    .local/bin/night_theme_switcher.sh
 
 {{ end }}
 

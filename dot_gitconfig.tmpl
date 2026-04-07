@@ -1,9 +1,6 @@
 [user]
     email = ctretyak@gmail.com
     name = ctretyak
-    {{- if eq .hosttype "home" -}}
-    {{- else if eq .hosttype "work" -}}
-    {{- end }}
 [safe]
     directory = {{ (joinPath .chezmoi.homeDir ".local/share/chezmoi") | replaceAllRegex "\\\\" "/" }}
 [pull]
@@ -11,13 +8,16 @@
 [fetch]
     prune = true
 [alias]
-    prune-branches = !git remote prune origin && git branch -vv | grep ': gone]' | awk '{print $1}' | xargs -r git branch -D
+    prune-branches = !git remote prune origin && git branch -vv | grep ': gone]' | awk '{print $1}' | xargs git branch -D
 {{- if eq .chezmoi.os "windows" }}
 [credential]
     helper = wincred
 {{- else if .wsl }}
 [credential]
     helper = /mnt/c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe
+{{- else if eq .chezmoi.os "darwin" }}
+[credential]
+    helper = osxkeychain
 {{- else if eq .chezmoi.os "linux" }}
 [credential]
     helper = store

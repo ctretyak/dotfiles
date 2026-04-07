@@ -1,0 +1,15 @@
+- name: Install Neovim
+  homebrew:
+    update_homebrew: no
+    name:
+      - neovim
+      - fd
+      - ripgrep
+      - fzf
+      - lazygit
+    state: present
+
+- name: Install Neovim plugins
+  command: nvim --headless "+Lazy! sync" +qa
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.local/share/nvim/lazy"

@@ -1,3 +1,29 @@
+- name: Install common packages
+  become: true
+  package:
+    name:
+      - git
+      - keepassxc
+      - tmux
+    state: present
+
+- name: Install tmux plugins
+  command: "{{ .chezmoi.homeDir }}/.tmux/plugins/tpm/bin/install_plugins"
+  changed_when: false
+
+- name: Install Claude Code
+  shell: |
+    export NVM_DIR="$HOME/.nvm"
+    . "$NVM_DIR/nvm.sh"
+    npm install -g @anthropic-ai/claude-code
+  args:
+    creates: "{{ .chezmoi.homeDir }}/.nvm/versions/node/*/bin/claude"
+
+- name: Install Neovim plugins
+  command: nvim --headless "+Lazy! sync" +qa
+  args:
+    creates: "{{ .chezmoi.homeDir }}/.local/share/nvim/lazy"
+
 - import_tasks: tasks/linux/fastfetch.yml
 - import_tasks: tasks/linux/gnome.yml
 - import_tasks: tasks/linux/htop.yml
@@ -9,6 +35,4 @@
 - import_tasks: tasks/linux/gimp.yml
 {{ end }}
 - import_tasks: tasks/linux/cron/cleanup.yml
-- import_tasks: tasks/linux/cron/dark-mode.yml
 - import_tasks: tasks/linux/cron/next-wallpaper.yml
-- import_tasks: tasks/linux/cron/update_cursor.yml

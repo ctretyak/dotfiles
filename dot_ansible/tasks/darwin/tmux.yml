@@ -1,0 +1,9 @@
+- name: Install tmux
+  homebrew:
+    update_homebrew: no
+    name: tmux
+    state: present
+
+- name: Install tmux plugins
+  command: "{{ lookup('env', 'HOME') }}/.tmux/plugins/tpm/bin/install_plugins"
+  changed_when: false

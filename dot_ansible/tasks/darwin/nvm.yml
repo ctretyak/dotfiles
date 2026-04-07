@@ -1,4 +1,14 @@
 - name: Install NVM
   homebrew:
+    update_homebrew: no
     name: nvm
     state: present
+
+- name: Install Node LTS
+  shell: |
+    export NVM_DIR="$HOME/.nvm"
+    mkdir -p "$NVM_DIR"
+    . /opt/homebrew/opt/nvm/nvm.sh
+    nvm install --lts
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.nvm/versions/node"

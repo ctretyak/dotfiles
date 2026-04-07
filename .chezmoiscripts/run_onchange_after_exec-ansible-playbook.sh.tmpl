@@ -1,6 +1,9 @@
 #!/bin/bash
+# ansible hash: {{ output "bash" "-c" (printf "find %s/dot_ansible -type f | sort | xargs cat | shasum" .chezmoi.sourceDir) }}
 
 set -e
+
+export ANSIBLE_CONFIG="{{ .chezmoi.homeDir }}/.ansible/ansible.cfg"
 
 {{ if eq .chezmoi.os "darwin" }}
 ansible-playbook "{{ .chezmoi.homeDir }}/.ansible/playbook.yml" -i localhost,
