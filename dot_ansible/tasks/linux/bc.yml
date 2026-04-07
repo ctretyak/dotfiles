@@ -1,0 +1,5 @@
+- name: Install bc
+  become: true
+  package:
+    name: bc
+    state: present

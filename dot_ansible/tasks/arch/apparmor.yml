@@ -11,19 +11,27 @@
     enabled: true
     state: started
 
-- name: Add AppArmor LSM to kernel parameters in systemd-boot entries
+- name: Add AppArmor LSM to kernel parameters
   become: true
-  shell: |
-    for entry in /boot/loader/entries/*.conf; do
-      if grep -q '^options' "$entry" && ! grep -q 'apparmor' "$entry"; then
-        sed -i 's/^options.*/& lsm=landlock,lockdown,yama,integrity,apparmor,bpf/' "$entry"
-        echo "modified: $entry"
-      fi
-    done
-  register: boot_entries
-  changed_when: "'modified' in boot_entries.stdout"
+  lineinfile:
+    path: /etc/kernel/cmdline
+    regexp: '^(.+)$'
+    line: '\1 lsm=landlock,lockdown,yama,integrity,apparmor,bpf'
+    backrefs: true
+  when: "lookup('file', '/etc/kernel/cmdline') is not search('apparmor')"
+
+- name: Check if UKI needs regeneration
+  shell: grep -q 'apparmor' /proc/cmdline
+  register: cmdline_check
+  changed_when: false
+  failed_when: false
+
+- name: Regenerate UKI
+  become: true
+  command: mkinitcpio -P
+  when: cmdline_check.rc != 0 and lookup('file', '/etc/kernel/cmdline') is search('apparmor')
 
 - name: Reboot reminder
   debug:
-    msg: "Kernel parameters updated. Reboot required to activate AppArmor."
-  when: boot_entries.changed
+    msg: "UKI regenerated. Reboot required to activate AppArmor."
+  when: cmdline_check.rc != 0 and lookup('file', '/etc/kernel/cmdline') is search('apparmor')

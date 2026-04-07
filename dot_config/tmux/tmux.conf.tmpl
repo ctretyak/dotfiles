@@ -4,6 +4,10 @@ bind C-a send-prefix
 
 set -g mouse on
 setw -g mode-keys vi
+{{ if eq .chezmoi.os "linux" }}
+set -s copy-command 'wl-copy'
+bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel
+{{ end }}
 set -g base-index 1
 setw -g pane-base-index 1
 set -g renumber-windows on
