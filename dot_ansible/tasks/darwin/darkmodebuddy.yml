@@ -1,4 +1,3 @@
-{{ if output "bash" "-c" "system_profiler SPHardwareDataType | grep 'Model Name'" | lower | contains "macbook" }}
 - name: Install DarkModeBuddy
   homebrew:
     update_homebrew: no
@@ -18,4 +17,3 @@
     key: isChangeSystemAppearanceBasedOnAmbientLightEnabled
     type: bool
     value: true
-{{ end }}

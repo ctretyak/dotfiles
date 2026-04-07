@@ -30,6 +30,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), provisioned v
 
 ```sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+eval "$(/opt/homebrew/bin/brew shellenv)"
 brew install chezmoi
 chezmoi init --apply ctretyak
 ```
