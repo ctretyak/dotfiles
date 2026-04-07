@@ -1,0 +1,4 @@
+- name: Install DBeaver
+  become: true
+  snap:
+    name: dbeaver-ce

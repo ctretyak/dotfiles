@@ -1,0 +1,5 @@
+- name: Install Git
+  homebrew:
+    update_homebrew: no
+    name: git
+    state: present

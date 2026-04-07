@@ -1,0 +1,5 @@
+- name: Install Viscosity
+  homebrew:
+    update_homebrew: no
+    name: viscosity
+    state: present

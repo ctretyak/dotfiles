@@ -1,0 +1,3 @@
+- name: Install Google Chrome (AUR)
+  kewlfft.aur.aur:
+    name: google-chrome

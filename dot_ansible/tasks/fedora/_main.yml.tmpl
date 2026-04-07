@@ -1,82 +1,17 @@
-- name: Add rpmfusion-free repo
-  become: true
-  dnf:
-    name: "https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ "{{" }} ansible_facts['distribution_major_version'] {{ "}}" }}.noarch.rpm"
-    disable_gpg_check: true
-
+- import_tasks: repos.yml
+- import_tasks: docker.yml
+- import_tasks: gnupg.yml
+- import_tasks: neovim.yml
+- import_tasks: google-chrome.yml
+- import_tasks: telegram.yml
+- import_tasks: spotify.yml
+- import_tasks: vscode.yml
+- import_tasks: obsidian.yml
+- import_tasks: ticktick.yml
 {{ if eq .hosttype "work" }}
-- name: Enable SSH service
-  become: true
-  systemd:
-    name: sshd
-    enabled: yes
-    state: started
+- import_tasks: bruno.yml
+- import_tasks: dbeaver.yml
 {{ end }}
-
-- name: Install packages
-  become: true
-  package:
-    name:
-      - gpg
-      - containerd
-      - docker-cli
-      - docker-compose
-      - google-chrome-stable
-      - neovim
-      - telegram-desktop
-      - spotify
-
-- name: Enable lazygit COPR
-  become: true
-  command: dnf copr enable atim/lazygit -y
-  args:
-    creates: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:atim:lazygit.repo
-
-- name: Install development-tools group
-  become: true
-  shell: dnf group install -y development-tools
-  args:
-    creates: /usr/bin/gcc
-
-- name: Install Neovim dependencies
-  become: true
-  package:
-    name:
-      - gcc
-      - make
-      - kernel-devel
-      - glibc-devel
-      - autoconf
-      - automake
-      - libtool
-      - which
-      - fd-find
-      - lazygit
-      - ripgrep
-      - fzf
-    state: present
-
-- name: Install Obsidian
-  community.general.flatpak:
-    name: md.obsidian.Obsidian
-
-- name: Install TickTick
-  community.general.flatpak:
-    name: com.ticktick.TickTick
-
-{{ if eq .hosttype "work" }}
-- name: Install Bruno
-  community.general.flatpak:
-    name: com.usebruno.Bruno
-
-- name: Install DBeaver
-  community.general.flatpak:
-    name: io.dbeaver.DBeaverCommunity
-{{ end }}
-
 {{ if eq .hosttype "home" }}
-- name: Install Steam
-  become: true
-  package:
-    name: steam
+- import_tasks: steam.yml
 {{ end }}

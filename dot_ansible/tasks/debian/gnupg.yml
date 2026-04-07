@@ -1,0 +1,5 @@
+- name: Install GnuPG
+  become: true
+  package:
+    name: gpg
+    state: present

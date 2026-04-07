@@ -1,4 +1,0 @@
-- name: Install zoxide
-  become: true
-  package:
-    name: zoxide

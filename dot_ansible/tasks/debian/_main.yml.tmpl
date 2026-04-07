@@ -1,66 +1,17 @@
 - import_tasks: docker.yml
 - import_tasks: google-chrome.yml
-
-- name: Install packages
-  become: true
-  package:
-    name:
-      - gpg
-      - build-essential
-      - wl-clipboard
-      - fd-find
-      - ripgrep
-      - fzf
-
-- name: Install Neovim
-  become: true
-  snap:
-    name: nvim
-    classic: true
-
-{{ if ne (get .chezmoi.osRelease "versionCodename") "noble" }}
-- name: Install lazygit
-  become: true
-  package:
-    name: lazygit
-{{ end }}
-
-- name: Install Obsidian
-  become: true
-  snap:
-    name: obsidian
-    classic: true
-
-- name: Install Telegram
-  become: true
-  snap:
-    name: telegram-desktop
-
-- name: Install TickTick
-  become: true
-  snap:
-    name: ticktick
-
-- name: Install Spotify
-  become: true
-  snap:
-    name: spotify
-
+- import_tasks: gnupg.yml
+- import_tasks: build-tools.yml
+- import_tasks: neovim.yml
+- import_tasks: vscode.yml
+- import_tasks: obsidian.yml
+- import_tasks: telegram.yml
+- import_tasks: ticktick.yml
+- import_tasks: spotify.yml
 {{ if eq .hosttype "work" }}
-- name: Install Bruno
-  become: true
-  snap:
-    name: bruno
-
-- name: Install DBeaver
-  become: true
-  snap:
-    name: dbeaver-ce
+- import_tasks: bruno.yml
+- import_tasks: dbeaver.yml
 {{ end }}
-
 {{ if eq .hosttype "home" }}
-- name: Install Steam
-  become: true
-  snap:
-    name: steam
+- import_tasks: steam.yml
 {{ end }}

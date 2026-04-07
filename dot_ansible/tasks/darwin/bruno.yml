@@ -1,0 +1,5 @@
+- name: Install Bruno
+  homebrew:
+    update_homebrew: no
+    name: bruno
+    state: present

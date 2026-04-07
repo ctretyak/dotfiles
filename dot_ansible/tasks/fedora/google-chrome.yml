@@ -1,0 +1,5 @@
+- name: Install Google Chrome
+  become: true
+  package:
+    name: google-chrome-stable
+    state: present

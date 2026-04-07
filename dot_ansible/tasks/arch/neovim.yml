@@ -1,0 +1,11 @@
+- name: Install Neovim
+  become: true
+  package:
+    name:
+      - neovim
+      - fd
+      - wl-clipboard
+      - lazygit
+      - ripgrep
+      - fzf
+    state: present

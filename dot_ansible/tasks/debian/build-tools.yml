@@ -1,0 +1,7 @@
+- name: Install build tools
+  become: true
+  package:
+    name:
+      - build-essential
+      - wl-clipboard
+    state: present

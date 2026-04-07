@@ -1,21 +1,16 @@
-# macOS packages
-- name: Install packages
-  homebrew:
-    update_homebrew: no
-    name:
-      - claude-code
-      - cleanshot
-      - git
-      - google-chrome
-      - google-drive
-      - keepassxc
-      - obsidian
-      - spotify
-      - telegram
-      - ticktick
-      - viscosity
-    state: present
-
+- import_tasks: claude-code.yml
+- import_tasks: cleanshot.yml
+- import_tasks: iterm2.yml
+- import_tasks: git.yml
+- import_tasks: google-chrome.yml
+- import_tasks: google-drive.yml
+- import_tasks: keepassxc.yml
+- import_tasks: obsidian.yml
+- import_tasks: spotify.yml
+- import_tasks: telegram.yml
+- import_tasks: ticktick.yml
+- import_tasks: viscosity.yml
+- import_tasks: vscode.yml
 - import_tasks: darkmodebuddy.yml
 - import_tasks: docker.yml
 - import_tasks: gpg.yml
@@ -23,13 +18,7 @@
 - import_tasks: neovim.yml
 - import_tasks: tmux.yml
 - import_tasks: homebrew-update.yml
-
 {{ if eq .hosttype "work" }}
-- name: Install work packages
-  homebrew:
-    update_homebrew: no
-    name:
-      - bruno
-      - dbeaver-community
-    state: present
+- import_tasks: bruno.yml
+- import_tasks: dbeaver.yml
 {{ end }}

@@ -1,0 +1,5 @@
+- name: Install Spotify
+  become: true
+  package:
+    name: spotify
+    state: present

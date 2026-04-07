@@ -1,0 +1,5 @@
+- name: Install Visual Studio Code
+  homebrew:
+    update_homebrew: no
+    name: visual-studio-code
+    state: present

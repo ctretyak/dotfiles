@@ -1,0 +1,18 @@
+- name: Install cronie
+  become: true
+  pacman:
+    name: cronie
+
+- name: Enable cronie service
+  become: true
+  systemd:
+    name: cronie
+    enabled: true
+    state: started
+
+- name: Enable bluetooth service
+  become: true
+  systemd:
+    name: bluetooth.service
+    enabled: yes
+    state: started

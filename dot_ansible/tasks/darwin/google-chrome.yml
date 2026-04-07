@@ -1,0 +1,5 @@
+- name: Install Google Chrome
+  homebrew:
+    update_homebrew: no
+    name: google-chrome
+    state: present

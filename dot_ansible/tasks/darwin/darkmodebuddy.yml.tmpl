@@ -1,9 +1,21 @@
-{{ if eq .chezmoi.os "darwin" }}
 {{ if output "bash" "-c" "system_profiler SPHardwareDataType | grep 'Model Name'" | lower | contains "macbook" }}
 - name: Install DarkModeBuddy
   homebrew:
     update_homebrew: no
     name: darkmodebuddy
     state: present
-{{ end }}
+
+- name: Configure DarkModeBuddy darkness threshold
+  community.general.osx_defaults:
+    domain: codes.rambo.DarkModeBuddy
+    key: darknessThreshold
+    type: float
+    value: 29.82
+
+- name: Enable DarkModeBuddy auto-switch
+  community.general.osx_defaults:
+    domain: codes.rambo.DarkModeBuddy
+    key: isChangeSystemAppearanceBasedOnAmbientLightEnabled
+    type: bool
+    value: true
 {{ end }}

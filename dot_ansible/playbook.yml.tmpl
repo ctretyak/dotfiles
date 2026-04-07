@@ -1,9 +1,8 @@
 - name: Install packages
   hosts: localhost
   connection: local
-{{ if eq .chezmoi.os "darwin" }}
   gather_facts: false
-{{ end }}
+  any_errors_fatal: true
   tasks:
 {{ if .os.idLike }}
     - import_tasks: tasks/{{ .os.idLike }}/_main.yml

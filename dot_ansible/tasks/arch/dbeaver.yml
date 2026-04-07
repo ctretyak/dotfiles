@@ -1,0 +1,3 @@
+- name: Install DBeaver (AUR)
+  kewlfft.aur.aur:
+    name: dbeaver

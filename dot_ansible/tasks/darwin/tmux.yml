@@ -4,6 +4,12 @@
     name: tmux
     state: present
 
+- name: Clone TPM
+  git:
+    repo: https://github.com/tmux-plugins/tpm
+    dest: "{{ lookup('env', 'HOME') }}/.tmux/plugins/tpm"
+    depth: 1
+
 - name: Install tmux plugins
   command: "{{ lookup('env', 'HOME') }}/.tmux/plugins/tpm/bin/install_plugins"
   changed_when: false

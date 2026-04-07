@@ -20,7 +20,7 @@
     helper = osxkeychain
 {{- else if eq .chezmoi.os "linux" }}
 [credential]
-    helper = store
+    helper = /usr/lib/git-core/git-credential-libsecret
 {{- end }}
 
 [include]

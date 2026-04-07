@@ -1,4 +1,4 @@
-- name: cron - Update Homebrew packages
+- name: Setup daily Homebrew update cron
   ansible.builtin.cron:
     name: "update_homebrew"
     special_time: daily

@@ -1,0 +1,5 @@
+- name: Install KeePassXC
+  homebrew:
+    update_homebrew: no
+    name: keepassxc
+    state: present

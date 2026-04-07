@@ -6,7 +6,7 @@ model=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
 used=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 
 # effortLevel is a setting in settings.json, not part of the statusline stdin JSON
-effort=$(jq -r '.effortLevel // empty' /Users/tretyak.k/.claude/settings.json 2>/dev/null)
+effort=$(jq -r '.effortLevel // empty' "${HOME}/.claude/settings.json" 2>/dev/null)
 
 # Format effort level as orange bars: low=|   medium=||  high=|||
 ORANGE='\033[38;5;208m'

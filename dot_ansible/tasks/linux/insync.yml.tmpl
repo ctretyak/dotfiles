@@ -32,11 +32,8 @@
 
 {{ else if eq .os.idLike "debian" }}
 
-# cannot find repo to install
-
-{{ else }}
-
 - name: Install Insync
+  become: true
   package:
     name: insync
 

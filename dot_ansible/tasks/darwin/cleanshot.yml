@@ -1,0 +1,5 @@
+- name: Install CleanShot
+  homebrew:
+    update_homebrew: no
+    name: cleanshot
+    state: present

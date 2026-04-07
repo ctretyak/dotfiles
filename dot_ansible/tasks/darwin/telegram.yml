@@ -1,0 +1,5 @@
+- name: Install Telegram
+  homebrew:
+    update_homebrew: no
+    name: telegram
+    state: present

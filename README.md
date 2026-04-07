@@ -1,26 +1,47 @@
-# chezmoi
+# Dotfiles
 
-## Initialization
+Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), provisioned via Ansible.
 
-### Windows
+## Supported systems
 
-Run as admin
-```powershell
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { Write-Host "This script must be run as Administrator." -ForegroundColor Red; exit 1 }
-Set-ExecutionPolicy RemoteSigned; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'));
-choco install chezmoi -y;
+| OS | Distros |
+|----|---------|
+| macOS | Homebrew |
+| Linux | Arch, Debian/Ubuntu, Fedora |
+| Windows | Chocolatey (minimal) |
 
-```
+## What's managed
 
-and after as non-admin
+**Shell:** Zsh, Powerlevel10k, Zinit (autosuggestions, completions, syntax highlighting), fzf, NVM
 
-```powershell
-if (([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) { Write-Host "This script must NOT be run as Administrator." -ForegroundColor Red; exit 1 }
+**Dev tools:** Neovim, Git (multi-identity + GPG), Docker, tmux + TPM, Claude Code
+
+**Apps:** Google Chrome, Obsidian, Telegram, Spotify, TickTick, KeePassXC, VSCode
+
+**macOS-only:** Google Drive, CleanShot, Viscosity, DarkModeBuddy (MacBook)
+
+**Linux-only:** Insync (Google Drive), libsecret (credential storage)
+
+**Work profile:** Bruno, DBeaver &mdash; enabled via `hosttype: work` in chezmoi config
+
+## Bootstrap
+
+### macOS
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install chezmoi
 chezmoi init --apply ctretyak
-
 ```
 
-### Ubuntu
+### Arch
+
+```sh
+sudo pacman -S chezmoi --noconfirm
+chezmoi init --apply ctretyak
+```
+
+### Debian / Ubuntu
 
 ```sh
 sudo snap install chezmoi --classic
@@ -33,26 +54,47 @@ chezmoi init --apply ctretyak
 sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply ctretyak
 ```
 
-### Arch
+### Windows
 
-```sh
-sudo pacman -S chezmoi --noconfirm
-chezmoi init --apply https://ctretyak:__PROJECT_TOKEN__@gitlab.com/ctretyak/chezmoi.git
+Admin:
+```powershell
+Set-ExecutionPolicy RemoteSigned
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+choco install chezmoi -y
 ```
 
-### Snap
-
-```sh
-sudo snap install chezmoi --classic
-chezmoi init --apply https://ctretyak:__PROJECT_TOKEN__@gitlab.com/ctretyak/chezmoi.git
+Non-admin:
+```powershell
+chezmoi init --apply ctretyak
 ```
 
-## Problems
+## How it works
 
-### Obsidian wayland support
-
-It doesn't necessary if you don't have fractional scaling
-
-```sh
-flatpak override --user --socket=wayland md.obsidian.Obsidian
 ```
+chezmoi init --apply
+  -> .chezmoiscripts/   # install ansible + dependencies
+  -> chezmoi apply      # lay down dotfiles
+  -> ansible-playbook   # install packages & configure apps
+```
+
+**Chezmoi scripts** (`.chezmoiscripts/`) bootstrap Ansible per distro, then trigger the playbook.
+
+**Ansible tasks** (`dot_ansible/tasks/`) are organized by OS:
+- `linux/` &mdash; common Linux tasks (zsh, git, tmux, neovim, claude-code, nvm, keepassxc, insync)
+- `arch/`, `debian/`, `fedora/` &mdash; distro-specific packages and repos
+- `darwin/` &mdash; macOS apps via Homebrew
+
+Each directory has `_main.yml.tmpl` that imports individual task files. Work/home conditionals live at `_main.yml` level.
+
+**Templates** (`.chezmoitemplates/zsh/`) are shared zsh config fragments included by `dot_zshrc.tmpl`.
+
+## Git identities
+
+The `git/setup-git-identities.sh` script manages multiple git identities stored in `~/git/{name}/.gitconfig`, each with its own email, name, and optional GPG key. Identities are activated via `includeIf` in `~/.gitconfig.local`.
+
+## Configuration
+
+`~/.config/chezmoi/chezmoi.yaml` is generated from `.chezmoi.yaml.tmpl` and sets:
+- `hosttype` &mdash; `home` or `work` (controls which apps are installed)
+- `os.id` / `os.idLike` &mdash; detected from `/etc/os-release`

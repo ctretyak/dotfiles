@@ -1,0 +1,5 @@
+- name: Install Obsidian
+  become: true
+  package:
+    name: obsidian
+    state: present

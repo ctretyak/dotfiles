@@ -1,0 +1,5 @@
+- name: Install Spotify
+  homebrew:
+    update_homebrew: no
+    name: spotify
+    state: present

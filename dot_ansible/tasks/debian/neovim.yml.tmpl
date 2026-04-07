@@ -1,0 +1,21 @@
+- name: Install Neovim
+  become: true
+  snap:
+    name: nvim
+    classic: true
+
+- name: Install Neovim dependencies
+  become: true
+  package:
+    name:
+      - fd-find
+      - ripgrep
+      - fzf
+    state: present
+
+{{ if ne (get .chezmoi.osRelease "versionCodename") "noble" }}
+- name: Install lazygit
+  become: true
+  package:
+    name: lazygit
+{{ end }}
