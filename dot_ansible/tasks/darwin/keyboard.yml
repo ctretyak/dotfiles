@@ -1,3 +1,8 @@
+- name: Get macOS major version
+  shell: sw_vers -productVersion | cut -d. -f1
+  register: macos_version
+  changed_when: false
+
 - name: Disable press-and-hold for accented characters
   community.general.osx_defaults:
     domain: NSGlobalDomain
@@ -9,12 +14,12 @@
   community.general.osx_defaults:
     domain: NSGlobalDomain
     key: KeyRepeat
-    type: int
+    type: "{{ 'int' if macos_version.stdout | int >= 26 else 'float' }}"
     value: 2
 
 - name: Set short delay until key repeat
   community.general.osx_defaults:
     domain: NSGlobalDomain
     key: InitialKeyRepeat
-    type: int
+    type: "{{ 'int' if macos_version.stdout | int >= 26 else 'float' }}"
     value: 15
