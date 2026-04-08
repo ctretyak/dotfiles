@@ -3,3 +3,19 @@
     update_homebrew: no
     name: cleanshot
     state: present
+
+- name: Configure CleanShot
+  community.general.osx_defaults:
+    domain: pl.maketheweb.cleanshotx
+    key: "{{ item.key }}"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+  loop:
+    - { key: screenshotFormat, type: string, value: "png" }
+    - { key: captureWithoutDesktopIcons, type: bool, value: "true" }
+    - { key: highlightClicks, type: bool, value: "true" }
+    - { key: autoClosePopup, type: bool, value: "true" }
+    - { key: popupAutoCloseInterval, type: int, value: 5 }
+    - { key: popupAutoCloseMode, type: int, value: 1 }
+    - { key: deletePopupAfterDragging, type: bool, value: "true" }
+    - { key: analyticsAllowed, type: bool, value: "false" }
