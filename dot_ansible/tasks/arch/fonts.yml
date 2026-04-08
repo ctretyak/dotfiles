@@ -3,3 +3,9 @@
   package:
     name: ttf-jetbrains-mono-nerd
     state: present
+
+- name: Install Inter font
+  become: true
+  package:
+    name: inter-font
+    state: present

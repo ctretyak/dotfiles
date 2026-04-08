@@ -1,0 +1,31 @@
+- name: Check if GNOME Shell is installed
+  command: which gnome-shell
+  register: gnome_check
+  changed_when: false
+  failed_when: false
+
+- name: Install AppIndicator extension
+  become: true
+  package:
+    name: gnome-shell-extension-appindicator
+    state: present
+  when: gnome_check.rc == 0
+
+- name: Enable AppIndicator extension via gsettings
+  shell: |
+    current=$(gsettings get org.gnome.shell enabled-extensions)
+    if echo "$current" | grep -q 'appindicatorsupport@rgcjonas.gmail.com'; then
+      echo "already enabled"
+    else
+      cleaned=$(echo "$current" | sed "s/@as \[\]/[]/")
+      if [ "$cleaned" = "[]" ]; then
+        gsettings set org.gnome.shell enabled-extensions "['appindicatorsupport@rgcjonas.gmail.com']"
+      else
+        new=$(echo "$cleaned" | sed "s/]/, 'appindicatorsupport@rgcjonas.gmail.com']/")
+        gsettings set org.gnome.shell enabled-extensions "$new"
+      fi
+      echo "enabled"
+    fi
+  register: ext_enable
+  changed_when: "'enabled' == ext_enable.stdout | trim"
+  when: gnome_check.rc == 0

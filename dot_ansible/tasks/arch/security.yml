@@ -1,0 +1,187 @@
+# --- Firewall (nftables) ---
+
+- name: Install nftables
+  become: true
+  package:
+    name: nftables
+    state: present
+
+- name: Configure nftables firewall
+  become: true
+  copy:
+    content: |
+      #!/usr/sbin/nft -f
+
+      flush ruleset
+
+      table inet filter {
+        chain input {
+          type filter hook input priority filter; policy drop;
+
+          # loopback
+          iif "lo" accept
+
+          # established/related
+          ct state established,related accept
+
+          # drop invalid
+          ct state invalid drop
+
+          # ICMP/ICMPv6
+          meta l4proto icmp accept
+          meta l4proto ipv6-icmp accept
+
+          # DHCPv6 client
+          udp dport 546 accept
+        }
+
+        chain forward {
+          type filter hook forward priority filter; policy drop;
+        }
+
+        chain output {
+          type filter hook output priority filter; policy accept;
+        }
+      }
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0644"
+  register: nftables_config
+
+- name: Enable nftables service
+  become: true
+  systemd:
+    name: nftables
+    enabled: true
+    state: started
+
+- name: Restart nftables on config change
+  become: true
+  systemd:
+    name: nftables
+    state: restarted
+  when: nftables_config.changed
+
+# --- Sysctl hardening ---
+
+- name: Deploy sysctl hardening config
+  become: true
+  copy:
+    content: |
+      # Kernel hardening
+      kernel.kptr_restrict = 2
+      kernel.unprivileged_bpf_disabled = 1
+      kernel.kexec_load_disabled = 1
+      kernel.sysrq = 4
+      kernel.perf_event_paranoid = 2
+      kernel.yama.ptrace_scope = 1
+
+      # Filesystem
+      fs.protected_hardlinks = 1
+      fs.protected_symlinks = 1
+      fs.protected_fifos = 2
+      fs.protected_regular = 2
+      fs.suid_dumpable = 0
+
+      # Network
+      net.ipv4.conf.all.rp_filter = 1
+      net.ipv4.conf.default.rp_filter = 1
+      net.ipv4.conf.all.accept_redirects = 0
+      net.ipv4.conf.default.accept_redirects = 0
+      net.ipv6.conf.all.accept_redirects = 0
+      net.ipv6.conf.default.accept_redirects = 0
+      net.ipv4.conf.all.send_redirects = 0
+      net.ipv4.conf.default.send_redirects = 0
+      net.ipv4.conf.all.accept_source_route = 0
+      net.ipv4.conf.default.accept_source_route = 0
+      net.ipv6.conf.all.accept_source_route = 0
+      net.ipv6.conf.default.accept_source_route = 0
+      net.ipv4.tcp_syncookies = 1
+      net.ipv4.tcp_rfc1337 = 1
+    dest: /etc/sysctl.d/99-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+  register: sysctl_config
+
+- name: Apply sysctl settings
+  become: true
+  shell: sysctl --system
+  when: sysctl_config.changed
+
+# --- Mount hardening ---
+
+- name: Harden /dev/shm mount options (noexec,nosuid,nodev)
+  become: true
+  mount:
+    path: /dev/shm
+    src: tmpfs
+    fstype: tmpfs
+    opts: defaults,nosuid,nodev,noexec
+    state: mounted
+
+# --- Core dumps ---
+
+- name: Disable systemd core dump storage
+  become: true
+  copy:
+    content: |
+      [Coredump]
+      Storage=none
+      ProcessSizeMax=0
+    dest: /etc/systemd/coredump.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure limits.d directory exists
+  become: true
+  file:
+    path: /etc/security/limits.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Disable core dumps via limits
+  become: true
+  copy:
+    content: |
+      * hard core 0
+    dest: /etc/security/limits.d/10-coredump.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+# --- Kernel module blacklist ---
+
+- name: Deploy modprobe blacklist for unused kernel modules
+  become: true
+  copy:
+    content: |
+      # Uncommon network protocols
+      install dccp /bin/true
+      install sctp /bin/true
+      install rds /bin/true
+      install tipc /bin/true
+
+      # Rare/legacy filesystems
+      install cramfs /bin/true
+      install freevxfs /bin/true
+      install jffs2 /bin/true
+      install hfs /bin/true
+      install hfsplus /bin/true
+    dest: /etc/modprobe.d/blacklist-unused.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+# --- Faillock ---
+
+- name: Set faillock deny to 6 attempts
+  become: true
+  lineinfile:
+    path: /etc/security/faillock.conf
+    regexp: '^#?\s*deny\s*='
+    line: 'deny = 6'
