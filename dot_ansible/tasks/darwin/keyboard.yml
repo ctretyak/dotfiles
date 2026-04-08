@@ -9,12 +9,12 @@
   community.general.osx_defaults:
     domain: NSGlobalDomain
     key: KeyRepeat
-    type: float
+    type: int
     value: 2
 
 - name: Set short delay until key repeat
   community.general.osx_defaults:
     domain: NSGlobalDomain
     key: InitialKeyRepeat
-    type: float
+    type: int
     value: 15
