@@ -1,7 +1,12 @@
-- name: Install Docker
+- name: Install Docker CLI tools
   homebrew:
     update_homebrew: no
     name:
       - docker
       - docker-compose
+    state: present
+
+- name: Install Docker Desktop
+  homebrew_cask:
+    name: docker
     state: present
