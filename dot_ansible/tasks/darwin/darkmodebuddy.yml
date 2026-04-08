@@ -1,6 +1,5 @@
 - name: Install DarkModeBuddy
-  homebrew:
-    update_homebrew: no
+  homebrew_cask:
     name: darkmodebuddy
     state: present
 
