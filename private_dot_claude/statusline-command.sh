@@ -38,53 +38,36 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 
-# Format rate limit with pace indicator
+# Format rate limit with projected end-of-period usage
 # Args: used_pct, resets_at (epoch), window_seconds, label
 fmt_rate_limit() {
   local used_pct="$1" resets_at="$2" window_sec="$3" label="$4"
   [ -z "$used_pct" ] && return
   used_pct=$(printf "%.0f" "$used_pct")
 
-  local now remaining_sec
+  local now remaining_sec elapsed_sec projected color
   now=$(date +%s)
   remaining_sec=$(( resets_at - now ))
   [ "$remaining_sec" -lt 0 ] && remaining_sec=0
-
-  # Time remaining as Xh Xm
-  local hours mins time_left
-  hours=$(( remaining_sec / 3600 ))
-  mins=$(( (remaining_sec % 3600) / 60 ))
-  if [ "$hours" -gt 0 ]; then
-    time_left="${hours}h${mins}m"
-  else
-    time_left="${mins}m"
-  fi
-
-  # Pace: delta from even distribution
-  local elapsed_sec budget_pct delta delta_fmt color
   elapsed_sec=$(( window_sec - remaining_sec ))
-  if [ "$elapsed_sec" -gt 0 ]; then
-    budget_pct=$(echo "$elapsed_sec * 100 / $window_sec" | bc)
-    delta=$(( used_pct - budget_pct ))
-  else
-    delta=0
-  fi
 
-  if [ "$delta" -le -5 ]; then
-    color="$BLUE"
-    delta_fmt="${delta}%"
-  elif [ "$delta" -le 0 ]; then
-    color="$GREEN"
-    delta_fmt="${delta}%"
-  elif [ "$delta" -le 15 ]; then
-    color="$YELLOW"
-    delta_fmt="+${delta}%"
+  # Project usage at end of period; require >=10% of window elapsed
+  local min_elapsed=$(( window_sec / 10 ))
+  if [ "$elapsed_sec" -gt "$min_elapsed" ] && [ "$used_pct" -gt 0 ]; then
+    projected=$(( used_pct * window_sec / elapsed_sec ))
+    if [ "$projected" -le 80 ]; then
+      color="$BLUE"
+    elif [ "$projected" -le 100 ]; then
+      color="$GREEN"
+    elif [ "$projected" -le 130 ]; then
+      color="$YELLOW"
+    else
+      color="$RED"
+    fi
+    printf "${color}${used_pct}%%→${projected}%%${RESET}"
   else
-    color="$RED"
-    delta_fmt="+${delta}%"
+    printf "${DIM}${used_pct}%%${RESET}"
   fi
-
-  printf "${color}${used_pct}%% ${delta_fmt}${RESET} ${DIM}${time_left}${RESET}"
 }
 
 # Rate limits
