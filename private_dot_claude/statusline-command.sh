@@ -43,6 +43,7 @@ RED='\033[0;31m'
 fmt_rate_limit() {
   local used_pct="$1" resets_at="$2" window_sec="$3" label="$4"
   [ -z "$used_pct" ] && return
+  used_pct=$(printf "%.0f" "$used_pct")
 
   local now remaining_sec
   now=$(date +%s)
