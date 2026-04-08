@@ -1,3 +1,4 @@
+- import_tasks: fonts.yml
 - import_tasks: keyboard.yml
 - import_tasks: claude-code.yml
 - import_tasks: cleanshot.yml
@@ -11,7 +12,7 @@
 - import_tasks: ticktick.yml
 - import_tasks: viscosity.yml
 - import_tasks: vscode.yml
-{{ if output "bash" "-c" "system_profiler SPHardwareDataType | grep 'Model Name'" | lower | contains "macbook" }}
+{{ if output "bash" "-c" "system_profiler SPHardwareDataType 2>/dev/null | grep 'Model Name'" | lower | contains "macbook" }}
 - import_tasks: darkmodebuddy.yml
 {{ end }}
 - import_tasks: docker.yml

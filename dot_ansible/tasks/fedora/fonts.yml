@@ -1,0 +1,22 @@
+- name: Check if JetBrainsMono Nerd Font is installed
+  shell: fc-list | grep -qi "JetBrainsMono Nerd"
+  register: font_check
+  changed_when: false
+  failed_when: false
+
+- name: Create fonts directory
+  file:
+    path: "{{ ansible_env.HOME }}/.local/share/fonts"
+    state: directory
+  when: font_check.rc != 0
+
+- name: Download JetBrainsMono Nerd Font
+  unarchive:
+    src: https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz
+    dest: "{{ ansible_env.HOME }}/.local/share/fonts"
+    remote_src: true
+  when: font_check.rc != 0
+
+- name: Refresh font cache
+  command: fc-cache -fv
+  when: font_check.rc != 0

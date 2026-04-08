@@ -1,0 +1,5 @@
+- name: Install JetBrainsMono Nerd Font
+  homebrew:
+    update_homebrew: no
+    name: font-jetbrains-mono-nerd-font
+    state: present

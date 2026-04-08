@@ -1,0 +1,5 @@
+- name: Install JetBrainsMono Nerd Font
+  become: true
+  package:
+    name: ttf-jetbrains-mono-nerd
+    state: present
