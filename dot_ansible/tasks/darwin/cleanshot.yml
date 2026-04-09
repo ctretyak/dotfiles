@@ -19,3 +19,4 @@
     - { key: popupAutoCloseMode, type: int, value: 1 }
     - { key: deletePopupAfterDragging, type: bool, value: "true" }
     - { key: analyticsAllowed, type: bool, value: "false" }
+    - { key: popupOnLeftEdge, type: bool, value: "false" }
