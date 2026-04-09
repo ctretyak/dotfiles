@@ -3,7 +3,7 @@
     key: /org/gnome/desktop/input-sources/sources
     value: "[('xkb', 'us'), ('xkb', 'ru')]"
 
-- name: Set keyboard layout switching to Ctrl+Space
+- name: Set keyboard layout switching to Super+Space
   community.general.dconf:
     key: /org/gnome/desktop/input-sources/xkb-options
-    value: "['grp:ctrl_space_toggle']"
+    value: "['grp:win_space_toggle']"

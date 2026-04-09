@@ -1,0 +1,25 @@
+- name: Install reflector
+  become: true
+  package:
+    name: reflector
+    state: present
+
+- name: Configure reflector
+  become: true
+  copy:
+    content: |
+      --save /etc/pacman.d/mirrorlist
+      --protocol https
+      --latest 10
+      --sort rate
+    dest: /etc/xdg/reflector/reflector.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable reflector timer (weekly mirror update)
+  become: true
+  systemd:
+    name: reflector.timer
+    enabled: true
+    state: started

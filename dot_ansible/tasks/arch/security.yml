@@ -54,14 +54,12 @@
   systemd:
     name: nftables
     enabled: true
-    state: started
 
-- name: Restart nftables on config change
+- name: Start or restart nftables
   become: true
   systemd:
     name: nftables
-    state: restarted
-  when: nftables_config.changed
+    state: "{{ 'restarted' if nftables_config.changed else 'started' }}"
 
 # --- Sysctl hardening ---
 
@@ -185,3 +183,49 @@
     path: /etc/security/faillock.conf
     regexp: '^#?\s*deny\s*='
     line: 'deny = 6'
+
+# --- Secure Boot (sbctl) ---
+
+- name: Install sbctl
+  become: true
+  package:
+    name: sbctl
+    state: present
+
+- name: Check sbctl setup status
+  become: true
+  command: sbctl status --json
+  register: sbctl_status
+  changed_when: false
+
+- name: Create Secure Boot keys
+  become: true
+  command: sbctl create-keys
+  when: not (sbctl_status.stdout | from_json).installed
+
+- name: Enroll Secure Boot keys (with Microsoft keys)
+  become: true
+  command: sbctl enroll-keys --microsoft
+  when:
+    - (sbctl_status.stdout | from_json).setup_mode
+    - not (sbctl_status.stdout | from_json).secure_boot
+
+- name: Find EFI binaries to sign
+  become: true
+  find:
+    paths: /boot/EFI
+    patterns: "*.efi,*.EFI"
+    recurse: true
+  register: efi_binaries
+
+- name: Sign EFI binaries with sbctl
+  become: true
+  command: "sbctl sign -s {{ item.path }}"
+  loop: "{{ efi_binaries.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  register: sbctl_sign
+  changed_when: "'already signed' not in sbctl_sign.stderr | default('')"
+  failed_when:
+    - sbctl_sign.rc != 0
+    - "'already signed' not in sbctl_sign.stderr | default('')"

@@ -10,9 +10,16 @@
     enabled: true
     state: started
 
+- name: Check if Bluetooth adapter exists
+  command: rfkill list bluetooth
+  register: bluetooth_check
+  changed_when: false
+  failed_when: false
+
 - name: Enable bluetooth service
   become: true
   systemd:
     name: bluetooth.service
     enabled: yes
     state: started
+  when: bluetooth_check.rc == 0 and bluetooth_check.stdout | length > 0

@@ -1,0 +1,5 @@
+- name: Install fwupd
+  become: true
+  package:
+    name: fwupd
+    state: present
