@@ -63,6 +63,8 @@ Defined in `.chezmoi.yaml.tmpl`:
 
 `.chezmoiignore` excludes irrelevant files per OS and distro. Scripts in `.chezmoiscripts/linux/{arch,debian,fedora}/` are filtered by `.os.idLike`.
 
+**When adding new files**, always check if the file is OS-specific and add an exclusion rule to `.chezmoiignore` if needed. Without this, files deploy to all systems (e.g., fontconfig on macOS, aerospace.toml on Linux).
+
 ## File naming
 
 Chezmoi prefixes map to target attributes:
