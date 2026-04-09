@@ -86,7 +86,7 @@ on-mode-changed = []
     2 = 'DELL P2723QE'     # Browser: Chrome
     3 = 'DELL P2723QE'     # Reddy (work chat)
     Q = 'DELL P2723QE'     # Telegram
-    6 = 'DELL P2723QE'     # Music: Spotify
+    A = 'DELL P2723QE'     # Music: Spotify
 
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
@@ -280,7 +280,7 @@ run = 'move-node-to-workspace 5'
 # Workspace 6: Music
 [[on-window-detected]]
 if.app-id = 'com.spotify.client'
-run = 'move-node-to-workspace 6'
+run = 'move-node-to-workspace A'
 
 # Workspace D: KeePassXC
 [[on-window-detected]]
