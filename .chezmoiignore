@@ -41,12 +41,21 @@ old_*/**
 
 {{ end }}
 
+# Linux only (configs)
+{{ if ne .chezmoi.os "linux" }}
+
+    .config/fontconfig
+
+{{ end }}
+
 # macOS only
 {{ if ne .chezmoi.os "darwin" }}
 
     .ansible/tasks/darwin
     .chezmoiscripts/darwin/**
     .config/iterm2
+    .aerospace.toml
+    Library
 
 {{ end }}
 
