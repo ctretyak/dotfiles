@@ -75,19 +75,6 @@ on-mode-changed = []
     outer.top =        8
     outer.right =      8
 
-# Pin workspaces to monitors
-[workspace-to-monitor-force-assignment]
-    1 = 'DELL P2721Q'      # Code: VS Code + iTerm2
-    4 = 'DELL P2721Q'      # Tasks: TickTick
-    5 = 'DELL P2721Q'      # Notes: Obsidian
-    D = 'DELL P2721Q'      # KeePassXC
-    S = 'DELL P2721Q'      # Mail & Calendar
-    R = 'DELL P2721Q'      # Everything else
-    2 = 'DELL P2723QE'     # Browser: Chrome
-    3 = 'DELL P2723QE'     # Reddy (work chat)
-    Q = 'DELL P2723QE'     # Telegram
-    A = 'DELL P2723QE'     # Music: Spotify
-
 # 'main' binding mode declaration
 # See: https://nikitabobko.github.io/AeroSpace/guide#binding-modes
 # 'main' binding mode must be always presented
