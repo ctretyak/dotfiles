@@ -1,22 +1,14 @@
 {
-  "permissions": {
-    "allow": [
-      "Bash",
-      "WebFetch",
-      "WebSearch"
-    ]
-  },
   "env": {
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "200000"
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "300000"
+  },
+  "permissions": {
+    "defaultMode": "auto"
   },
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
   "language": "Русский",
-  "voiceEnabled": true,
-  "voice": {
-    "enabled": true,
-    "mode": "hold"
-  }
+  "skipAutoPermissionPrompt": true
 }
