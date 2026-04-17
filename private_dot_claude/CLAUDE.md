@@ -1,13 +1,17 @@
 # Global Rules
 
-## Communication
-- The user speaks English and Russian. Prefer Russian for all responses unless the user writes in English.
-
-- Do NOT add `Co-Authored-By` lines to commit messages
+## Git
 - Do NOT commit or push to git unless explicitly asked by the user. Each commit/push requires separate explicit permission — authorization does NOT carry over from previous tasks in the same conversation
 
 ## Projects
 - Рабочие проекты лежат в `~/git/x`. Если задача затрагивает несколько проектов, искать их там.
+
+## Chezmoi
+- Source: `~/.local/share/chezmoi`. Системные конфиги (dotfiles, ansible-задачи, пакеты) редактируются в source, не напрямую в `~/`.
+- Исключение: GUI-настроенные приложения и бинарные plist — редактировать целевой файл, затем сразу `chezmoi add <path>`.
+- После изменений в source: `chezmoi diff` для превью, `chezmoi apply` для применения (apply также триггерит ansible при изменениях в `dot_ansible/`).
+- При добавлении новых файлов проверять `.chezmoiignore` на предмет OS-специфичности — без фильтрации файл развернётся на всех системах.
+- Правило применяется из ЛЮБОЙ директории, не только при работе внутри source.
 
 ## Obsidian
 - Vault: `Core` at `~/Documents/Core`
