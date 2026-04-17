@@ -1,0 +1,583 @@
+#!/bin/bash
+set -euo pipefail
+
+# --- Colors ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[0;33m'
+BOLD='\033[1m'
+DIM='\033[2m'
+RESET='\033[0m'
+
+# --- Config ---
+BASE_DIR="${GIT_IDENTITIES_DIR:-$HOME/git}"
+CONFIG_DIR="${GIT_IDENTITIES_CONFIG:-$HOME/.gitconfig.d}"
+INDEX_FILE="$CONFIG_DIR/_index.conf"
+MAIN_CONFIG="$HOME/.gitconfig"
+DEBUG="${DEBUG:-0}"
+
+# Layout:
+#   ~/.gitconfig              (your dotfile, managed however you like)
+#                             must contain: [include] path = ~/.gitconfig.d/_index.conf
+#   ~/.gitconfig.d/_index.conf    (script-managed) includeIf → per-identity conf
+#   ~/.gitconfig.d/<id>.conf      (script-managed) per-identity [user] settings
+#   ~/git/<id>/                   (your projects for identity <id>)
+
+# --- Helpers ---
+info()    { echo -e "${BLUE}$*${RESET}"; }
+success() { echo -e "${GREEN}$*${RESET}"; }
+error()   { echo -e "${RED}$*${RESET}" >&2; }
+warn()    { echo -e "${YELLOW}$*${RESET}"; }
+header()  { echo -e "\n${BOLD}$*${RESET}"; echo -e "${DIM}$(printf '%.0s─' {1..40})${RESET}"; }
+lower()   { echo "$1" | tr '[:upper:]' '[:lower:]'; }
+
+gpg_run() {
+  if [[ "$DEBUG" == "1" ]]; then gpg "$@"; else gpg "$@" 2>/dev/null; fi
+}
+
+cleanup() {
+  [[ -n "${GNUPGHOME_TMP:-}" ]] && rm -rf "$GNUPGHOME_TMP"
+  [[ -n "${KEYFILE:-}" ]] && rm -f "$KEYFILE"
+  return 0
+}
+trap cleanup EXIT
+
+# --- Usage ---
+usage() {
+  cat <<EOF
+Git Identity Manager — per-directory git identities via includeIf.
+
+Layout:
+  ~/.gitconfig                  must [include] ~/.gitconfig.d/_index.conf
+  ~/.gitconfig.d/_index.conf    (script-managed) includeIf dispatcher
+  ~/.gitconfig.d/<id>.conf      (script-managed) identity settings
+  ~/git/<id>/                   your projects for identity <id>
+
+Usage:
+  $(basename "$0")              Interactive menu
+  $(basename "$0") list         List identities
+  $(basename "$0") check        Verify ~/.gitconfig setup
+  $(basename "$0") migrate      Migrate from legacy layout
+  $(basename "$0") -h|--help    Show this help
+
+Environment:
+  GIT_IDENTITIES_DIR            Base dir for projects (default: ~/git)
+  GIT_IDENTITIES_CONFIG         Config dir (default: ~/.gitconfig.d)
+  DEBUG=1                       Show gpg stderr
+EOF
+}
+
+# --- GPG: find existing secret keys matching name+email ---
+find_matching_gpg_keys() {
+  local search_name="$1" search_email="$2" current_keyid=""
+  while IFS=: read -r type _ _ _ keyid _ _ _ _ uid _; do
+    case "$type" in
+      sec) current_keyid="$keyid" ;;
+      uid)
+        if [[ "$uid" == *"<$search_email>"* ]] && [[ "$uid" == *"$search_name"* ]]; then
+          printf '%s\t%s\n' "$current_keyid" "$uid"
+        fi
+        ;;
+    esac
+  done < <(gpg --list-secret-keys --with-colons 2>/dev/null)
+}
+
+# --- GPG: pick existing or create new; echoes key_id on stdout ---
+pick_gpg_key() {
+  local name="$1" email="$2" key_id="" existing_keys=()
+
+  if command -v gpg &>/dev/null; then
+    while IFS= read -r line; do
+      [[ -n "$line" ]] && existing_keys+=("$line")
+    done < <(find_matching_gpg_keys "$name" "$email")
+  fi
+
+  if [[ ${#existing_keys[@]} -gt 0 ]]; then
+    echo -e "${BLUE}  Found existing GPG key(s) matching $name <$email>:${RESET}" >&2
+    local i
+    for i in "${!existing_keys[@]}"; do
+      local ek_id="${existing_keys[$i]%%	*}"
+      local ek_uid="${existing_keys[$i]#*	}"
+      echo -e "    ${BOLD}$((i+1)))${RESET} $ek_id ${DIM}$ek_uid${RESET}" >&2
+    done
+    echo >&2
+    read -p "  Use existing key? [number/N]: " choice
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#existing_keys[@]} )); then
+      key_id="${existing_keys[$((choice-1))]%%	*}"
+      echo -e "${GREEN}  Using existing key $key_id.${RESET}" >&2
+      echo "$key_id"
+      return 0
+    fi
+  fi
+
+  read -p "  Create GPG key? [y/N]: " create_gpg
+  if [[ "$(lower "$create_gpg")" != "y" ]]; then
+    echo ""; return 0
+  fi
+
+  if ! command -v gpg &>/dev/null; then
+    error "  gpg not found. Install GnuPG first."
+    echo ""; return 0
+  fi
+
+  local passphrase
+  read -s -p "  GPG Passphrase (hidden): " passphrase
+  echo >&2
+
+  GNUPGHOME_TMP=$(mktemp -d)
+  KEYFILE=$(mktemp)
+  chmod 600 "$KEYFILE"
+
+  cat >"$KEYFILE" <<EOF
+%echo Generating GPG key for $name <$email>
+Key-Type: default
+Expire-Date: 0
+Name-Real: $name
+Name-Email: $email
+%commit
+%echo done
+EOF
+
+  echo -e "${BLUE}  Generating GPG key...${RESET}" >&2
+  if ! gpg_run --batch --homedir "$GNUPGHOME_TMP" \
+               --pinentry-mode loopback --passphrase-fd 3 \
+               --generate-key "$KEYFILE" 3<<<"$passphrase"; then
+    error "  Failed to generate GPG key. Re-run with DEBUG=1 for details."
+    cleanup; GNUPGHOME_TMP=""; KEYFILE=""
+    echo ""; return 0
+  fi
+
+  key_id=$(gpg --homedir "$GNUPGHOME_TMP" --list-secret-keys --with-colons 2>/dev/null \
+           | awk -F: '/^sec:/ {print $5; exit}')
+  if [[ -z "$key_id" ]]; then
+    error "  Failed to extract key id after generation."
+    cleanup; GNUPGHOME_TMP=""; KEYFILE=""
+    echo ""; return 0
+  fi
+
+  if ! gpg_run --homedir "$GNUPGHOME_TMP" --export-secret-keys --armor "$key_id" \
+       | gpg_run --import; then
+    error "  Failed to import key into main keyring."
+    cleanup; GNUPGHOME_TMP=""; KEYFILE=""
+    echo ""; return 0
+  fi
+
+  cleanup; GNUPGHOME_TMP=""; KEYFILE=""
+  echo "$key_id"
+}
+
+# --- Detect how ~/.gitconfig is managed (for bootstrap safety) ---
+gitconfig_managed_by() {
+  [[ ! -e "$MAIN_CONFIG" ]] && { echo "absent"; return; }
+  [[ -L "$MAIN_CONFIG" ]] && { echo "symlink"; return; }
+  if command -v chezmoi &>/dev/null && chezmoi managed "$MAIN_CONFIG" &>/dev/null; then
+    echo "chezmoi"; return
+  fi
+  echo "plain"
+}
+
+# --- Ensure ~/.gitconfig includes our index; bootstrap if safe ---
+# Returns 0 if set up, 1 if user action needed.
+ensure_include() {
+  local want="~/.gitconfig.d/_index.conf"
+
+  if [[ -f "$MAIN_CONFIG" ]] && git config -f "$MAIN_CONFIG" --get-all include.path 2>/dev/null \
+       | grep -Fxq -e "$want" -e "$INDEX_FILE"; then
+    return 0
+  fi
+
+  local managed
+  managed=$(gitconfig_managed_by)
+
+  case "$managed" in
+    plain|absent)
+      warn "  $MAIN_CONFIG does not include $want."
+      echo -e "  ${DIM}Block to add:${RESET}"
+      echo -e "    [include]"
+      echo -e "        path = $want"
+      echo
+      read -p "  Add automatically now? [Y/n]: " confirm
+      if [[ "$(lower "$confirm")" != "n" ]]; then
+        [[ -f "$MAIN_CONFIG" ]] && cp "$MAIN_CONFIG" "$MAIN_CONFIG.bak"
+        { echo; echo "[include]"; echo "    path = $want"; } >> "$MAIN_CONFIG"
+        success "  Added. Backup: $MAIN_CONFIG.bak"
+        return 0
+      fi
+      warn "  Skipped. Add manually before creating identities."
+      return 1
+      ;;
+    symlink)
+      warn "  $MAIN_CONFIG is a symlink (likely managed by stow/rcm/dotbot)."
+      warn "  Add this to the source file, then re-run:"
+      echo -e "    [include]"
+      echo -e "        path = $want"
+      return 1
+      ;;
+    chezmoi)
+      warn "  $MAIN_CONFIG is managed by chezmoi."
+      warn "  Run: chezmoi edit ~/.gitconfig"
+      warn "  Add this block, save, then: chezmoi apply ~/.gitconfig"
+      echo -e "    [include]"
+      echo -e "        path = $want"
+      return 1
+      ;;
+  esac
+}
+
+ensure_include_interactive() {
+  header "Check ~/.gitconfig include"
+  if ensure_include; then
+    success "  $MAIN_CONFIG correctly includes $INDEX_FILE."
+  fi
+}
+
+# --- Add includeIf block to index ---
+ensure_includeif() {
+  local identity="$1" id_dir="$2"
+  local id_dir_tilde="${id_dir/#$HOME/~}"
+  local conf_path_tilde="${CONFIG_DIR/#$HOME/~}/${identity}.conf"
+  local include_if_line="[includeIf \"gitdir/i:$id_dir_tilde/\"]"
+
+  mkdir -p "$CONFIG_DIR"
+  touch "$INDEX_FILE"
+  if ! grep -Fq "$include_if_line" "$INDEX_FILE" 2>/dev/null; then
+    { echo; echo "$include_if_line"; echo "    path = $conf_path_tilde"; } >> "$INDEX_FILE"
+  fi
+}
+
+# --- Write identity file ---
+write_config() {
+  local config_path="$1" email="$2" name="$3" key_id="$4"
+
+  mkdir -p "$(dirname "$config_path")"
+  if [[ -n "$key_id" ]]; then
+    cat >"$config_path" <<EOF
+[user]
+    email = $email
+    name = $name
+    signingkey = $key_id
+[commit]
+    gpgsign = true
+EOF
+  else
+    cat >"$config_path" <<EOF
+[user]
+    email = $email
+    name = $name
+EOF
+  fi
+}
+
+# --- Collect identity names from CONFIG_DIR ---
+collect_identities() {
+  local cfg id
+  for cfg in "$CONFIG_DIR"/*.conf; do
+    [[ -f "$cfg" ]] || continue
+    id=$(basename "$cfg" .conf)
+    [[ "$id" == "_index" ]] && continue
+    echo "$id"
+  done
+}
+
+# --- List identities ---
+list_identities() {
+  header "Git Identities"
+  local found=0 id cfg name email key gpg_badge
+  while IFS= read -r id; do
+    [[ -z "$id" ]] && continue
+    cfg="$CONFIG_DIR/$id.conf"
+    found=1
+    name=$(git config -f "$cfg" user.name 2>/dev/null || echo "?")
+    email=$(git config -f "$cfg" user.email 2>/dev/null || echo "?")
+    key=$(git config -f "$cfg" user.signingkey 2>/dev/null || echo "")
+    gpg_badge=""
+    [[ -n "$key" ]] && gpg_badge=" ${YELLOW}GPG${RESET}"
+    printf "  ${BOLD}%-12s${RESET} %s ${DIM}<%s>${RESET}%b\n" "$id" "$name" "$email" "$gpg_badge"
+  done < <(collect_identities)
+  [[ $found -eq 0 ]] && echo -e "  ${DIM}No identities configured${RESET}"
+  echo
+}
+
+# --- Select identity; echoes name or empty ---
+select_identity() {
+  local identities=() id
+  while IFS= read -r id; do
+    [[ -n "$id" ]] && identities+=("$id")
+  done < <(collect_identities)
+
+  if [[ ${#identities[@]} -eq 0 ]]; then
+    echo -e "  ${DIM}No identities available.${RESET}" >&2
+    echo ""; return
+  fi
+
+  echo "  Available identities:" >&2
+  local i
+  for i in "${!identities[@]}"; do
+    echo -e "    ${BOLD}$((i+1)))${RESET} ${identities[$i]}" >&2
+  done
+  echo >&2
+
+  read -p "  Select number (or q to cancel): " choice
+  if [[ "$choice" == "q" || -z "$choice" ]]; then echo ""; return; fi
+  if ! [[ "$choice" =~ ^[0-9]+$ ]] || (( choice < 1 || choice > ${#identities[@]} )); then
+    error "  Invalid selection."; echo ""; return
+  fi
+  echo "${identities[$((choice-1))]}"
+}
+
+# --- Create identity ---
+create_identity() {
+  header "Create Identity"
+
+  ensure_include || { warn "  Fix ~/.gitconfig setup first, then re-run."; return; }
+
+  read -p "  Identity name (e.g. github, work): " identity
+  if [[ -z "$identity" ]]; then error "No identity name provided."; return; fi
+  if [[ "$identity" =~ [^a-zA-Z0-9_-] ]]; then
+    error "Identity name must contain only letters, numbers, hyphens, underscores."
+    return
+  fi
+  if [[ "$identity" == "_index" ]]; then error "Reserved name: _index"; return; fi
+
+  local config_path="$CONFIG_DIR/$identity.conf"
+  if [[ -f "$config_path" ]]; then
+    warn "  Identity '$identity' already exists."
+    return
+  fi
+
+  local id_dir="$BASE_DIR/$identity"
+  read -p "  Project directory [$id_dir]: " custom_dir
+  [[ -n "$custom_dir" ]] && id_dir="${custom_dir/#~/$HOME}"
+  mkdir -p "$id_dir"
+
+  local email name
+  while true; do
+    read -p "  Email: " email
+    [[ "$email" == *@* ]] && break
+    error "  Invalid email format."
+  done
+
+  while true; do
+    read -p "  Name: " name
+    [[ -n "$name" ]] && break
+    error "  Name cannot be empty."
+  done
+
+  local key_id
+  key_id="$(pick_gpg_key "$name" "$email")"
+
+  header "Preview: $config_path"
+  echo -e "  ${DIM}[user]${RESET}"
+  echo -e "  ${DIM}    email = ${RESET}$email"
+  echo -e "  ${DIM}    name = ${RESET}$name"
+  if [[ -n "$key_id" ]]; then
+    echo -e "  ${DIM}    signingkey = ${RESET}$key_id"
+    echo -e "  ${DIM}[commit]${RESET}"
+    echo -e "  ${DIM}    gpgsign = true${RESET}"
+  fi
+  echo
+  echo -e "  Project dir: ${id_dir/#$HOME/~}"
+  echo
+
+  read -p "  Save? [Y/n]: " confirm
+  if [[ "$(lower "$confirm")" == "n" ]]; then warn "  Cancelled."; return; fi
+
+  write_config "$config_path" "$email" "$name" "$key_id"
+  ensure_includeif "$identity" "$id_dir"
+  success "  Identity '$identity' created."
+
+  if [[ -n "$key_id" ]]; then
+    echo
+    info "  Public GPG key (add to Git hosting):"
+    echo
+    gpg --armor --export "$key_id"
+  fi
+}
+
+# --- Edit identity ---
+edit_identity() {
+  header "Edit Identity"
+  local identity
+  identity=$(select_identity)
+  [[ -z "$identity" ]] && return
+  local config_path="$CONFIG_DIR/$identity.conf"
+
+  local cur_email cur_name cur_key
+  cur_email=$(git config -f "$config_path" user.email 2>/dev/null || echo "")
+  cur_name=$(git config -f "$config_path" user.name 2>/dev/null || echo "")
+  cur_key=$(git config -f "$config_path" user.signingkey 2>/dev/null || echo "")
+
+  info "  Current: $cur_name <$cur_email>${cur_key:+ [GPG: $cur_key]}"
+  echo
+
+  local email name
+  read -p "  New email (Enter to keep '$cur_email'): " email
+  [[ -z "$email" ]] && email="$cur_email"
+
+  read -p "  New name (Enter to keep '$cur_name'): " name
+  [[ -z "$name" ]] && name="$cur_name"
+
+  read -p "  Change GPG key? [y/N]: " change_gpg
+  local key_id="$cur_key"
+  if [[ "$(lower "$change_gpg")" == "y" ]]; then
+    read -p "  Remove GPG signing entirely? [y/N]: " remove_gpg
+    if [[ "$(lower "$remove_gpg")" == "y" ]]; then
+      key_id=""
+    else
+      key_id="$(pick_gpg_key "$name" "$email")"
+    fi
+  fi
+
+  write_config "$config_path" "$email" "$name" "$key_id"
+  success "  Identity '$identity' updated."
+}
+
+# --- Delete identity ---
+delete_identity() {
+  header "Delete Identity"
+  local identity
+  identity=$(select_identity)
+  [[ -z "$identity" ]] && return
+  local config_path="$CONFIG_DIR/$identity.conf"
+  local signing_key
+  signing_key=$(git config -f "$config_path" user.signingkey 2>/dev/null || echo "")
+
+  warn "  This will:"
+  warn "    - delete $config_path"
+  warn "    - remove includeIf block from $INDEX_FILE (backup saved)"
+  if [[ -n "$signing_key" ]]; then
+    warn "  Note: GPG key $signing_key will NOT be removed from keyring."
+    warn "        Delete manually: gpg --delete-secret-keys $signing_key"
+  fi
+  read -p "  Are you sure? [y/N]: " confirm
+  [[ "$(lower "$confirm")" != "y" ]] && return
+
+  rm -f "$config_path"
+
+  if [[ -f "$INDEX_FILE" ]]; then
+    cp "$INDEX_FILE" "$INDEX_FILE.bak"
+    local tmp
+    tmp=$(mktemp)
+    awk -v marker="/$identity.conf" '
+      /^\[includeIf/ {
+        header=$0
+        if ((getline next_line) <= 0) { print header; exit }
+        if (index(next_line, marker) > 0) {
+          buf_blank=""
+          next
+        }
+        if (buf_blank != "") { print buf_blank; buf_blank="" }
+        print header; print next_line; next
+      }
+      /^$/ {
+        if (buf_blank != "") print buf_blank
+        buf_blank=$0; next
+      }
+      {
+        if (buf_blank != "") { print buf_blank; buf_blank="" }
+        print
+      }
+      END { if (buf_blank != "") print buf_blank }
+    ' "$INDEX_FILE" > "$tmp"
+    mv "$tmp" "$INDEX_FILE"
+    info "  Backup: $INDEX_FILE.bak"
+  fi
+
+  success "  Identity '$identity' deleted."
+}
+
+# --- Migrate from legacy layout (pre-.gitconfig.d) ---
+migrate_legacy() {
+  header "Migrate from legacy layout"
+
+  local old_local="$HOME/.gitconfig.local"
+  local legacy_ids=() cfg id
+  for cfg in "$BASE_DIR"/*/.gitconfig; do
+    [[ -f "$cfg" ]] || continue
+    legacy_ids+=("$(basename "$(dirname "$cfg")")")
+  done
+
+  if [[ ${#legacy_ids[@]} -eq 0 && ! -f "$old_local" ]]; then
+    echo -e "  ${DIM}Nothing to migrate.${RESET}"
+    return
+  fi
+
+  echo "  Found legacy layout:"
+  [[ -f "$old_local" ]] && echo -e "    - $old_local"
+  for id in "${legacy_ids[@]}"; do
+    echo -e "    - $BASE_DIR/$id/.gitconfig"
+  done
+  echo
+  echo "  Will:"
+  echo "    - copy each $BASE_DIR/<id>/.gitconfig → $CONFIG_DIR/<id>.conf"
+  echo "    - regenerate $INDEX_FILE"
+  echo "    - leave originals in place (delete manually when confident)"
+  echo
+  read -p "  Proceed? [y/N]: " confirm
+  [[ "$(lower "$confirm")" != "y" ]] && return
+
+  mkdir -p "$CONFIG_DIR"
+  : > "$INDEX_FILE"
+
+  for id in "${legacy_ids[@]}"; do
+    local src="$BASE_DIR/$id/.gitconfig"
+    local dst="$CONFIG_DIR/$id.conf"
+    if [[ -f "$dst" ]]; then
+      warn "  Skipped $id — $dst already exists"
+      continue
+    fi
+    cp "$src" "$dst"
+    ensure_includeif "$id" "$BASE_DIR/$id"
+    success "  Migrated $id"
+  done
+
+  echo
+  warn "  Next steps (manual):"
+  warn "    1. Update ~/.gitconfig (or chezmoi source):"
+  warn "         replace:  [include] path = ~/.gitconfig.local"
+  warn "         with:     [include] path = ~/.gitconfig.d/_index.conf"
+  warn "    2. Verify: $(basename "$0") check"
+  warn "    3. When confident, remove old files:"
+  [[ -f "$old_local" ]] && warn "         rm $old_local"
+  for id in "${legacy_ids[@]}"; do
+    warn "         rm $BASE_DIR/$id/.gitconfig"
+  done
+}
+
+# --- CLI dispatch ---
+case "${1:-}" in
+  -h|--help) usage; exit 0 ;;
+  list)      list_identities; exit 0 ;;
+  check)     ensure_include_interactive; exit $? ;;
+  migrate)   migrate_legacy; exit 0 ;;
+  "")        ;;
+  *)         error "Unknown command: $1"; usage; exit 1 ;;
+esac
+
+# --- Main menu ---
+echo -e "\n${BOLD}Git Identity Manager${RESET}"
+
+while true; do
+  echo -e "${DIM}$(printf '%.0s─' {1..40})${RESET}"
+  echo -e "  ${BOLD}1)${RESET} Create new identity"
+  echo -e "  ${BOLD}2)${RESET} List identities"
+  echo -e "  ${BOLD}3)${RESET} Edit identity"
+  echo -e "  ${BOLD}4)${RESET} Delete identity"
+  echo -e "  ${BOLD}5)${RESET} Check ~/.gitconfig include"
+  echo -e "  ${BOLD}6)${RESET} Migrate legacy layout"
+  echo -e "  ${BOLD}7)${RESET} Exit"
+  echo
+
+  read -p "  Choose [1-7]: " action
+  case "$action" in
+    1) create_identity ;;
+    2) list_identities ;;
+    3) edit_identity ;;
+    4) delete_identity ;;
+    5) ensure_include_interactive ;;
+    6) migrate_legacy ;;
+    7|q|"") break ;;
+    *) error "  Invalid option." ;;
+  esac
+done

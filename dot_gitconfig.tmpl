@@ -1,14 +1,21 @@
 [user]
     email = ctretyak@gmail.com
     name = ctretyak
-[safe]
-    directory = {{ (joinPath .chezmoi.homeDir ".local/share/chezmoi") | replaceAllRegex "\\\\" "/" }}
 [pull]
     rebase = true
+[push]
+    default = simple
+    autoSetupRemote = true
 [fetch]
     prune = true
-[alias]
-    prune-branches = !git remote prune origin && git branch -vv | grep ': gone]' | awk '{print $1}' | xargs git branch -D
+[rebase]
+    autoStash = true
+    autoSquash = true
+[rerere]
+    enabled = true
+[diff]
+    colorMoved = zebra
+    algorithm = histogram
 {{- if eq .chezmoi.os "windows" }}
 [credential]
     helper = wincred
@@ -22,6 +29,5 @@
 [credential]
     helper = /usr/lib/git-core/git-credential-libsecret
 {{- end }}
-
 [include]
-    path = ~/.gitconfig.local
+    path = ~/.gitconfig.d/_index.conf
