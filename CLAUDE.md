@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Chezmoi dotfiles repository. Manages configs across macOS, Linux (Arch, Debian, Fedora), and Windows. Package installation is delegated to Ansible, triggered automatically by chezmoi.
+Chezmoi dotfiles repository. Manages configs across macOS, Linux (Arch, Debian/Ubuntu/Pop!_OS, Fedora), and Windows. Package installation is delegated to Ansible, triggered automatically by chezmoi.
 
 ## Key commands
 
@@ -33,8 +33,9 @@ The ansible trigger script hashes all `dot_ansible/` content — any change re-r
 
 `dot_ansible/tasks/` has one directory per OS/distro. Each has `_main.yml.tmpl` that imports individual task files (one file per app/tool):
 
-- `linux/` — common Linux tasks (git, zsh, tmux, neovim, nvm, claude-code, keepassxc, insync)
-- `arch/`, `debian/`, `fedora/` — distro-specific packages and repos
+- `linux/` — common Linux tasks (git, zsh, tmux, neovim, nvm, claude-code, keepassxc)
+- `arch/`, `debian/`, `fedora/` — distro-specific packages and repos (insync lives here per-distro: AUR on Arch, apt repo on Debian, yum repo on Fedora)
+- `debian/` uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno) since Pop!_OS ships without Snap
 - `darwin/` — macOS apps via Homebrew
 
 Playbook loads tasks in order: distro-specific (`os.idLike`) first, then OS-level (`chezmoi.os`).

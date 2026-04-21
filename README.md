@@ -7,7 +7,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), provisioned v
 | OS | Distros |
 |----|---------|
 | macOS | Homebrew |
-| Linux | Arch, Debian/Ubuntu, Fedora |
+| Linux | Arch, Debian/Ubuntu/Pop!_OS, Fedora |
 | Windows | Chocolatey (minimal) |
 
 ## What's managed
@@ -20,7 +20,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), provisioned v
 
 **macOS-only:** Google Drive, CleanShot, Viscosity, DarkModeBuddy (MacBook)
 
-**Linux-only:** Insync (Google Drive), libsecret (credential storage)
+**Linux-only:** Insync (Google Drive), libsecret (credential storage); Debian uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno)
 
 **Work profile:** Bruno, DBeaver &mdash; enabled via `hosttype: work` in chezmoi config
 
@@ -42,11 +42,10 @@ sudo pacman -S chezmoi --noconfirm
 chezmoi init --apply ctretyak
 ```
 
-### Debian / Ubuntu
+### Debian / Ubuntu / Pop!_OS
 
 ```sh
-sudo snap install chezmoi --classic
-chezmoi init --apply ctretyak
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply ctretyak
 ```
 
 ### Fedora
@@ -82,8 +81,8 @@ chezmoi init --apply
 **Chezmoi scripts** (`.chezmoiscripts/`) bootstrap Ansible per distro, then trigger the playbook.
 
 **Ansible tasks** (`dot_ansible/tasks/`) are organized by OS:
-- `linux/` &mdash; common Linux tasks (zsh, git, tmux, neovim, claude-code, nvm, keepassxc, insync)
-- `arch/`, `debian/`, `fedora/` &mdash; distro-specific packages and repos
+- `linux/` &mdash; common Linux tasks (zsh, git, tmux, neovim, claude-code, nvm, keepassxc)
+- `arch/`, `debian/`, `fedora/` &mdash; distro-specific packages and repos (including insync, which uses different package managers per distro)
 - `darwin/` &mdash; macOS apps via Homebrew
 
 Each directory has `_main.yml.tmpl` that imports individual task files. Work/home conditionals live at `_main.yml` level.
