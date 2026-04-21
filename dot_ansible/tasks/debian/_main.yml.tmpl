@@ -1,14 +1,13 @@
-- import_tasks: fonts.yml
 - import_tasks: docker.yml
 - import_tasks: google-chrome.yml
 - import_tasks: gnupg.yml
-- import_tasks: build-tools.yml
+- import_tasks: flatpak.yml
 - import_tasks: neovim.yml
 - import_tasks: vscode.yml
 - import_tasks: obsidian.yml
 - import_tasks: telegram.yml
-- import_tasks: ticktick.yml
 - import_tasks: spotify.yml
+- import_tasks: insync.yml
 {{ if eq .hosttype "work" }}
 - import_tasks: bruno.yml
 - import_tasks: dbeaver.yml

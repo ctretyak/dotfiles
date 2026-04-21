@@ -1,18 +1,9 @@
-{{ if eq .os.idLike "arch" }}
-
-- name: Install Insync
-  become: true
-  become_user: aur_builder
-  kewlfft.aur.aur:
-    name: insync
-
-{{ else if eq .os.idLike "fedora" }}
-
 - name: Import Insync GPG key
   become: true
   rpm_key:
     key: https://d2t3ff60b2tol4.cloudfront.net/repomd.xml.key
-- name: Create insync.repo for Fedora
+
+- name: Create insync.repo
   become: true
   copy:
     dest: /etc/yum.repos.d/insync.repo
@@ -27,16 +18,9 @@
     owner: root
     group: root
     mode: '0644'
-- name: Install Insync
-  become: true
-  package:
-    name: insync
-
-{{ else if eq .os.idLike "debian" }}
 
 - name: Install Insync
   become: true
   package:
     name: insync
-
-{{ end }}
+    state: present

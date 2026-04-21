@@ -1,4 +1,5 @@
 - name: Install Spotify
-  become: true
-  snap:
-    name: spotify
+  community.general.flatpak:
+    name: com.spotify.Client
+    remote: flathub
+    state: present

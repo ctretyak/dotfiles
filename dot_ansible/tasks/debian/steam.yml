@@ -1,4 +1,5 @@
 - name: Install Steam
   become: true
-  snap:
-    name: steam
+  apt:
+    name: steam-installer
+    state: present

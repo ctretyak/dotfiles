@@ -1,0 +1,27 @@
+- name: Install Neovim and dependencies
+  become: true
+  apt:
+    name:
+      - neovim
+      - fd-find
+      - ripgrep
+      - fzf
+      - wl-clipboard
+    state: present
+
+- name: Get latest lazygit version
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/jesseduffield/lazygit/releases/latest
+    return_content: true
+  register: lazygit_release
+
+- name: Install lazygit
+  become: true
+  ansible.builtin.unarchive:
+    src: "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_{{ lazygit_release.json.tag_name | regex_replace('^v', '') }}_Linux_x86_64.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    include:
+      - lazygit
+    mode: '0755'
+    creates: /usr/local/bin/lazygit

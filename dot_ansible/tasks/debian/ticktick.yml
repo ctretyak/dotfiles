@@ -1,4 +1,0 @@
-- name: Install TickTick
-  become: true
-  snap:
-    name: ticktick

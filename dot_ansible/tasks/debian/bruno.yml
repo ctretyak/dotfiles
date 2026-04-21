@@ -1,4 +1,5 @@
 - name: Install Bruno
-  become: true
-  snap:
-    name: bruno
+  community.general.flatpak:
+    name: com.usebruno.Bruno
+    remote: flathub
+    state: present

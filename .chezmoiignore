@@ -41,8 +41,8 @@ old_*/**
 
 {{ end }}
 
-# Linux only (configs)
-{{ if ne .chezmoi.os "linux" }}
+# Arch-only configs (Chrome/font rendering tuned for Arch)
+{{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "arch")) }}
 
     .config/fontconfig
     .config/chrome-flags.conf

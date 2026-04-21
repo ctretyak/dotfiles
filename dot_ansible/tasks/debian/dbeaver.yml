@@ -1,4 +1,20 @@
+- name: Add DBeaver signing key
+  become: true
+  ansible.builtin.get_url:
+    url: https://dbeaver.io/debs/dbeaver.gpg.key
+    dest: /etc/apt/keyrings/dbeaver.asc
+    mode: '0644'
+
+- name: Add DBeaver repository
+  become: true
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/dbeaver.asc] https://dbeaver.io/debs/dbeaver-ce /"
+    filename: dbeaver
+    state: present
+
 - name: Install DBeaver
   become: true
-  snap:
+  apt:
     name: dbeaver-ce
+    state: present
+    update_cache: true

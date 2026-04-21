@@ -1,0 +1,20 @@
+- name: Add Insync signing key
+  become: true
+  ansible.builtin.get_url:
+    url: https://d2t3ff60b2tol4.cloudfront.net/repomd.xml.key
+    dest: /etc/apt/keyrings/insync.asc
+    mode: '0644'
+
+- name: Add Insync repository
+  become: true
+  ansible.builtin.apt_repository:
+    repo: 'deb [signed-by=/etc/apt/keyrings/insync.asc] http://apt.insync.io/ubuntu noble non-free contrib'
+    filename: insync
+    state: present
+
+- name: Install Insync
+  become: true
+  apt:
+    name: insync
+    state: present
+    update_cache: true
