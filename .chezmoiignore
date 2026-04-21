@@ -45,6 +45,8 @@ old_*/**
 {{ if ne .chezmoi.os "linux" }}
 
     .config/fontconfig
+    .config/chrome-flags.conf
+    .config/environment.d
 
 {{ end }}
 

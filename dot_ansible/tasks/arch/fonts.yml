@@ -9,3 +9,24 @@
   package:
     name: inter-font
     state: present
+
+- name: Install Roboto font
+  become: true
+  package:
+    name: ttf-roboto
+    state: present
+
+- name: Install Noto fonts
+  become: true
+  package:
+    name:
+      - noto-fonts
+      - noto-fonts-cjk
+      - noto-fonts-extra
+    state: present
+
+- name: Install Microsoft core fonts (AUR)
+  become: true
+  become_user: aur_builder
+  kewlfft.aur.aur:
+    name: ttf-ms-fonts
