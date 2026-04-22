@@ -17,3 +17,60 @@
     src: /opt/Telegram/Telegram
     dest: /usr/local/bin/telegram-desktop
     state: link
+
+# Telegram self-installs PNG + symbolic icons on first launch,
+# but no scalable SVG — COSMIC dock needs one at small sizes.
+# breeze-icon-theme ships one we can borrow.
+- name: Install breeze-icon-theme (source of scalable Telegram SVG)
+  become: true
+  ansible.builtin.apt:
+    name: breeze-icon-theme
+    state: present
+
+- name: Ensure user hicolor scalable apps directory exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/share/icons/hicolor/scalable/apps"
+    state: directory
+
+- name: Install scalable Telegram icon from breeze
+  ansible.builtin.copy:
+    src: /usr/share/icons/breeze/apps/48/telegram.svg
+    dest: "{{ lookup('env', 'HOME') }}/.local/share/icons/hicolor/scalable/apps/org.telegram.desktop.svg"
+    remote_src: true
+
+- name: Ensure user applications directory exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/share/applications"
+    state: directory
+
+- name: Install Telegram desktop entry
+  ansible.builtin.copy:
+    dest: "{{ lookup('env', 'HOME') }}/.local/share/applications/org.telegram.desktop.desktop"
+    mode: '0644'
+    content: |
+      [Desktop Entry]
+      Name=Telegram
+      Comment=New era of messaging
+      TryExec=/opt/Telegram/Telegram
+      Exec=/opt/Telegram/Telegram -- %U
+      Icon=org.telegram.desktop
+      Terminal=false
+      StartupWMClass=TelegramDesktop
+      Type=Application
+      Categories=Chat;Network;InstantMessaging;Qt;
+      MimeType=x-scheme-handler/tg;x-scheme-handler/tonsite;
+      Keywords=tg;chat;im;messaging;messenger;sms;tdesktop;
+      Actions=quit;
+      DBusActivatable=true
+      SingleMainWindow=true
+      X-GNOME-UsesNotifications=true
+      X-GNOME-SingleWindow=true
+
+      [Desktop Action quit]
+      Exec=/opt/Telegram/Telegram -quit
+      Name=Quit Telegram
+      Icon=application-exit
+
+- name: Refresh icon cache
+  ansible.builtin.command: gtk-update-icon-cache -f -t {{ lookup('env', 'HOME') }}/.local/share/icons/hicolor
+  changed_when: false
