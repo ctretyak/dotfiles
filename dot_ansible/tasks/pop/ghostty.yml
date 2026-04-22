@@ -1,0 +1,97 @@
+# debian.griffo.io ships ghostty only for pure Debian, not Ubuntu/Pop. We use
+# the community AppImage (pkgforge-dev) instead. Cleanup the old apt repo below
+# in case it was added on a previous run.
+
+- name: Remove obsolete Ghostty apt source
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/debian.griffo.io.list
+    state: absent
+
+- name: Remove obsolete Ghostty apt key
+  become: true
+  ansible.builtin.file:
+    path: /etc/apt/keyrings/debian.griffo.io.asc
+    state: absent
+
+- name: Create Ghostty install directory
+  become: true
+  ansible.builtin.file:
+    path: /opt/ghostty
+    state: directory
+    mode: '0755'
+
+- name: Get latest Ghostty AppImage version
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/pkgforge-dev/ghostty-appimage/releases/latest
+    return_content: true
+  register: ghostty_release
+
+- name: Check installed Ghostty AppImage version
+  ansible.builtin.command: /opt/ghostty/ghostty.AppImage --version
+  register: ghostty_installed
+  failed_when: false
+  changed_when: false
+
+- name: Download Ghostty AppImage
+  become: true
+  ansible.builtin.get_url:
+    url: "https://github.com/pkgforge-dev/ghostty-appimage/releases/download/{{ ghostty_release.json.tag_name }}/Ghostty-{{ ghostty_release.json.tag_name | regex_replace('^v', '') }}-x86_64.AppImage"
+    dest: /opt/ghostty/ghostty.AppImage
+    mode: '0755'
+  when: ghostty_release.json.tag_name | regex_replace('^v', '') not in (ghostty_installed.stdout | default(''))
+
+- name: Symlink ghostty to /usr/local/bin
+  become: true
+  ansible.builtin.file:
+    src: /opt/ghostty/ghostty.AppImage
+    dest: /usr/local/bin/ghostty
+    state: link
+
+- name: Ensure user icon directory exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/share/icons/hicolor/256x256/apps"
+    state: directory
+
+- name: Ensure user applications directory exists
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/share/applications"
+    state: directory
+
+- name: Extract Ghostty AppImage to temp (for icon)
+  ansible.builtin.command: /opt/ghostty/ghostty.AppImage --appimage-extract
+  args:
+    chdir: /tmp
+    creates: /tmp/squashfs-root/AppRun
+
+- name: Install Ghostty icon
+  ansible.builtin.copy:
+    src: /tmp/squashfs-root/com.mitchellh.ghostty.png
+    dest: "{{ lookup('env', 'HOME') }}/.local/share/icons/hicolor/256x256/apps/com.mitchellh.ghostty.png"
+    remote_src: true
+
+- name: Install Ghostty desktop entry
+  ansible.builtin.copy:
+    dest: "{{ lookup('env', 'HOME') }}/.local/share/applications/com.mitchellh.ghostty.desktop"
+    mode: '0644'
+    content: |
+      [Desktop Entry]
+      Name=Ghostty
+      GenericName=Terminal
+      Comment=A fast, feature-rich, and cross-platform terminal emulator
+      Exec=/opt/ghostty/ghostty.AppImage
+      TryExec=/opt/ghostty/ghostty.AppImage
+      Terminal=false
+      Type=Application
+      Icon=com.mitchellh.ghostty
+      Categories=System;TerminalEmulator;
+      StartupWMClass=com.mitchellh.ghostty
+      Keywords=terminal;ghostty;
+
+- name: Refresh icon cache
+  ansible.builtin.command: gtk-update-icon-cache -f -t {{ lookup('env', 'HOME') }}/.local/share/icons/hicolor
+
+- name: Cleanup AppImage extract
+  ansible.builtin.file:
+    path: /tmp/squashfs-root
+    state: absent
