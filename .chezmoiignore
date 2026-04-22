@@ -32,11 +32,11 @@ old_*/**
 
     .ansible/tasks/linux
     .ansible/tasks/arch
-    .ansible/tasks/debian
+    .ansible/tasks/pop
     .ansible/tasks/fedora
     .chezmoiscripts/linux/**
     .chezmoiscripts/linux/arch/**
-    .chezmoiscripts/linux/debian/**
+    .chezmoiscripts/linux/pop/**
     .chezmoiscripts/linux/fedora/**
 
 {{ end }}
@@ -67,9 +67,10 @@ old_*/**
     .chezmoiscripts/linux/arch/**
     .ansible/tasks/arch
 {{ end }}
-{{ if ne .os.idLike "debian" }}
-    .chezmoiscripts/linux/debian/**
-    .ansible/tasks/debian
+{{ if ne .os.idLike "pop" }}
+    .chezmoiscripts/linux/pop/**
+    .ansible/tasks/pop
+    .config/cosmic
 {{ end }}
 {{ if ne .os.idLike "fedora" }}
     .chezmoiscripts/linux/fedora/**

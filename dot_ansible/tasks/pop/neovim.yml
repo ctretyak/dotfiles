@@ -1,0 +1,59 @@
+- name: Install Neovim dependencies
+  become: true
+  apt:
+    name:
+      - fd-find
+      - ripgrep
+      - fzf
+      - wl-clipboard
+    state: present
+
+- name: Remove apt neovim (too old for LazyVim, requires >= 0.11.2)
+  become: true
+  apt:
+    name: neovim
+    state: absent
+
+- name: Get latest Neovim version
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/neovim/neovim/releases/latest
+    return_content: true
+  register: neovim_release
+
+- name: Check installed Neovim version
+  command: /opt/nvim-linux-x86_64/bin/nvim --version
+  register: nvim_installed
+  failed_when: false
+  changed_when: false
+
+- name: Install Neovim from GitHub release
+  become: true
+  ansible.builtin.unarchive:
+    src: "https://github.com/neovim/neovim/releases/download/{{ neovim_release.json.tag_name }}/nvim-linux-x86_64.tar.gz"
+    dest: /opt
+    remote_src: true
+  when: neovim_release.json.tag_name not in (nvim_installed.stdout | default(''))
+
+- name: Symlink nvim to /usr/local/bin
+  become: true
+  ansible.builtin.file:
+    src: /opt/nvim-linux-x86_64/bin/nvim
+    dest: /usr/local/bin/nvim
+    state: link
+
+- name: Get latest lazygit version
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/jesseduffield/lazygit/releases/latest
+    return_content: true
+  register: lazygit_release
+
+- name: Install lazygit
+  become: true
+  ansible.builtin.unarchive:
+    src: "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_{{ lazygit_release.json.tag_name | regex_replace('^v', '') }}_Linux_x86_64.tar.gz"
+    dest: /usr/local/bin
+    remote_src: true
+    include:
+      - lazygit
+    mode: '0755'
+    creates: /usr/local/bin/lazygit

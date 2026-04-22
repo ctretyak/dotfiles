@@ -97,4 +97,4 @@ The `git/setup-git-identities.sh` script manages multiple git identities stored 
 
 `~/.config/chezmoi/chezmoi.yaml` is generated from `.chezmoi.yaml.tmpl` and sets:
 - `hosttype` &mdash; `home` or `work` (controls which apps are installed)
-- `os.id` / `os.idLike` &mdash; detected from `/etc/os-release`
+- `os.idLike` &mdash; normalized distro family: `"pop"` for Pop!_OS, `"arch"` / `"fedora"` otherwise

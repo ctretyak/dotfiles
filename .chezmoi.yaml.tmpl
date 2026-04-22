@@ -1,12 +1,27 @@
 {{- $choices := list "home" "work" -}}
 {{- $hosttype := promptChoice "What type of host are you on" $choices -}}
 
+{{/* Resolve distro family. Prefer the exact ID for Pop!_OS (treated as its own family);
+     otherwise pick the first known ID_LIKE entry. */}}
+{{- $rawId := get .chezmoi.osRelease "id" -}}
+{{- $rawIdLike := or (get .chezmoi.osRelease "idLike") $rawId -}}
+{{- $idLike := $rawIdLike -}}
+{{- if eq $rawId "pop" -}}
+  {{- $idLike = "pop" -}}
+{{- else -}}
+  {{- range (splitList " " $rawIdLike) -}}
+    {{- if or (eq . "arch") (eq . "fedora") -}}
+      {{- $idLike = . -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
 diff:
   exclude:
     - scripts
 
 data:
   os:
-    idLike: {{ or (get .chezmoi.osRelease "idLike") (get .chezmoi.osRelease "id") }}
+    idLike: {{ $idLike }}
   hosttype: {{ $hosttype }}
   wsl: false

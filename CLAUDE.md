@@ -34,8 +34,8 @@ The ansible trigger script hashes all `dot_ansible/` content — any change re-r
 `dot_ansible/tasks/` has one directory per OS/distro. Each has `_main.yml.tmpl` that imports individual task files (one file per app/tool):
 
 - `linux/` — common Linux tasks (git, zsh, tmux, neovim, nvm, claude-code, keepassxc)
-- `arch/`, `debian/`, `fedora/` — distro-specific packages and repos (insync lives here per-distro: AUR on Arch, apt repo on Debian, yum repo on Fedora)
-- `debian/` uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno) since Pop!_OS ships without Snap
+- `arch/`, `pop/`, `fedora/` — distro-specific packages and repos (insync lives here per-distro: AUR on Arch, apt repo on Pop, yum repo on Fedora)
+- `pop/` is Pop!_OS-specific (not generic Debian/Ubuntu): uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno) and targets COSMIC desktop. Fires only when `.os.id == "pop"`
 - `darwin/` — macOS apps via Homebrew
 
 Playbook loads tasks in order: distro-specific (`os.idLike`) first, then OS-level (`chezmoi.os`).
@@ -57,12 +57,12 @@ Playbook loads tasks in order: distro-specific (`os.idLike`) first, then OS-leve
 
 Defined in `.chezmoi.yaml.tmpl`:
 - `.hosttype` — `home` or `work` (prompted on init)
-- `.os.id`, `.os.idLike` — from `/etc/os-release` (arch, debian, fedora)
+- `.os.idLike` — normalized distro family. `"pop"` for Pop!_OS (from `ID`), `"arch"` / `"fedora"` for others (from `ID_LIKE`)
 - `.chezmoi.os` — darwin, linux, windows
 
 ### OS filtering
 
-`.chezmoiignore` excludes irrelevant files per OS and distro. Scripts in `.chezmoiscripts/linux/{arch,debian,fedora}/` are filtered by `.os.idLike`.
+`.chezmoiignore` excludes irrelevant files per OS and distro. Scripts in `.chezmoiscripts/linux/{arch,pop,fedora}/` are filtered by `.os.idLike`.
 
 **When adding new files**, always check if the file is OS-specific and add an exclusion rule to `.chezmoiignore` if needed. Without this, files deploy to all systems (e.g., fontconfig on macOS, aerospace.toml on Linux).
 
