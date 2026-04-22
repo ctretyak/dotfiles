@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Chezmoi dotfiles repository. Manages configs across macOS, Linux (Arch, Debian/Ubuntu/Pop!_OS, Fedora, Fedora Kinoite), and Windows. Package installation is delegated to Ansible, triggered automatically by chezmoi.
+Chezmoi dotfiles repository. Manages configs across macOS, Linux (Arch, Debian/Ubuntu/Pop!_OS, Fedora, Fedora Kinoite, Aurora), and Windows. Package installation is delegated to Ansible, triggered automatically by chezmoi.
 
 ## Key commands
 
@@ -36,11 +36,11 @@ The ansible trigger script hashes all `dot_ansible/` content — any change re-r
 - `linux/` — common Linux tasks (git, zsh, tmux, neovim, nvm, claude-code, keepassxc). **Not loaded on Kinoite** — atomic OS has no `package:` support, Kinoite handles everything in `kinoite/`.
 - `arch/`, `pop/`, `fedora/` — distro-specific packages and repos (insync lives here per-distro: AUR on Arch, apt repo on Pop, yum repo on Fedora)
 - `pop/` is Pop!_OS-specific (not generic Debian/Ubuntu): uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno) and targets COSMIC desktop. Fires only when `.os.id == "pop"`
-- `kinoite/` is Fedora Atomic KDE-specific. Three-layer model:
+- `kinoite/` serves both **Fedora Kinoite** and **Aurora** (ublue-os KDE remix of Kinoite). Aurora is architecturally identical to Kinoite (same rpm-ostree, same KDE, `FROM kinoite` in their Containerfile); the only per-task branch is Claude Code install method. Three-layer model:
   - **Host layer** (`host-packages.yml`): `rpm-ostree install` everything needed for interactive + dev work — shell, tmux, CLI tools (git, ripgrep, fd, fzf, lazygit, wl-clipboard, bc, jq), editor (neovim), dev runtimes (nodejs, npm, python3-pip, gcc, gcc-c++, make). Each new layer requires reboot; task ends play so user reboots once, then re-runs apply. Distrobox was intentionally dropped — wrapper latency and split-PATH confusion weren't worth the `/usr` isolation on a developer workstation.
   - **Flatpak layer** (all `*.yml` except host/claude-code/fonts): every GUI app via Flathub (Telegram, Obsidian, Spotify, TickTick, Chrome, VS Code, Ghostty, KeePassXC, Insync, Bruno, DBeaver, Steam).
-  - **HOME layer** (`claude-code.yml`): official `curl | bash` installers that write into `$HOME` directly (Claude Code → `~/.local/bin/claude`). No layer, no container — HOME is writable on Kinoite. Use this path for vendor installers that respect `$HOME` and carry their own self-update.
-  Fires only when `VARIANT_ID=kinoite` (detected in `.chezmoi.yaml.tmpl`). The `linux/_main.yml` import is skipped on Kinoite because package tasks assume a mutable classic package manager.
+  - **HOME layer** — Claude Code is the only non-rpm/non-flatpak install. On plain Kinoite (`claude-code-curl.yml`) it comes via the official `curl | bash` installer into `~/.local/bin`, self-updating. On Aurora (`claude-code-brew.yml`) it uses the preinstalled Homebrew (`brew install claude-code`) — Aurora ships brew at `/home/linuxbrew/.linuxbrew/` by default. Branch chosen in `_main.yml.tmpl` via `.os.variant`.
+  Aurora-specific differences beyond Claude Code are all preinstalled in the base image (codecs, Flathub filters, brew) — no extra ansible work needed. Fires when `VARIANT_ID=kinoite` or `VARIANT_ID=aurora` (detected in `.chezmoi.yaml.tmpl`, both set `os.idLike=kinoite`). The `linux/_main.yml` import is skipped on both because package tasks assume a mutable classic package manager.
 - `darwin/` — macOS apps via Homebrew
 
 Playbook loads tasks in order: distro-specific (`os.idLike`) first, then OS-level (`chezmoi.os`). Kinoite skips the OS-level import.
@@ -64,8 +64,12 @@ Defined in `.chezmoi.yaml.tmpl`:
 - `.hosttype` — `home` or `work` (prompted on init)
 - `.os.idLike` — normalized distro family.
   - `"pop"` for Pop!_OS (from `ID`)
-  - `"kinoite"` for Fedora Atomic KDE (from `ID=fedora` + `VARIANT_ID=kinoite`)
+  - `"kinoite"` for Fedora Atomic KDE **and** Aurora (both route through `kinoite/` tasks)
   - `"arch"` / `"fedora"` for others (from `ID_LIKE`)
+- `.os.variant` — distinguishes atomic KDE flavors.
+  - `"kinoite"` for plain Fedora Kinoite (`VARIANT_ID=kinoite`)
+  - `"aurora"` for ublue-os Aurora (`VARIANT_ID=aurora`)
+  - empty string on other systems
 - `.chezmoi.os` — darwin, linux, windows
 
 ### OS filtering

@@ -3,17 +3,25 @@
 
 {{/* Resolve distro family.
      - Pop!_OS treated as its own family.
-     - Fedora Atomic variants (Kinoite/Silverblue/...) split from traditional Fedora
-       because rpm-ostree + flatpak + distrobox replaces dnf/package-based tasks.
+     - Fedora Atomic (Kinoite) and Aurora (ublue-os KDE remix of Kinoite) both
+       route through the `kinoite/` task tree — ublue images are FROM kinoite,
+       architecturally identical. The `.os.variant` field distinguishes them
+       for the few tasks that need to branch (e.g. claude-code uses brew on
+       Aurora, curl|bash on plain Kinoite).
      - Otherwise pick the first known ID_LIKE entry. */}}
 {{- $rawId := get .chezmoi.osRelease "id" -}}
 {{- $rawVariant := or (get .chezmoi.osRelease "variantId") "" -}}
 {{- $rawIdLike := or (get .chezmoi.osRelease "idLike") $rawId -}}
 {{- $idLike := $rawIdLike -}}
+{{- $variant := "" -}}
 {{- if eq $rawId "pop" -}}
   {{- $idLike = "pop" -}}
 {{- else if and (eq $rawId "fedora") (eq $rawVariant "kinoite") -}}
   {{- $idLike = "kinoite" -}}
+  {{- $variant = "kinoite" -}}
+{{- else if and (eq $rawId "fedora") (eq $rawVariant "aurora") -}}
+  {{- $idLike = "kinoite" -}}
+  {{- $variant = "aurora" -}}
 {{- else -}}
   {{- range (splitList " " $rawIdLike) -}}
     {{- if or (eq . "arch") (eq . "fedora") -}}
@@ -29,5 +37,6 @@ diff:
 data:
   os:
     idLike: {{ $idLike }}
+    variant: {{ $variant }}
   hosttype: {{ $hosttype }}
   wsl: false

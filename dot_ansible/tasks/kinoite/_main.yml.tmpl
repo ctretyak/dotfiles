@@ -12,7 +12,11 @@
 - import_tasks: flathub.yml
 - import_tasks: host-packages.yml
 - import_tasks: fonts.yml
-- import_tasks: claude-code.yml
+{{ if eq .os.variant "aurora" }}
+- import_tasks: claude-code-brew.yml
+{{ else }}
+- import_tasks: claude-code-curl.yml
+{{ end }}
 
 - import_tasks: ghostty.yml
 - import_tasks: keepassxc.yml
