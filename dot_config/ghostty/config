@@ -11,3 +11,7 @@ cursor-style = block
 cursor-style-blink = false
 
 scrollback-limit = 10000000
+
+# Copy/paste on Russian layout — bind to Cyrillic chars at the physical V/C keys
+keybind = ctrl+shift+м=paste_from_clipboard
+keybind = ctrl+shift+с=copy_to_clipboard
