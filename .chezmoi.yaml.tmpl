@@ -1,13 +1,19 @@
 {{- $choices := list "home" "work" -}}
 {{- $hosttype := promptChoice "What type of host are you on" $choices -}}
 
-{{/* Resolve distro family. Prefer the exact ID for Pop!_OS (treated as its own family);
-     otherwise pick the first known ID_LIKE entry. */}}
+{{/* Resolve distro family.
+     - Pop!_OS treated as its own family.
+     - Fedora Atomic variants (Kinoite/Silverblue/...) split from traditional Fedora
+       because rpm-ostree + flatpak + distrobox replaces dnf/package-based tasks.
+     - Otherwise pick the first known ID_LIKE entry. */}}
 {{- $rawId := get .chezmoi.osRelease "id" -}}
+{{- $rawVariant := or (get .chezmoi.osRelease "variantId") "" -}}
 {{- $rawIdLike := or (get .chezmoi.osRelease "idLike") $rawId -}}
 {{- $idLike := $rawIdLike -}}
 {{- if eq $rawId "pop" -}}
   {{- $idLike = "pop" -}}
+{{- else if and (eq $rawId "fedora") (eq $rawVariant "kinoite") -}}
+  {{- $idLike = "kinoite" -}}
 {{- else -}}
   {{- range (splitList " " $rawIdLike) -}}
     {{- if or (eq . "arch") (eq . "fedora") -}}

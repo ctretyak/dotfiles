@@ -34,10 +34,12 @@ old_*/**
     .ansible/tasks/arch
     .ansible/tasks/pop
     .ansible/tasks/fedora
+    .ansible/tasks/kinoite
     .chezmoiscripts/linux/**
     .chezmoiscripts/linux/arch/**
     .chezmoiscripts/linux/pop/**
     .chezmoiscripts/linux/fedora/**
+    .chezmoiscripts/linux/kinoite/**
 
 {{ end }}
 
@@ -75,6 +77,10 @@ old_*/**
 {{ if ne .os.idLike "fedora" }}
     .chezmoiscripts/linux/fedora/**
     .ansible/tasks/fedora
+{{ end }}
+{{ if ne .os.idLike "kinoite" }}
+    .chezmoiscripts/linux/kinoite/**
+    .ansible/tasks/kinoite
 {{ end }}
 
 {{ end }}

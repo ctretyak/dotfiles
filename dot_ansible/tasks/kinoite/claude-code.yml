@@ -1,0 +1,8 @@
+# Claude Code ships a statically-linked binary via official installer that
+# lands in ~/.local/bin and self-updates. No node, no rpm-ostree layer, no
+# distrobox needed — HOME is writable on Kinoite.
+
+- name: Install Claude Code
+  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/claude"

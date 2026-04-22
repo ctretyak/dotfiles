@@ -1,0 +1,41 @@
+# VS Code via Microsoft's official yum repo, layered through rpm-ostree.
+#
+# Flatpak sandbox breaks VS Code dev workflow in annoying ways:
+# - terminal doesn't inherit host shell environment cleanly
+# - Remote-SSH / Remote-Containers extensions need extra portal wiring
+# - debug adapters struggle with port forwarding
+# - podman/docker from the integrated terminal is extra complicated
+#
+# Microsoft officially supports the RPM repo, so we use that.
+
+- name: Import Microsoft GPG key
+  become: true
+  ansible.builtin.rpm_key:
+    state: present
+    key: https://packages.microsoft.com/keys/microsoft.asc
+
+- name: Add Microsoft VS Code yum repo
+  become: true
+  ansible.builtin.yum_repository:
+    name: vscode
+    description: Visual Studio Code
+    baseurl: https://packages.microsoft.com/yumrepos/vscode
+    gpgcheck: true
+    gpgkey: https://packages.microsoft.com/keys/microsoft.asc
+    enabled: true
+
+- name: Check currently layered packages
+  ansible.builtin.command: rpm-ostree status --json
+  register: ostree_status_vscode
+  changed_when: false
+
+- name: Layer VS Code
+  become: true
+  ansible.builtin.command: rpm-ostree install --idempotent --assumeyes code
+  when: "'code' not in ((ostree_status_vscode.stdout | from_json).deployments[0].packages | default([]))"
+  register: vscode_layer
+
+- name: Notify if VS Code needs a reboot to activate
+  ansible.builtin.debug:
+    msg: "VS Code layered into next deployment. Reboot to activate."
+  when: vscode_layer.changed

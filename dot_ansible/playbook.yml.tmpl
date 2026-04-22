@@ -7,4 +7,10 @@
 {{ if .os.idLike }}
     - import_tasks: tasks/{{ .os.idLike }}/_main.yml
 {{ end }}
+{{/* Kinoite has no package: support (rpm-ostree only) — the linux/_main.yml
+     chain assumes a classic package manager, so skip it. All CLI tools for
+     Kinoite are installed via host-packages.yml (rpm-ostree layered) and
+     distrobox.yml (dev container). */}}
+{{ if ne .os.idLike "kinoite" }}
     - import_tasks: tasks/{{ .chezmoi.os }}/_main.yml
+{{ end }}

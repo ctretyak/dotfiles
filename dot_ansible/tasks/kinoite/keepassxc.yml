@@ -1,0 +1,5 @@
+- name: Install KeePassXC (Flatpak)
+  community.general.flatpak:
+    name: org.keepassxc.KeePassXC
+    remote: flathub
+    state: present

@@ -1,0 +1,5 @@
+- name: Install Google Chrome (Flatpak)
+  community.general.flatpak:
+    name: com.google.Chrome
+    remote: flathub
+    state: present

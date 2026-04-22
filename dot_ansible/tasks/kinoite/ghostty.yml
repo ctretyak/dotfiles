@@ -1,0 +1,5 @@
+- name: Install Ghostty (Flatpak)
+  community.general.flatpak:
+    name: com.mitchellh.ghostty
+    remote: flathub
+    state: present
