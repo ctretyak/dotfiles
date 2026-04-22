@@ -1,30 +1,22 @@
-# Kinoite / Aurora task chain.
+# Fedora Kinoite task chain.
 #
 # Layering model:
-# - Host (rpm-ostree): shell plugins + C/C++ toolchain on Aurora, full dev
-#   stack on Kinoite. Every new layer requires reboot; host-packages stops
-#   the play early if it had to layer something so the user reboots once
-#   and re-runs apply.
-# - Brew (Aurora only): dev CLI — neovim, node, python, ripgrep, fd, fzf,
-#   lazygit, bc, jq, wl-clipboard. Preinstalled brew + ublue's auto-upgrade
-#   timer means we only ensure formulae are present.
+# - Host (rpm-ostree): shell + tmux + CLI tools + editor + dev runtimes.
+#   Every new layer requires reboot; host-packages stops the play early if
+#   it had to layer something so the user reboots once and re-runs apply.
 # - Flatpak: all GUI apps.
-# - HOME installers: vendor scripts that write into $HOME (Claude Code on
-#   plain Kinoite; on Aurora it rides brew alongside the dev stack).
+# - HOME installers: vendor scripts that write into $HOME (Claude Code via
+#   the official curl | bash installer, lands in ~/.local/bin, self-updates).
 #
-# Distrobox was intentionally dropped — see host-packages.yml for reasoning.
+# Aurora (ublue-os KDE remix of Kinoite) has its own tree at tasks/aurora/ —
+# it uses brew for the dev CLI, skips the Flathub remote-add (preconfigured
+# in the base image), and installs Claude Code via brew. Kept separate for
+# explicit visibility even though ~14 Flatpak tasks are identical.
 
 - import_tasks: flathub.yml
 - import_tasks: host-packages.yml
-{{ if eq (or (get .os "variant") "") "aurora" }}
-- import_tasks: brew-packages.yml
-{{ end }}
 - import_tasks: fonts.yml
-{{ if eq (or (get .os "variant") "") "aurora" }}
-- import_tasks: claude-code-brew.yml
-{{ else }}
-- import_tasks: claude-code-curl.yml
-{{ end }}
+- import_tasks: claude-code.yml
 
 - import_tasks: ghostty.yml
 - import_tasks: keepassxc.yml

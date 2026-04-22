@@ -1,0 +1,5 @@
+- name: Install Insync (Flatpak)
+  community.general.flatpak:
+    name: com.insynchq.Insync
+    remote: flathub
+    state: present

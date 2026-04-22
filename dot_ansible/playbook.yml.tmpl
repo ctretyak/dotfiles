@@ -7,10 +7,11 @@
 {{ if .os.idLike }}
     - import_tasks: tasks/{{ .os.idLike }}/_main.yml
 {{ end }}
-{{/* Kinoite has no package: support (rpm-ostree only) — the linux/_main.yml
-     chain assumes a classic package manager, so skip it. All CLI tools for
-     Kinoite are installed via host-packages.yml (rpm-ostree layered) and
-     distrobox.yml (dev container). */}}
-{{ if ne .os.idLike "kinoite" }}
+{{/* Kinoite and Aurora have no package: support (rpm-ostree only) — the
+     linux/_main.yml chain assumes a classic package manager, so skip it.
+     All CLI tools for Kinoite are installed via host-packages.yml (rpm-ostree
+     layered). Aurora's CLI stack is split between rpm-ostree (minimal) and
+     brew (brew-packages.yml). */}}
+{{ if and (ne .os.idLike "kinoite") (ne .os.idLike "aurora") }}
     - import_tasks: tasks/{{ .chezmoi.os }}/_main.yml
 {{ end }}

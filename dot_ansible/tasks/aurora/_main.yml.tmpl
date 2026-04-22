@@ -1,0 +1,39 @@
+# Aurora (ublue-os KDE) task chain.
+#
+# Aurora extends Fedora Kinoite (FROM quay.io/fedora/fedora-kinoite) with
+# codecs, brew, Flathub (with filters), and daily rebuilds. Base image
+# already ships: zsh, tmux, git, gcc, distrobox, podman-docker, ptyxis,
+# fastfetch, htop, glow, gum, just, kate — see build_files/base/01-packages.sh.
+#
+# Install model on Aurora (ublue philosophy: brew + flatpak over rpm-ostree):
+#   - rpm-ostree: only what brew can't cleanly cover (zsh plugins, g++, make)
+#   - brew (preinstalled): dev CLI + Claude Code, self-updates via brew-upgrade.timer
+#   - flatpak: all GUI apps. Flathub remote is preconfigured by the ublue
+#     systemd service flatpak-add-flathub-repos.service — we don't re-add it
+#   - rpm-ostree for VS Code: Microsoft's yum repo, since the Flatpak sandbox
+#     breaks Remote-SSH / Remote-Containers / debug adapters
+
+- import_tasks: host-packages.yml
+- import_tasks: brew-packages.yml
+- import_tasks: fonts.yml
+- import_tasks: claude-code.yml
+
+- import_tasks: ghostty.yml
+- import_tasks: keepassxc.yml
+- import_tasks: google-chrome.yml
+- import_tasks: telegram.yml
+- import_tasks: spotify.yml
+- import_tasks: obsidian.yml
+- import_tasks: ticktick.yml
+- import_tasks: insync.yml
+- import_tasks: vscode.yml
+{{ if eq .hosttype "work" }}
+- import_tasks: bruno.yml
+- import_tasks: dbeaver.yml
+{{ end }}
+{{ if eq .hosttype "home" }}
+- import_tasks: steam.yml
+{{ end }}
+
+- import_tasks: tmux-plugins.yml
+- import_tasks: neovim-plugins.yml

@@ -1,0 +1,5 @@
+- name: Install Telegram Desktop (Flatpak)
+  community.general.flatpak:
+    name: org.telegram.desktop
+    remote: flathub
+    state: present

@@ -20,7 +20,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), provisioned v
 
 **macOS-only:** Google Drive, CleanShot, Viscosity, DarkModeBuddy (MacBook)
 
-**Linux-only:** Insync (Google Drive), libsecret (credential storage); Pop!_OS uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno); Kinoite uses rpm-ostree + Flatpak; Aurora same as Kinoite but Claude Code installed via preinstalled Homebrew
+**Linux-only:** Insync (Google Drive), libsecret (credential storage); Pop!_OS uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno); Kinoite uses rpm-ostree + Flatpak; Aurora uses preinstalled Homebrew for the dev CLI + Claude Code, minimal rpm-ostree layer, and the same Flatpak GUI list
 
 **Work profile:** Bruno, DBeaver &mdash; enabled via `hosttype: work` in chezmoi config
 
@@ -72,7 +72,7 @@ After bootstrap:
 
 ### Aurora (ublue-os KDE)
 
-Image-based KDE remix of Kinoite from [Universal Blue](https://projectbluefin.io/). Inherits Fedora Kinoite base (same rpm-ostree, same KDE) and adds preinstalled codecs, filtered Flathub, Homebrew, and daily rebuilds. Everything in chezmoi routes through the same `tasks/kinoite/` tree — Aurora is detected via `VARIANT_ID=aurora` and only differs in how Claude Code is installed (Homebrew instead of `curl | bash`).
+Image-based KDE remix of Kinoite from [Universal Blue](https://projectbluefin.io/). Inherits Fedora Kinoite base (same rpm-ostree, same KDE, `FROM quay.io/fedora/fedora-kinoite` in their Containerfile) and adds preinstalled codecs, filtered Flathub, Homebrew, and daily rebuilds. Detected via `VARIANT_ID=aurora` (`os.idLike=aurora`) and routed to its own `tasks/aurora/` tree — the Flatpak task files duplicate the Kinoite ones for explicit visibility rather than sharing via conditional imports.
 
 ```sh
 # rpm-ostree install chezmoi  &&  sudo systemctl reboot
@@ -83,10 +83,10 @@ chezmoi apply
 
 After bootstrap (delta vs Kinoite):
 - **Host codecs and Mesa-freeworld**: preinstalled in Aurora image, no manual RPM Fusion override needed (Kinoite requires it for hardware H.264/H.265 decode)
-- **Flathub**: preinstalled with filters, bootstrap skips the remote-add step
-- **Homebrew**: preinstalled at `/home/linuxbrew/.linuxbrew/` with `brew-upgrade.timer` for auto-updates (30min after boot, then every 8h). Dev CLI lives here — `neovim`, `node`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`, `wl-clipboard`; Claude Code via `brew install claude-code`
-- **Host layer shrinks**: rpm-ostree layers only `zsh-syntax-highlighting`, `zsh-autosuggestions`, `gcc`, `gcc-c++`, `make` (everything else moves to brew or was already in the Aurora image — zsh, tmux, git, fastfetch, htop, distrobox, podman-docker, ptyxis)
-- Flatpak app list, VS Code rpm repo, and fonts tasks are identical to Kinoite
+- **Flathub**: preconfigured by Aurora's `flatpak-add-flathub-repos.service` — `aurora/` has no `flathub.yml` task
+- **Homebrew**: preinstalled at `/home/linuxbrew/.linuxbrew/` and chowned to UID 1000 by `brew-setup.service` on first boot; `brew-upgrade.timer` auto-upgrades at boot+30min and every 8h. Dev CLI lives here — `neovim`, `node`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`, `wl-clipboard`; Claude Code via `brew install claude-code`
+- **Host layer shrinks**: rpm-ostree layers only `zsh-syntax-highlighting`, `zsh-autosuggestions`, `gcc-c++`, `make` (everything else moves to brew or was already in the Aurora image — zsh, tmux, git, gcc, fastfetch, htop, distrobox, podman-docker, ptyxis)
+- Flatpak app list, VS Code rpm repo, and fonts tasks mirror Kinoite (duplicated files under `tasks/aurora/`)
 
 Switching between Kinoite and Aurora post-install is a single `bootc switch` command (no reinstall).
 
@@ -117,9 +117,10 @@ chezmoi init --apply
 **Chezmoi scripts** (`.chezmoiscripts/`) bootstrap Ansible per distro, then trigger the playbook.
 
 **Ansible tasks** (`dot_ansible/tasks/`) are organized by OS:
-- `linux/` &mdash; common Linux tasks (zsh, git, tmux, neovim, claude-code, nvm, keepassxc). Skipped on Kinoite/Aurora (no `package:` support).
+- `linux/` &mdash; common Linux tasks (zsh, git, tmux, neovim, claude-code, nvm, keepassxc). Skipped on Kinoite and Aurora (no `package:` support — atomic OS).
 - `arch/`, `pop/`, `fedora/` &mdash; distro-specific packages and repos (including insync, which uses different package managers per distro)
-- `kinoite/` &mdash; serves both Fedora Kinoite and Aurora (same base image architecture). On Kinoite: rpm-ostree for shell + CLI + editor + dev runtimes, Flatpak for GUI. On Aurora: rpm-ostree only for zsh plugins + gcc toolchain, brew for dev CLI (neovim/node/python/ripgrep/fd/fzf/lazygit/bc/jq/wl-clipboard), same Flatpak list. Claude Code installs via `curl | bash` on Kinoite or `brew install` on Aurora. Variant detected in `.chezmoi.yaml.tmpl`, branched in `_main.yml.tmpl` and `host-packages.yml.tmpl`.
+- `kinoite/` &mdash; plain Fedora Kinoite (atomic KDE). rpm-ostree for the full dev stack (shell + CLI + editor + dev runtimes), Flatpak for GUI, Claude Code via `curl | bash` into `$HOME`
+- `aurora/` &mdash; ublue-os Aurora (KDE remix of Kinoite). Kept as a separate tree rather than branching `kinoite/` &mdash; easier to read, worth the duplicated Flatpak tasks. Minimal rpm-ostree layer (just zsh plugins + `gcc-c++` + `make`), dev CLI via preinstalled brew, same Flatpak GUI list, Claude Code via `brew install`. No `flathub.yml` &mdash; Aurora preconfigures Flathub in its image
 - `darwin/` &mdash; macOS apps via Homebrew
 
 Each directory has `_main.yml.tmpl` that imports individual task files. Work/home conditionals live at `_main.yml` level.
@@ -136,9 +137,6 @@ The `git/setup-git-identities.sh` script manages multiple git identities stored 
 - `hosttype` &mdash; `home` or `work` (controls which apps are installed)
 - `os.idLike` &mdash; normalized distro family:
   - `"pop"` for Pop!_OS (from `ID=pop`)
-  - `"kinoite"` for Fedora Atomic KDE **and** Aurora (both are atomic KDE — same task tree)
+  - `"kinoite"` for plain Fedora Kinoite (from `ID=fedora` + `VARIANT_ID=kinoite`)
+  - `"aurora"` for ublue-os Aurora (from `ID=fedora` + `VARIANT_ID=aurora`)
   - `"arch"` / `"fedora"` otherwise (from `ID_LIKE`)
-- `os.variant` &mdash; distinguishes atomic KDE flavors:
-  - `"kinoite"` for plain Fedora Kinoite
-  - `"aurora"` for ublue-os Aurora
-  - empty on other systems

@@ -1,0 +1,5 @@
+- name: Install DBeaver Community (Flatpak)
+  community.general.flatpak:
+    name: io.dbeaver.DBeaverCommunity
+    remote: flathub
+    state: present

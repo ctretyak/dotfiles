@@ -33,18 +33,21 @@ The ansible trigger script hashes all `dot_ansible/` content — any change re-r
 
 `dot_ansible/tasks/` has one directory per OS/distro. Each has `_main.yml.tmpl` that imports individual task files (one file per app/tool):
 
-- `linux/` — common Linux tasks (git, zsh, tmux, neovim, nvm, claude-code, keepassxc). **Not loaded on Kinoite** — atomic OS has no `package:` support, Kinoite handles everything in `kinoite/`.
+- `linux/` — common Linux tasks (git, zsh, tmux, neovim, nvm, claude-code, keepassxc). **Not loaded on Kinoite or Aurora** — atomic OS has no `package:` support, each has its own task tree.
 - `arch/`, `pop/`, `fedora/` — distro-specific packages and repos (insync lives here per-distro: AUR on Arch, apt repo on Pop, yum repo on Fedora)
 - `pop/` is Pop!_OS-specific (not generic Debian/Ubuntu): uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno) and targets COSMIC desktop. Fires only when `.os.id == "pop"`
-- `kinoite/` serves both **Fedora Kinoite** and **Aurora** (ublue-os KDE remix of Kinoite). Aurora is architecturally identical to Kinoite (same rpm-ostree, same KDE, `FROM kinoite` in their Containerfile), so we share the task tree and branch on `.os.variant` only where behavior differs. Layer model:
-  - **Host layer** (`host-packages.yml.tmpl`): `rpm-ostree install`. On Kinoite this is the full dev stack — shell, tmux, CLI tools, neovim, nodejs/npm, python3-pip, gcc toolchain. On Aurora base already ships zsh/tmux/git/distrobox/podman-docker/fastfetch etc., so the layer is reduced to just `zsh-syntax-highlighting`, `zsh-autosuggestions`, `gcc`, `gcc-c++`, `make` — dev CLI moves to brew. Each new layer requires reboot; task ends play so user reboots once and re-runs apply. Distrobox was intentionally dropped on Kinoite (wrapper latency, split-PATH) and kept out of Aurora flow despite being preinstalled.
-  - **Brew layer** (`brew-packages.yml`, Aurora only): dev CLI via preinstalled `/home/linuxbrew/.linuxbrew/` — `neovim`, `node`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`, `wl-clipboard`. ublue's `brew-upgrade.timer` auto-upgrades on boot + every 8h.
-  - **Flatpak layer**: every GUI app via Flathub (Telegram, Obsidian, Spotify, TickTick, Chrome, Ghostty, KeePassXC, Insync, Bruno, DBeaver, Steam). VS Code intentionally stays on rpm-ostree (Microsoft's repo) — the Flatpak sandbox breaks Remote-SSH/Remote-Containers and debug adapters.
-  - **HOME layer** — Claude Code. On plain Kinoite (`claude-code-curl.yml`) via official `curl | bash` into `~/.local/bin`, self-updating. On Aurora (`claude-code-brew.yml`) via preinstalled Homebrew — self-updates ride the same brew timer. Also here: TPM clone + tmux plugin install (`tmux-plugins.yml`), Lazy.nvim sync (`neovim-plugins.yml`). Both run for both variants.
-  Aurora-specific differences beyond those two branch files are all preinstalled in the base image (codecs, Flathub filters, brew, brew-upgrade.timer) — no extra ansible work needed. Fires when `VARIANT_ID=kinoite` or `VARIANT_ID=aurora` (detected in `.chezmoi.yaml.tmpl`, both set `os.idLike=kinoite`). The `linux/_main.yml` import is skipped on both because package tasks assume a mutable classic package manager.
+- `kinoite/` — plain **Fedora Kinoite** (atomic KDE). Three-layer model:
+  - **Host layer** (`host-packages.yml`): full dev stack via `rpm-ostree install` — zsh + plugins, tmux, CLI (git, ripgrep, fd-find, fzf, lazygit, wl-clipboard, bc, jq), editor (neovim), dev runtimes (nodejs, npm, python3-pip, gcc, gcc-c++, make). Each new layer requires reboot; task ends play so user reboots once and re-runs apply. Distrobox was intentionally dropped — wrapper latency and split-PATH confusion weren't worth the `/usr` isolation on a developer workstation.
+  - **Flatpak layer**: every GUI app via Flathub (Telegram, Obsidian, Spotify, TickTick, Chrome, Ghostty, KeePassXC, Insync, Bruno, DBeaver, Steam). Flathub is not preconfigured on plain Kinoite, so `flathub.yml` adds the remote system-wide. VS Code intentionally stays on rpm-ostree (Microsoft's repo) — the Flatpak sandbox breaks Remote-SSH/Remote-Containers and debug adapters.
+  - **HOME layer** — Claude Code via official `curl | bash` into `~/.local/bin`, self-updating (`claude-code.yml`). Plus TPM clone + tmux plugin install (`tmux-plugins.yml`) and Lazy.nvim headless sync (`neovim-plugins.yml`).
+- `aurora/` — **Aurora** (ublue-os KDE remix of Kinoite, `FROM quay.io/fedora/fedora-kinoite`). Architecturally identical to Kinoite but the base image adds codecs, Flathub with filters, brew with an auto-upgrade timer, and daily rebuilds. We keep a separate task tree (with duplicated Flatpak tasks) rather than branching the kinoite tree — explicit over concise. Per-layer differences from kinoite:
+  - **Host layer** (`host-packages.yml`): minimal — only `zsh-syntax-highlighting`, `zsh-autosuggestions`, `gcc-c++`, `make`. Everything else (`zsh`, `tmux`, `git`, `gcc`, `distrobox`, `podman-docker`, `ptyxis`, `fastfetch`, `htop`) ships in the Aurora base image.
+  - **Brew layer** (`brew-packages.yml`): dev CLI via preinstalled `/home/linuxbrew/.linuxbrew/` — `neovim`, `node`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`, `wl-clipboard`. Brew is chowned to UID 1000 by `brew-setup.service` on first boot (no sudo needed); ublue's `brew-upgrade.timer` upgrades all formulae at boot+30min and every 8h.
+  - **Flatpak layer**: same app list as Kinoite, but **no `flathub.yml`** — Aurora's `flatpak-add-flathub-repos.service` adds the remote on first boot, our task would be a redundant idempotent no-op.
+  - **HOME layer** — Claude Code via `brew install claude-code` (`claude-code.yml`), rides the same upgrade timer. Plus the same `tmux-plugins.yml` / `neovim-plugins.yml` as Kinoite.
 - `darwin/` — macOS apps via Homebrew
 
-Playbook loads tasks in order: distro-specific (`os.idLike`) first, then OS-level (`chezmoi.os`). Kinoite skips the OS-level import.
+Playbook loads tasks in order: distro-specific (`os.idLike`) first, then OS-level (`chezmoi.os`). Kinoite and Aurora skip the OS-level `linux/` import (no classic package manager).
 
 ### Conventions
 
@@ -65,17 +68,14 @@ Defined in `.chezmoi.yaml.tmpl`:
 - `.hosttype` — `home` or `work` (prompted on init)
 - `.os.idLike` — normalized distro family.
   - `"pop"` for Pop!_OS (from `ID`)
-  - `"kinoite"` for Fedora Atomic KDE **and** Aurora (both route through `kinoite/` tasks)
+  - `"kinoite"` for plain Fedora Kinoite (from `ID=fedora` + `VARIANT_ID=kinoite`)
+  - `"aurora"` for ublue-os Aurora (from `ID=fedora` + `VARIANT_ID=aurora`)
   - `"arch"` / `"fedora"` for others (from `ID_LIKE`)
-- `.os.variant` — distinguishes atomic KDE flavors.
-  - `"kinoite"` for plain Fedora Kinoite (`VARIANT_ID=kinoite`)
-  - `"aurora"` for ublue-os Aurora (`VARIANT_ID=aurora`)
-  - empty string on other systems
 - `.chezmoi.os` — darwin, linux, windows
 
 ### OS filtering
 
-`.chezmoiignore` excludes irrelevant files per OS and distro. Scripts in `.chezmoiscripts/linux/{arch,pop,fedora,kinoite}/` are filtered by `.os.idLike`.
+`.chezmoiignore` excludes irrelevant files per OS and distro. Scripts in `.chezmoiscripts/linux/{arch,pop,fedora,kinoite,aurora}/` and task trees in `.ansible/tasks/{arch,pop,fedora,kinoite,aurora}/` are filtered by `.os.idLike`.
 
 **When adding new files**, always check if the file is OS-specific and add an exclusion rule to `.chezmoiignore` if needed. Without this, files deploy to all systems (e.g., fontconfig on macOS, aerospace.toml on Linux).
 

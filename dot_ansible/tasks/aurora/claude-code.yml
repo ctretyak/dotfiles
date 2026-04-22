@@ -1,5 +1,6 @@
 # Aurora ships Homebrew preinstalled at /home/linuxbrew/.linuxbrew.
-# Claude Code has an official brew formula that self-updates via brew upgrade.
+# Claude Code has an official brew formula that self-updates via brew upgrade
+# (ublue's brew-upgrade.timer picks this up automatically).
 
 - name: Install Claude Code via Homebrew
   ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/brew install claude-code

@@ -1,14 +1,21 @@
-# Kinoite / Aurora host layer via rpm-ostree.
+# Fedora Kinoite host layer via rpm-ostree.
 #
-# Kinoite: everything dev-related lives on the host — shell, CLI, editor,
-# dev runtimes. No brew in base image, so rpm-ostree is the natural choice.
+# Everything dev-related lives on the host — shell, CLI, editor, dev runtimes.
+# Plain Kinoite has no brew in base, so rpm-ostree is the natural choice.
+# (Aurora — the ublue-os KDE remix — takes a different path: minimal layer
+# plus brew; see tasks/aurora/ for that tree.)
 #
-# Aurora: base image already ships zsh, tmux, git, fastfetch, htop, distrobox,
-# podman-docker, ptyxis, etc. Homebrew is also preinstalled, and ublue's
-# philosophy prefers brew + flatpak over rpm-ostree layering. So the Aurora
-# branch layers only what brew can't cleanly cover:
-#   - zsh plugins (system-sourced from /usr/share/zsh/site-functions)
-#   - C/C++ toolchain (brew's gcc is huge; Fedora gcc is ~80 MB layered)
+# Distrobox was considered for language runtimes but the wrapper latency
+# (~300-500ms per nvim/node invocation), broken /etc editing via sudoedit,
+# and split-PATH "did I launch this from which shell" confusion weren't
+# worth the /usr isolation. This machine is a developer workstation —
+# compilers and node on /usr are normal, not pollution.
+#
+# Groups:
+# - Shell: zsh + plugins, tmux
+# - CLI tools: git, ripgrep, fd-find, fzf, lazygit, wl-clipboard, bc, jq
+# - Editor: neovim (Mason/treesitter will find node/gcc natively)
+# - Dev runtimes: nodejs, npm, python3-pip, gcc, make, gcc-c++
 
 - name: Check currently layered packages
   ansible.builtin.command: rpm-ostree status --json
@@ -18,15 +25,6 @@
 - name: Compute required host layers
   ansible.builtin.set_fact:
     required_layers:
-{{ if eq (or (get .os "variant") "") "aurora" }}
-      # Aurora: minimal layer — defer dev CLI to brew
-      - zsh-syntax-highlighting
-      - zsh-autosuggestions
-      - gcc
-      - gcc-c++
-      - make
-{{ else }}
-      # Kinoite: full stack via rpm-ostree
       # Shell
       - zsh
       - zsh-syntax-highlighting
@@ -49,32 +47,31 @@
       - gcc
       - gcc-c++
       - make
-{{ end }}
 
 - name: Determine missing layers
   ansible.builtin.set_fact:
     missing_layers: >-
-      {{`{{ required_layers
+      {{ required_layers
          | reject('in', (ostree_status.stdout | from_json).deployments[0].packages | default([]))
-         | list }}`}}
+         | list }}
 
 - name: Layer missing host packages via rpm-ostree
   become: true
   ansible.builtin.command: >
-    rpm-ostree install --idempotent --assumeyes {{`{{ missing_layers | join(' ') }}`}}
+    rpm-ostree install --idempotent --assumeyes {{ missing_layers | join(' ') }}
   when: missing_layers | length > 0
   register: rpm_ostree_install
 
 - name: Notify about staged deployment
   ansible.builtin.debug:
     msg: >
-      Host packages layered into the next deployment: {{`{{ missing_layers | join(', ') }}`}}.
+      Host packages layered into the next deployment: {{ missing_layers | join(', ') }}.
       Reboot to activate them. Re-run 'chezmoi apply' after reboot to continue.
   when: missing_layers | length > 0
 
-- name: Set zsh as default shell
+- name: Set zsh as default shell (requires zsh layered first)
   become: true
   ansible.builtin.user:
-    name: "{{`{{ lookup('env', 'USER') }}`}}"
+    name: "{{ lookup('env', 'USER') }}"
     shell: /usr/bin/zsh
   when: missing_layers | length == 0
