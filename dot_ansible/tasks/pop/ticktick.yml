@@ -1,0 +1,5 @@
+- name: Install TickTick
+  community.general.flatpak:
+    name: com.ticktick.TickTick
+    remote: flathub
+    state: present
