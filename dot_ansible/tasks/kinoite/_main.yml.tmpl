@@ -1,18 +1,26 @@
-# Fedora Kinoite task chain.
+# Kinoite / Aurora task chain.
 #
 # Layering model:
-# - Host (rpm-ostree): shell + tmux + CLI tools + editor + dev runtimes.
-#   Every new layer requires reboot; host-packages stops the play early if
-#   it had to layer something so the user reboots once and re-runs apply.
+# - Host (rpm-ostree): shell plugins + C/C++ toolchain on Aurora, full dev
+#   stack on Kinoite. Every new layer requires reboot; host-packages stops
+#   the play early if it had to layer something so the user reboots once
+#   and re-runs apply.
+# - Brew (Aurora only): dev CLI — neovim, node, python, ripgrep, fd, fzf,
+#   lazygit, bc, jq, wl-clipboard. Preinstalled brew + ublue's auto-upgrade
+#   timer means we only ensure formulae are present.
 # - Flatpak: all GUI apps.
-# - HOME installers: vendor scripts that write into $HOME (Claude Code).
+# - HOME installers: vendor scripts that write into $HOME (Claude Code on
+#   plain Kinoite; on Aurora it rides brew alongside the dev stack).
 #
 # Distrobox was intentionally dropped — see host-packages.yml for reasoning.
 
 - import_tasks: flathub.yml
 - import_tasks: host-packages.yml
+{{ if eq (or (get .os "variant") "") "aurora" }}
+- import_tasks: brew-packages.yml
+{{ end }}
 - import_tasks: fonts.yml
-{{ if eq .os.variant "aurora" }}
+{{ if eq (or (get .os "variant") "") "aurora" }}
 - import_tasks: claude-code-brew.yml
 {{ else }}
 - import_tasks: claude-code-curl.yml
@@ -34,3 +42,6 @@
 {{ if eq .hosttype "home" }}
 - import_tasks: steam.yml
 {{ end }}
+
+- import_tasks: tmux-plugins.yml
+- import_tasks: neovim-plugins.yml

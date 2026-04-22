@@ -84,8 +84,9 @@ chezmoi apply
 After bootstrap (delta vs Kinoite):
 - **Host codecs and Mesa-freeworld**: preinstalled in Aurora image, no manual RPM Fusion override needed (Kinoite requires it for hardware H.264/H.265 decode)
 - **Flathub**: preinstalled with filters, bootstrap skips the remote-add step
-- **Homebrew**: preinstalled at `/home/linuxbrew/.linuxbrew/` &mdash; Claude Code and any future `curl | bash` HOME installers should prefer brew on Aurora for self-updates
-- Everything else (rpm-ostree layers, Flatpak app list) is identical to Kinoite
+- **Homebrew**: preinstalled at `/home/linuxbrew/.linuxbrew/` with `brew-upgrade.timer` for auto-updates (30min after boot, then every 8h). Dev CLI lives here — `neovim`, `node`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`, `wl-clipboard`; Claude Code via `brew install claude-code`
+- **Host layer shrinks**: rpm-ostree layers only `zsh-syntax-highlighting`, `zsh-autosuggestions`, `gcc`, `gcc-c++`, `make` (everything else moves to brew or was already in the Aurora image — zsh, tmux, git, fastfetch, htop, distrobox, podman-docker, ptyxis)
+- Flatpak app list, VS Code rpm repo, and fonts tasks are identical to Kinoite
 
 Switching between Kinoite and Aurora post-install is a single `bootc switch` command (no reinstall).
 
@@ -118,7 +119,7 @@ chezmoi init --apply
 **Ansible tasks** (`dot_ansible/tasks/`) are organized by OS:
 - `linux/` &mdash; common Linux tasks (zsh, git, tmux, neovim, claude-code, nvm, keepassxc). Skipped on Kinoite/Aurora (no `package:` support).
 - `arch/`, `pop/`, `fedora/` &mdash; distro-specific packages and repos (including insync, which uses different package managers per distro)
-- `kinoite/` &mdash; serves both Fedora Kinoite and Aurora (same base image architecture): rpm-ostree layering for shell + CLI + editor + dev runtimes, Flatpak for GUI apps. Claude Code installs via `curl | bash` into `$HOME` on Kinoite or `brew install` on Aurora (variant detected in `.chezmoi.yaml.tmpl`).
+- `kinoite/` &mdash; serves both Fedora Kinoite and Aurora (same base image architecture). On Kinoite: rpm-ostree for shell + CLI + editor + dev runtimes, Flatpak for GUI. On Aurora: rpm-ostree only for zsh plugins + gcc toolchain, brew for dev CLI (neovim/node/python/ripgrep/fd/fzf/lazygit/bc/jq/wl-clipboard), same Flatpak list. Claude Code installs via `curl | bash` on Kinoite or `brew install` on Aurora. Variant detected in `.chezmoi.yaml.tmpl`, branched in `_main.yml.tmpl` and `host-packages.yml.tmpl`.
 - `darwin/` &mdash; macOS apps via Homebrew
 
 Each directory has `_main.yml.tmpl` that imports individual task files. Work/home conditionals live at `_main.yml` level.

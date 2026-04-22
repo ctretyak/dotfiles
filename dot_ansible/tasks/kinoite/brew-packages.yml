@@ -1,0 +1,27 @@
+# Aurora ships Homebrew preinstalled at /home/linuxbrew/.linuxbrew.
+# ublue's brew-upgrade.timer handles self-updates (OnBootSec=30min,
+# OnUnitInactiveSec=8h) so we only need to ensure formulae are present.
+#
+# Dev stack via brew (Aurora-preferred over rpm-ostree):
+#   - neovim, node, python@3.12 — editor + runtimes
+#   - ripgrep, fd, fzf, lazygit  — search / git TUI
+#   - bc, jq, wl-clipboard       — shell utilities
+#
+# Compared to Kinoite's rpm-ostree list: gcc/gcc-c++/make stay on rpm-ostree
+# (brew's gcc formula is huge; Fedora gcc is a small, well-integrated layer).
+
+- name: Install dev stack via Homebrew
+  community.general.homebrew:
+    name:
+      - neovim
+      - node
+      - python@3.12
+      - ripgrep
+      - fd
+      - fzf
+      - lazygit
+      - bc
+      - jq
+      - wl-clipboard
+    state: present
+    path: /home/linuxbrew/.linuxbrew/bin
