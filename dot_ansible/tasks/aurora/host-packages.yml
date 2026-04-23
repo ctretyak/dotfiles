@@ -7,8 +7,9 @@
 #   - zsh-syntax-highlighting / zsh-autosuggestions — system-sourced plugins
 #     from /usr/share/zsh/site-functions, fit the system integration better
 #     than brew equivalents
-#   - gcc-c++ (g++) — C++ compiler, not in base; brew's gcc formula is huge
-#   - make — build tool, not in base
+#   - gcc-c++ (g++) — needed by nvim-treesitter to build C++-scanner parsers
+#     (yaml, typescript, tsx, prisma). Base ships gcc but not g++; brew's gcc
+#     formula is huge and mismatches system headers
 #
 # Everything else (neovim, node, python, ripgrep, fd, fzf, lazygit, bc, jq,
 # wl-clipboard) is installed via brew (brew-packages.yml).
@@ -24,7 +25,6 @@
       - zsh-syntax-highlighting
       - zsh-autosuggestions
       - gcc-c++
-      - make
 
 - name: Determine missing layers
   ansible.builtin.set_fact:
