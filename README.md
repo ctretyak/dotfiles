@@ -74,17 +74,19 @@ After bootstrap:
 
 Image-based KDE remix of Kinoite from [Universal Blue](https://projectbluefin.io/). Inherits Fedora Kinoite base (same rpm-ostree, same KDE, `FROM quay.io/fedora/fedora-kinoite` in their Containerfile) and adds preinstalled codecs, filtered Flathub, Homebrew, and daily rebuilds. Detected via `VARIANT_ID=aurora` (`os.idLike=aurora`) and routed to its own `tasks/aurora/` tree — the Flatpak task files duplicate the Kinoite ones for explicit visibility rather than sharing via conditional imports.
 
+Chezmoi itself is installed via the preinstalled Homebrew instead of rpm-ostree — userland install means no bootstrap reboot, and `brew-upgrade.timer` keeps it current automatically.
+
 ```sh
-# rpm-ostree install chezmoi  &&  sudo systemctl reboot
+brew install chezmoi
 chezmoi init --apply ctretyak
-sudo systemctl reboot
+sudo systemctl reboot   # ansible + host-packages layered during bootstrap
 chezmoi apply
 ```
 
 After bootstrap (delta vs Kinoite):
 - **Host codecs and Mesa-freeworld**: preinstalled in Aurora image, no manual RPM Fusion override needed (Kinoite requires it for hardware H.264/H.265 decode)
 - **Flathub**: preconfigured by Aurora's `flatpak-add-flathub-repos.service` — `aurora/` has no `flathub.yml` task
-- **Homebrew**: preinstalled at `/home/linuxbrew/.linuxbrew/` and chowned to UID 1000 by `brew-setup.service` on first boot; `brew-upgrade.timer` auto-upgrades at boot+30min and every 8h. Dev CLI lives here — `neovim`, `node`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`, `wl-clipboard`; Claude Code via `brew install claude-code`
+- **Homebrew**: preinstalled at `/home/linuxbrew/.linuxbrew/` and chowned to UID 1000 by `brew-setup.service` on first boot; `brew-upgrade.timer` auto-upgrades at boot+30min and every 8h. Dev CLI lives here — `neovim`, `node`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`, `wl-clipboard`; Claude Code via `brew install claude-code`; chezmoi itself is installed via brew at bootstrap (rather than rpm-ostree)
 - **Host layer shrinks**: rpm-ostree layers only `zsh-syntax-highlighting`, `zsh-autosuggestions`, `gcc-c++`, `make` (everything else moves to brew or was already in the Aurora image — zsh, tmux, git, gcc, fastfetch, htop, distrobox, podman-docker, ptyxis)
 - Flatpak app list, VS Code rpm repo, and fonts tasks mirror Kinoite (duplicated files under `tasks/aurora/`)
 
