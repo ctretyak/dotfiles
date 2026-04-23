@@ -1,10 +1,15 @@
-# Aurora ships Homebrew preinstalled at /home/linuxbrew/.linuxbrew.
-# Claude Code has an official brew formula that self-updates via brew upgrade
-# (ublue's brew-upgrade.timer picks this up automatically).
+# Claude Code ships a statically-linked binary via official installer that
+# lands in ~/.local/bin and self-updates. Previously installed via brew, but
+# native install avoids brew-upgrade timer conflicts and gives direct control
+# over update timing.
 
-- name: Install Claude Code via Homebrew
-  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/brew install claude-code
+- name: Uninstall Claude Code from Homebrew (migration)
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/brew uninstall claude-code
+  register: brew_uninstall_claude
+  changed_when: brew_uninstall_claude.rc == 0
+  failed_when: false
+
+- name: Install Claude Code
+  ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
   args:
-    creates: /home/linuxbrew/.linuxbrew/bin/claude
-  register: claude_brew
-  changed_when: "'already installed' not in (claude_brew.stderr | default('')) and claude_brew.rc == 0"
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/claude"

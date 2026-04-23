@@ -3,9 +3,12 @@
 # OnUnitInactiveSec=8h) so we only need to ensure formulae are present.
 #
 # Dev stack via brew (Aurora-preferred over rpm-ostree):
-#   - neovim, node, python@3.12 — editor + runtimes
+#   - neovim, python@3.12       — editor + runtime
 #   - ripgrep, fd, fzf, lazygit  — search / git TUI
-#   - bc, jq, wl-clipboard       — shell utilities
+#   - bc, jq                     — shell utilities
+#
+# wl-clipboard is NOT here — Aurora's base image already ships it
+# (/usr/bin/wl-copy, /usr/bin/wl-paste) and Homebrew has no such formula.
 #
 # Compared to Kinoite's rpm-ostree list: gcc/gcc-c++/make stay on rpm-ostree
 # (brew's gcc formula is huge; Fedora gcc is a small, well-integrated layer).
@@ -14,7 +17,6 @@
   community.general.homebrew:
     name:
       - neovim
-      - node
       - python@3.12
       - ripgrep
       - fd
@@ -22,6 +24,5 @@
       - lazygit
       - bc
       - jq
-      - wl-clipboard
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
