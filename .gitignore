@@ -1,0 +1,2 @@
+# Claude Code scheduler runtime state — ephemeral per-session, per-machine.
+.claude/scheduled_tasks.lock
