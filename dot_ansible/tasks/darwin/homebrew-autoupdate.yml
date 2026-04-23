@@ -1,0 +1,13 @@
+- name: Tap domt4/autoupdate
+  community.general.homebrew_tap:
+    name: domt4/autoupdate
+    state: present
+
+- name: Check if brew autoupdate launchd agent is configured
+  ansible.builtin.stat:
+    path: "{{ lookup('env', 'HOME') }}/Library/LaunchAgents/com.github.domt4.homebrew-autoupdate.plist"
+  register: autoupdate_plist
+
+- name: Start brew autoupdate (daily, with upgrade and cleanup, immediate on boot)
+  ansible.builtin.command: /opt/homebrew/bin/brew autoupdate start 86400 --upgrade --cleanup --immediate
+  when: not autoupdate_plist.stat.exists
