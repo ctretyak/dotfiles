@@ -90,3 +90,17 @@ old_*/**
 {{ end }}
 
 {{ end }}
+
+# KDE Plasma only (Kinoite, Aurora)
+{{ if not (and (eq .chezmoi.os "linux") (or (eq .os.idLike "kinoite") (eq .os.idLike "aurora"))) }}
+
+    .config/kwinrulesrc
+
+{{ end }}
+
+# Aurora only (ublue-os MOTD suppression flag)
+{{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "aurora")) }}
+
+    .config/no-show-user-motd
+
+{{ end }}

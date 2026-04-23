@@ -1,0 +1,12 @@
+[General]
+count=1
+rules=eae86e9a-f076-4209-9a68-a0761848b4dd
+
+[eae86e9a-f076-4209-9a68-a0761848b4dd]
+Description=Window settings for ^Meet - [a-z0-9-]+$
+above=true
+aboverule=2
+title=^Meet - [a-z0-9-]+$
+titlematch=3
+wmclass=google-chrome
+wmclassmatch=1

@@ -7,12 +7,21 @@
 # - podman/docker from the integrated terminal is extra complicated
 #
 # Microsoft officially supports the RPM repo, so we use that.
+#
+# We don't import the GPG key via rpm_key: /usr/share/rpm is read-only on
+# rpm-ostree systems, so rpm --import fails. Instead the repo file points
+# at gpgkey=URL and rpm-ostree fetches/trusts it automatically on install.
 
-- name: Import Microsoft GPG key
-  become: true
-  ansible.builtin.rpm_key:
-    state: present
-    key: https://packages.microsoft.com/keys/microsoft.asc
+# Check rpm-ostree state first so a fully installed layer short-circuits
+# both the yum repo add and the install — no sudo prompt on steady-state.
+- name: Check currently layered packages
+  ansible.builtin.command: rpm-ostree status --json
+  register: ostree_status_vscode
+  changed_when: false
+
+- name: Determine whether VS Code is already layered
+  ansible.builtin.set_fact:
+    vscode_layered: "{{ 'code' in ((ostree_status_vscode.stdout | from_json).deployments[0].packages | default([])) }}"
 
 - name: Add Microsoft VS Code yum repo
   become: true
@@ -23,19 +32,15 @@
     gpgcheck: true
     gpgkey: https://packages.microsoft.com/keys/microsoft.asc
     enabled: true
-
-- name: Check currently layered packages
-  ansible.builtin.command: rpm-ostree status --json
-  register: ostree_status_vscode
-  changed_when: false
+  when: not vscode_layered
 
 - name: Layer VS Code
   become: true
   ansible.builtin.command: rpm-ostree install --idempotent --assumeyes code
-  when: "'code' not in ((ostree_status_vscode.stdout | from_json).deployments[0].packages | default([]))"
+  when: not vscode_layered
   register: vscode_layer
 
 - name: Notify if VS Code needs a reboot to activate
   ansible.builtin.debug:
     msg: "VS Code layered into next deployment. Reboot to activate."
-  when: vscode_layer.changed
+  when: vscode_layer is changed

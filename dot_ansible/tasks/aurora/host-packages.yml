@@ -1,8 +1,8 @@
 # Aurora host layer via rpm-ostree — minimal.
 #
 # Aurora's base image already ships zsh, tmux, git (via git-credential-libsecret),
-# gcc, distrobox, podman-docker, ptyxis, fastfetch, htop, glow, gum, just, kate
-# and more. We only layer what's missing and not suitable for brew:
+# gcc, distrobox, podman-docker, ptyxis, fastfetch, htop, glow, gum, just, kate,
+# wl-clipboard and more. We only layer what's missing and not suitable for brew:
 #
 #   - zsh-syntax-highlighting / zsh-autosuggestions — system-sourced plugins
 #     from /usr/share/zsh/site-functions, fit the system integration better
@@ -11,8 +11,8 @@
 #     (yaml, typescript, tsx, prisma). Base ships gcc but not g++; brew's gcc
 #     formula is huge and mismatches system headers
 #
-# Everything else (neovim, node, python, ripgrep, fd, fzf, lazygit, bc, jq,
-# wl-clipboard) is installed via brew (brew-packages.yml).
+# Everything else (neovim, node, python, ripgrep, fd, fzf, lazygit, bc, jq)
+# is installed via brew (brew-packages.yml).
 
 - name: Check currently layered packages
   ansible.builtin.command: rpm-ostree status --json
@@ -47,9 +47,20 @@
       Reboot to activate them. Re-run 'chezmoi apply' after reboot to continue.
   when: missing_layers | length > 0
 
+# Read the current shell first so we only invoke `user:` (which needs sudo)
+# when the shell actually differs. Without this guard, every apply prompts
+# for sudo even on machines where zsh is already the login shell.
+- name: Read current user record
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ lookup('env', 'USER') }}"
+  when: missing_layers | length == 0
+
 - name: Set zsh as default shell
   become: true
   ansible.builtin.user:
     name: "{{ lookup('env', 'USER') }}"
     shell: /usr/bin/zsh
-  when: missing_layers | length == 0
+  when:
+    - missing_layers | length == 0
+    - getent_passwd[lookup('env', 'USER')][5] != '/usr/bin/zsh'

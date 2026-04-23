@@ -1,0 +1,37 @@
+# Ptyxis is Aurora's default GTK4 terminal — ships in the base image.
+# We don't install it, only persist user-level dconf tweaks.
+#
+# The profile UUID '2871e802…' is hardcoded by Aurora in
+# /usr/share/glib-2.0/schemas/zz0-aurora-modifications.gschema.override.
+# Aurora pins it so their own `ujust ptyxis-transparency` and system
+# dconf defaults (palette='Breeze', opacity=0.9) write to a known path.
+# We write to the same UUID for the same reason — don't change it.
+#
+# Why these keys:
+# - font-name: NFM (not NF) so Nerd Font icons render as single-cell width
+#   and p10k / tmux status / eza columns stay aligned
+# - interface-style='system': follow Plasma 6.5 dark/light auto-switch
+#   (Fedora's gschema override hard-defaults this to 'dark')
+# - login-shell=true: zsh reads /etc/profile.d/*, critical on Aurora
+#   where brew's PATH is exported system-wide from there
+# - opacity/palette: personal preference, overrides Aurora defaults
+
+- name: Configure Ptyxis — app-level dconf
+  community.general.dconf:
+    key: "/org/gnome/Ptyxis/{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+  loop:
+    - { key: font-name,       value: "'JetBrainsMono Nerd Font Mono 11'" }
+    - { key: use-system-font, value: "false" }
+    - { key: interface-style, value: "'system'" }
+
+- name: Configure Ptyxis — profile-level dconf
+  community.general.dconf:
+    key: "/org/gnome/Ptyxis/Profiles/2871e8027773ae74d6c87a5f659bbc74/{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+  loop:
+    - { key: login-shell, value: "true" }
+    - { key: opacity,     value: "0.95" }
+    - { key: palette,     value: "'gnome'" }

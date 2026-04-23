@@ -1,5 +1,43 @@
-- name: Install Insync (Flatpak)
-  community.general.flatpak:
-    name: com.insynchq.Insync
-    remote: flathub
-    state: present
+# Insync isn't published on Flathub — upstream distributes only through
+# their own yum/apt repos. On atomic Fedora this means rpm-ostree layering
+# against yum.insync.io, same pattern as vscode.yml.
+#
+# We don't import the GPG key via rpm_key: /usr/share/rpm is read-only on
+# rpm-ostree systems, so rpm --import fails. Instead the repo file points
+# at gpgkey=URL and rpm-ostree fetches/trusts it automatically on install.
+
+# Check the rpm-ostree state first — once Insync is already layered the
+# yum_repository add is also pointless, and skipping it keeps sudo out of
+# the apply loop on every subsequent run.
+- name: Check currently layered packages
+  ansible.builtin.command: rpm-ostree status --json
+  register: ostree_status_insync
+  changed_when: false
+
+- name: Determine whether Insync is already layered
+  ansible.builtin.set_fact:
+    insync_layered: "{{ 'insync' in ((ostree_status_insync.stdout | from_json).deployments[0].packages | default([])) }}"
+
+- name: Add Insync yum repo
+  become: true
+  ansible.builtin.yum_repository:
+    name: insync
+    file: insync
+    description: insync repo
+    baseurl: http://yum.insync.io/fedora/$releasever/
+    gpgcheck: true
+    gpgkey: https://d2t3ff60b2tol4.cloudfront.net/repomd.xml.key
+    enabled: true
+    metadata_expire: 120m
+  when: not insync_layered
+
+- name: Layer Insync
+  become: true
+  ansible.builtin.command: rpm-ostree install --idempotent --assumeyes insync
+  when: not insync_layered
+  register: insync_layer
+
+- name: Notify if Insync needs a reboot to activate
+  ansible.builtin.debug:
+    msg: "Insync layered into next deployment. Reboot to activate."
+  when: insync_layer is changed

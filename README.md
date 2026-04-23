@@ -20,7 +20,7 @@ Personal dotfiles managed with [chezmoi](https://www.chezmoi.io/), provisioned v
 
 **macOS-only:** Google Drive, CleanShot, Viscosity, DarkModeBuddy (MacBook)
 
-**Linux-only:** Insync (Google Drive), libsecret (credential storage); Pop!_OS uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno); Kinoite uses rpm-ostree + Flatpak; Aurora uses preinstalled Homebrew for the dev CLI + Claude Code, minimal rpm-ostree layer, and the same Flatpak GUI list
+**Linux-only:** Insync (Google Drive — rpm-ostree layer from yum.insync.io on Kinoite/Aurora, AUR on Arch, apt repo on Pop, yum repo on classic Fedora), libsecret (credential storage); Pop!_OS uses Flatpak for desktop apps (Obsidian, Telegram, Spotify, Bruno); Kinoite uses rpm-ostree + Flatpak; Aurora uses preinstalled Homebrew for the dev CLI + Claude Code, minimal rpm-ostree layer, and the same Flatpak GUI list
 
 **Work profile:** Bruno, DBeaver &mdash; enabled via `hosttype: work` in chezmoi config
 
@@ -67,7 +67,7 @@ chezmoi apply
 
 After bootstrap:
 - **Host** (rpm-ostree layers): shell (`zsh` + plugins, `tmux`), CLI (`git`, `ripgrep`, `fd-find`, `fzf`, `lazygit`, `wl-clipboard`, `bc`, `jq`), editor (`neovim`), dev runtimes (`nodejs`, `npm`, `python3-pip`, `gcc`, `gcc-c++`, `make`)
-- **Flatpak**: all GUI apps (Chrome, Telegram, Obsidian, Spotify, TickTick, VS Code, KeePassXC, Insync, Ghostty, Steam, Bruno, DBeaver)
+- **Flatpak**: all GUI apps (Chrome, Telegram, Obsidian, Spotify, TickTick, VS Code, KeePassXC, Steam, Bruno, DBeaver)
 - **HOME installers**: Claude Code via official `curl | bash` &mdash; lands in `~/.local/bin/claude`, self-updates
 
 ### Aurora (ublue-os KDE)
