@@ -3,6 +3,14 @@
 
 set -e
 
+# On atomic OSes (Kinoite/Aurora) ansible is layered via rpm-ostree by the
+# bootstrap script but only lands in PATH after reboot. Skip gracefully on
+# first run so chezmoi apply succeeds; the user reboots and re-runs.
+if ! command -v ansible-playbook >/dev/null 2>&1; then
+    echo "ansible-playbook not in PATH — reboot, then re-run 'chezmoi apply'."
+    exit 0
+fi
+
 export ANSIBLE_CONFIG="{{ .chezmoi.homeDir }}/.ansible/ansible.cfg"
 
 {{ if eq .chezmoi.os "darwin" }}

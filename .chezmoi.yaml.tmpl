@@ -15,10 +15,10 @@
 {{- $idLike := $rawIdLike -}}
 {{- if eq $rawId "pop" -}}
   {{- $idLike = "pop" -}}
+{{- else if or (eq $rawId "aurora") (and (eq $rawId "fedora") (eq $rawVariant "aurora")) -}}
+  {{- $idLike = "aurora" -}}
 {{- else if and (eq $rawId "fedora") (eq $rawVariant "kinoite") -}}
   {{- $idLike = "kinoite" -}}
-{{- else if and (eq $rawId "fedora") (eq $rawVariant "aurora") -}}
-  {{- $idLike = "aurora" -}}
 {{- else -}}
   {{- range (splitList " " $rawIdLike) -}}
     {{- if or (eq . "arch") (eq . "fedora") -}}
