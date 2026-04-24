@@ -1,11 +1,15 @@
 #!/bin/bash
 # ansible hash: {{ output "bash" "-c" (printf "find %s/dot_ansible -type f | sort | xargs cat | shasum" .chezmoi.sourceDir) }}
+# ansible-playbook: {{ output "bash" "-c" "command -v ansible-playbook || echo missing" | trim }}
 
 set -e
 
 # On atomic OSes (Kinoite/Aurora) ansible is layered via rpm-ostree by the
 # bootstrap script but only lands in PATH after reboot. Skip gracefully on
-# first run so chezmoi apply succeeds; the user reboots and re-runs.
+# first run so chezmoi apply succeeds; the user reboots and re-runs. The
+# `ansible-playbook:` hash line above flips from `missing` to the resolved
+# path once layering takes effect, changing the script's content hash so
+# chezmoi re-runs it on the post-reboot apply instead of caching the no-op.
 if ! command -v ansible-playbook >/dev/null 2>&1; then
     echo "ansible-playbook not in PATH — reboot, then re-run 'chezmoi apply'."
     exit 0
