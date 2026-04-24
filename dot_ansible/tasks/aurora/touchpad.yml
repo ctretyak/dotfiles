@@ -34,7 +34,7 @@
 
 - name: Enable natural scrolling
   community.general.ini_file:
-    path: "{{ ansible_env.HOME }}/.config/kcminputrc"
+    path: "{{ lookup('env', 'HOME') }}/.config/kcminputrc"
     section: "{{ item }}"
     option: NaturalScroll
     value: "true"
