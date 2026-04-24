@@ -37,6 +37,34 @@ BLUE='\033[0;34m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
+MAGENTA='\033[0;35m'
+
+# Git status for current workspace dir
+cwd=$(echo "$input" | jq -r '.workspace.current_dir // empty')
+git_part=""
+if [ -n "$cwd" ] && git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null \
+    || git -C "$cwd" rev-parse --short HEAD 2>/dev/null)
+
+  dirty=""
+  if [ -n "$(git -C "$cwd" status --porcelain --untracked-files=no --ignore-submodules 2>/dev/null | head -n 1)" ]; then
+    dirty=" ${YELLOW}●${RESET}"
+  fi
+
+  ab=""
+  upstream=$(git -C "$cwd" rev-parse --abbrev-ref '@{u}' 2>/dev/null)
+  if [ -n "$upstream" ]; then
+    counts=$(git -C "$cwd" rev-list --left-right --count "HEAD...$upstream" 2>/dev/null)
+    if [ -n "$counts" ]; then
+      ahead=${counts%%	*}
+      behind=${counts##*	}
+      [ "$ahead" -gt 0 ] 2>/dev/null && ab="${ab}${DIM}↑${ahead}${RESET}"
+      [ "$behind" -gt 0 ] 2>/dev/null && ab="${ab}${DIM}↓${behind}${RESET}"
+    fi
+  fi
+
+  git_part="${MAGENTA}${branch}${RESET}${dirty}${ab}"
+fi
 
 # Format rate limit with projected end-of-period usage
 # Args: used_pct, resets_at (epoch), window_seconds, label
@@ -85,4 +113,5 @@ parts="\033[0;36m${model}\033[0m"
 parts="${parts} · ${ctx_part}"
 [ -n "$rl_5h_fmt" ] && parts="${parts} · ${rl_5h_fmt}"
 [ -n "$rl_7d_fmt" ] && parts="${parts} · ${rl_7d_fmt}"
+[ -n "$git_part" ] && parts="${parts} · ${git_part}"
 printf "%b" "$parts"
