@@ -1,0 +1,44 @@
+# Enable natural (macOS-style) scrolling on every libinput touchpad KWin knows
+# about. kcminputrc stores per-device settings under
+# [Libinput/<vendor>/<product>/<name>] — we query KWin over the session DBus
+# to enumerate devices and filter to touchpads, so this task works on any
+# hardware without baking a vendor/product ID into the repo. Runs after the
+# Plasma session is up (ansible invocation is user-session), so the DBus
+# service is available. Takes effect on next login.
+
+- name: Discover KWin touchpads
+  ansible.builtin.shell: |
+    set -euo pipefail
+    call() {
+      dbus-send --session --print-reply=literal --dest=org.kde.KWin \
+        /org/kde/KWin/InputDevice/"$1" \
+        org.freedesktop.DBus.Properties.Get \
+        string:org.kde.KWin.InputDevice string:"$2"
+    }
+    devices=$(dbus-send --session --print-reply=literal --dest=org.kde.KWin \
+      /org/kde/KWin/InputDevice \
+      org.freedesktop.DBus.Properties.Get \
+      string:org.kde.KWin.InputDeviceManager string:devicesSysNames \
+      | grep -oE 'event[0-9]+')
+    for ev in $devices; do
+      is_tp=$(call "$ev" touchpad | awk '/boolean/ {print $NF}')
+      [ "$is_tp" = "true" ] || continue
+      vendor=$(call "$ev" vendor   | awk '/uint32/ {print $NF}')
+      product=$(call "$ev" product | awk '/uint32/ {print $NF}')
+      name=$(call "$ev" name       | sed -n 's/.*string "\(.*\)".*/\1/p')
+      printf 'Libinput/%s/%s/%s\n' "$vendor" "$product" "$name"
+    done
+  register: kwin_touchpads
+  changed_when: false
+  check_mode: false
+
+- name: Enable natural scrolling
+  community.general.ini_file:
+    path: "{{ ansible_env.HOME }}/.config/kcminputrc"
+    section: "{{ item }}"
+    option: NaturalScroll
+    value: "true"
+    no_extra_spaces: true
+    mode: "0644"
+    create: true
+  loop: "{{ kwin_touchpads.stdout_lines }}"
