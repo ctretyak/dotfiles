@@ -27,7 +27,7 @@
     helper = osxkeychain
 {{- else if eq .chezmoi.os "linux" }}
 [credential]
-    helper = /usr/lib/git-core/git-credential-libsecret
+    helper = libsecret
 {{- end }}
 [include]
     path = ~/.gitconfig.d/_index.conf
