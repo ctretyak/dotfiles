@@ -8,12 +8,14 @@ setw -g mode-keys vi
 bind -T copy-mode-vi v     send-keys -X begin-selection
 bind -T copy-mode-vi C-v   send-keys -X rectangle-toggle
 bind -T copy-mode-vi V     send-keys -X select-line
-bind -T copy-mode-vi y     send-keys -X copy-pipe-and-cancel
-bind -T copy-mode-vi Y     send-keys -X copy-pipe-end-of-line-and-cancel
+bind -T copy-mode-vi y     send-keys -X copy-pipe
+bind -T copy-mode-vi Y     send-keys -X copy-pipe-end-of-line
 {{ if eq .chezmoi.os "linux" }}
 set -s copy-command 'wl-copy'
-bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel
+{{ else if eq .chezmoi.os "darwin" }}
+set -s copy-command 'pbcopy'
 {{ end }}
+bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-no-clear
 set -g base-index 1
 setw -g pane-base-index 1
 set -g renumber-windows on
