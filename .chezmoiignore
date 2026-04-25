@@ -95,6 +95,8 @@ old_*/**
 {{ if not (and (eq .chezmoi.os "linux") (or (eq .os.idLike "kinoite") (eq .os.idLike "aurora"))) }}
 
     .config/kwinrulesrc
+    .config/kxkbrc
+    .config/plasmarc
 
 {{ end }}
 
