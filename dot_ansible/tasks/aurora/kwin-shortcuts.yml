@@ -1,4 +1,4 @@
-- name: Configure KWin (Alt+Tab across all desktops, 6 virtual desktops)
+- name: kwin-shortcuts | Configure KWin (Alt+Tab across all desktops, 6 virtual desktops)
   community.general.ini_file:
     path: "{{ lookup('env', 'HOME') }}/.config/kwinrc"
     section: "{{ item.section }}"
@@ -13,7 +13,7 @@
     - { section: Desktops, option: Rows,        value: "1" }
   register: kwinrc_changed
 
-- name: Configure KWin global shortcuts (vim hjkl + Meta+1..9)
+- name: kwin-shortcuts | Configure KWin global shortcuts (Meta+1..9 desktops)
   community.general.ini_file:
     path: "{{ lookup('env', 'HOME') }}/.config/kglobalshortcutsrc"
     section: kwin
@@ -25,14 +25,6 @@
   loop: "{{ kwin_shortcuts | dict2items }}"
   vars:
     kwin_shortcuts:
-      "Switch Window Left":     "Meta+H,Meta+Alt+Left,Switch to Window to the Left"
-      "Switch Window Down":     "Meta+J,Meta+Alt+Down,Switch to Window Below"
-      "Switch Window Up":       "Meta+K,Meta+Alt+Up,Switch to Window Above"
-      "Switch Window Right":    "Meta+L,Meta+Alt+Right,Switch to Window to the Right"
-      "Window Quick Tile Left":   "Meta+Shift+H,Meta+Left,Quick Tile Window to the Left"
-      "Window Quick Tile Bottom": "Meta+Shift+J,Meta+Down,Quick Tile Window to the Bottom"
-      "Window Quick Tile Top":    "Meta+Shift+K,Meta+Up,Quick Tile Window to the Top"
-      "Window Quick Tile Right":  "Meta+Shift+L,Meta+Right,Quick Tile Window to the Right"
       "Switch to Desktop 1": "Meta+1,Ctrl+F1,Switch to Desktop 1"
       "Switch to Desktop 2": "Meta+2,Ctrl+F2,Switch to Desktop 2"
       "Switch to Desktop 3": "Meta+3,Ctrl+F3,Switch to Desktop 3"
@@ -53,7 +45,7 @@
       "Window to Desktop 9": "Meta+Shift+9,,Window to Desktop 9"
   register: kwin_shortcuts_changed
 
-- name: Free Meta+1..9 from plasmashell taskbar entries
+- name: kwin-shortcuts | Free Meta+1..9 from plasmashell taskbar entries
   community.general.ini_file:
     path: "{{ lookup('env', 'HOME') }}/.config/kglobalshortcutsrc"
     section: plasmashell
@@ -65,12 +57,22 @@
   loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
   register: plasmashell_shortcuts_changed
 
-- name: Reload KWin
+# kwinrc is reread at runtime via D-Bus reconfigure (covers TabBox + Desktops).
+# kglobalshortcutsrc is NOT — KGlobalAccel components register their actions
+# via doRegister at session startup only. KDE Plasma 6 exposes no D-Bus method
+# to reload kglobalshortcutsrc; restarting plasma-kglobalaccel.service leaves
+# it dead (Type=dbus, no client trigger after restart). The only reliable
+# activation path is a Plasma session relogin.
+- name: kwin-shortcuts | Reload KWin runtime config (kwinrc)
   ansible.builtin.command: dbus-send --session --type=method_call --dest=org.kde.KWin /KWin org.kde.KWin.reconfigure
-  when: kwinrc_changed is changed or kwin_shortcuts_changed is changed
+  when: kwinrc_changed is changed
   changed_when: false
 
-- name: Restart KDE global shortcuts daemon
-  ansible.builtin.command: systemctl --user restart plasma-kglobalaccel.service
+- name: kwin-shortcuts | Notify about relogin requirement for shortcut changes
+  ansible.builtin.debug:
+    msg: |
+      Global shortcuts (kglobalshortcutsrc) were updated. KDE Plasma 6 has no
+      runtime reload — log out of the Plasma session and back in to activate
+      the new bindings. Both the kwin Meta+1..9 desktop bindings and the
+      plasmashell rebinds that free those keys need this.
   when: kwin_shortcuts_changed is changed or plasmashell_shortcuts_changed is changed
-  changed_when: false

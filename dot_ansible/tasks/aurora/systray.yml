@@ -1,4 +1,4 @@
-- name: Find system tray applet group
+- name: systray | Find system tray applet group
   ansible.builtin.shell: |
     set -euo pipefail
     awk '
@@ -13,7 +13,7 @@
   check_mode: false
   failed_when: systray_group.stdout == ""
 
-- name: Hide items from system tray
+- name: systray | Hide items from system tray
   community.general.ini_file:
     path: "{{ lookup('env', 'HOME') }}/.config/plasma-org.kde.plasma.desktop-appletsrc"
     section: "{{ systray_group.stdout }}"

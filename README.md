@@ -74,20 +74,25 @@ After bootstrap:
 
 Image-based KDE remix of Kinoite from [Universal Blue](https://projectbluefin.io/). Inherits Fedora Kinoite base (same rpm-ostree, same KDE, `FROM quay.io/fedora/fedora-kinoite` in their Containerfile) and adds preinstalled codecs, filtered Flathub, Homebrew, and daily rebuilds. Detected via `VARIANT_ID=aurora` (`os.idLike=aurora`) and routed to its own `tasks/aurora/` tree — the Flatpak task files duplicate the Kinoite ones for explicit visibility rather than sharing via conditional imports.
 
-Chezmoi itself is installed via the preinstalled Homebrew instead of rpm-ostree — userland install means no bootstrap reboot, and `brew-upgrade.timer` keeps it current automatically.
+Chezmoi itself is installed via the preinstalled Homebrew instead of rpm-ostree — userland install means no bootstrap reboot. Updates (system + flatpak + brew) are driven by ublue's `uupd.timer`, so we don't manage brew upgrades from chezmoi.
+
+The provision needs two reboots: one to activate the layered `ansible` package, then one to activate everything else the playbook layers in (host packages, VS Code, Insync). The actual chezmoi/ansible work happens on the second `chezmoi apply`.
 
 ```sh
 brew install chezmoi
 chezmoi init --apply ctretyak
-sudo systemctl reboot   # ansible + host-packages layered during bootstrap
-chezmoi apply
+sudo systemctl reboot   # 1st reboot: ansible layered during bootstrap
+chezmoi apply           # 2nd apply: layers host packages + VS Code + Insync,
+                        #            installs brew formulae, Flatpaks, configs
+sudo systemctl reboot   # 2nd reboot: activates the layered rpm-ostree slice
 ```
 
 After bootstrap (delta vs Kinoite):
 - **Host codecs and Mesa-freeworld**: preinstalled in Aurora image, no manual RPM Fusion override needed (Kinoite requires it for hardware H.264/H.265 decode)
-- **Flathub**: preconfigured by Aurora's `flatpak-add-flathub-repos.service` — `aurora/` has no `flathub.yml` task
-- **Homebrew**: preinstalled at `/home/linuxbrew/.linuxbrew/` and chowned to UID 1000 by `brew-setup.service` on first boot; `brew-upgrade.timer` auto-upgrades at boot+30min and every 8h. Dev CLI lives here — `neovim`, `node`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`, `wl-clipboard`; Claude Code via `brew install claude-code`; chezmoi itself is installed via brew at bootstrap (rather than rpm-ostree)
-- **Host layer shrinks**: rpm-ostree layers only `zsh-syntax-highlighting`, `zsh-autosuggestions`, `gcc-c++`, `make` (everything else moves to brew or was already in the Aurora image — zsh, tmux, git, gcc, fastfetch, htop, distrobox, podman-docker, ptyxis)
+- **Flathub**: preconfigured two ways — a static `/etc/flatpak/remotes.d/flathub.flatpakrepo` ships in the image, and ublue's `flatpak-add-flathub-repos.service` adds the remote one-shot at first boot. `aurora/` has no `flathub.yml` task
+- **Updates**: handled end-to-end by `uupd.timer` (Universal blue update daemon) — supplants `rpm-ostreed-automatic.timer`, `flatpak-system-update.timer`, and `brew-upgrade.timer` (the brew-upgrade unit isn't shipped on Aurora; uupd shells `brew upgrade` itself)
+- **Homebrew**: preinstalled at `/home/linuxbrew/.linuxbrew/` and chowned to UID 1000 by `brew-setup.service` on first boot. Dev CLI lives here — `neovim`, `python@3.12`, `ripgrep`, `fd`, `fzf`, `lazygit`, `bc`, `jq`. Node moved to NVM (per-project versions), Claude Code to the official `curl | bash` installer in `~/.local/bin`. chezmoi itself is bootstrapped via brew rather than rpm-ostree
+- **Host layer shrinks**: rpm-ostree layers only `zsh-syntax-highlighting`, `zsh-autosuggestions`, `gcc-c++` (the latter for nvim-treesitter's C++ scanners). Everything else moves to brew or already ships in the Aurora image (zsh, tmux, git, gcc, fastfetch, htop, distrobox, podman-docker, ptyxis, wl-clipboard)
 - Flatpak app list, VS Code rpm repo, and fonts tasks mirror Kinoite (duplicated files under `tasks/aurora/`)
 
 Switching between Kinoite and Aurora post-install is a single `bootc switch` command (no reinstall).

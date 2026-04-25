@@ -4,5 +4,6 @@ LayoutList=us,ru
 Model=pc104
 Options=grp:ctrl_space_toggle
 ResetOldOptions=true
+SwitchMode=WinClass
 Use=true
 VariantList=,

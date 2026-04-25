@@ -1,0 +1,31 @@
+# Aurora's default panel includes the org.kde.plasma.pager applet (virtual
+# desktops thumbnail). With Meta+1..9 wired in kwin-shortcuts.yml the visual
+# pager is redundant.
+#
+# Direct edits to plasma-org.kde.plasma.desktop-appletsrc are unsafe:
+# plasmashell holds the file in memory and rewrites it on quit, undoing
+# the changes. The supported KDE path is plasmashell scripting via
+# qdbus-qt6 evaluateScript — the change applies live and persists to disk.
+
+- name: pager | Detect pager applet in panel config
+  ansible.builtin.command:
+    cmd: grep -q '^plugin=org\.kde\.plasma\.pager$' {{ lookup('env', 'HOME') }}/.config/plasma-org.kde.plasma.desktop-appletsrc
+  register: pager_present
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: pager | Remove pager widget from all panels
+  ansible.builtin.command:
+    argv:
+      - qdbus-qt6
+      - org.kde.plasmashell
+      - /PlasmaShell
+      - org.kde.PlasmaShell.evaluateScript
+      - >-
+        var ps = panels();
+        for (var i = 0; i < ps.length; i++) {
+          var ws = ps[i].widgets("org.kde.plasma.pager");
+          for (var j = 0; j < ws.length; j++) ws[j].remove();
+        }
+  when: pager_present.rc == 0

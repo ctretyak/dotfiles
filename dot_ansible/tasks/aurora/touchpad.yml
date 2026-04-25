@@ -1,12 +1,19 @@
 # Enable natural (macOS-style) scrolling on every libinput touchpad KWin knows
-# about. kcminputrc stores per-device settings under
-# [Libinput/<vendor>/<product>/<name>] — we query KWin over the session DBus
-# to enumerate devices and filter to touchpads, so this task works on any
-# hardware without baking a vendor/product ID into the repo. Runs after the
-# Plasma session is up (ansible invocation is user-session), so the DBus
-# service is available. Takes effect on next login.
+# about. We query KWin over session D-Bus to enumerate devices and filter to
+# touchpads, so this task works on any hardware without baking a vendor/product
+# ID into the repo. Runs in the user session, so the D-Bus service is available.
+#
+# Persistence: kcminputrc stores per-device settings under nested groups
+# [Libinput][<vendor>][<product>][<name>] (Plasma 6 format — Plasma 5 used
+# the flat [Libinput/<v>/<p>/<n>] form, which Plasma 6 ignores). We pass the
+# section literally as `Libinput][v][p][name` so community.general.ini_file
+# wraps it into the expected nested-group header.
+#
+# Runtime apply: kcminputrc is read by KWin only at session start. To make the
+# change visible in the current session we also push naturalScroll over D-Bus
+# to each touchpad's InputDevice — KWin treats that as the live source of truth.
 
-- name: Discover KWin touchpads
+- name: touchpad | Discover KWin touchpads
   ansible.builtin.shell: |
     set -euo pipefail
     call() {
@@ -26,19 +33,27 @@
       vendor=$(call "$ev" vendor   | awk '/uint32/ {print $NF}')
       product=$(call "$ev" product | awk '/uint32/ {print $NF}')
       name=$(call "$ev" name       | sed -n 's/^[[:space:]]*variant[[:space:]]*//p')
-      printf 'Libinput/%s/%s/%s\n' "$vendor" "$product" "$name"
+      printf '%s;Libinput][%s][%s][%s\n' "$ev" "$vendor" "$product" "$name"
     done
   register: kwin_touchpads
   changed_when: false
   check_mode: false
 
-- name: Enable natural scrolling
+- name: touchpad | Persist natural scrolling in kcminputrc
   community.general.ini_file:
     path: "{{ lookup('env', 'HOME') }}/.config/kcminputrc"
-    section: "{{ item }}"
+    section: "{{ item.split(';')[1] }}"
     option: NaturalScroll
     value: "true"
     no_extra_spaces: true
     mode: "0644"
     create: true
   loop: "{{ kwin_touchpads.stdout_lines }}"
+
+- name: touchpad | Apply natural scrolling at runtime via D-Bus
+  ansible.builtin.command: >-
+    busctl --user set-property org.kde.KWin
+    /org/kde/KWin/InputDevice/{{ item.split(';')[0] }}
+    org.kde.KWin.InputDevice naturalScroll b true
+  loop: "{{ kwin_touchpads.stdout_lines }}"
+  changed_when: false

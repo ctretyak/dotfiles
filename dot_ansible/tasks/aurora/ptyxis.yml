@@ -16,7 +16,7 @@
 #   where brew's PATH is exported system-wide from there
 # - opacity/palette: personal preference, overrides Aurora defaults
 
-- name: Configure Ptyxis — app-level dconf
+- name: ptyxis | Configure Ptyxis — app-level dconf
   community.general.dconf:
     key: "/org/gnome/Ptyxis/{{ item.key }}"
     value: "{{ item.value }}"
@@ -26,7 +26,7 @@
     - { key: use-system-font, value: "false" }
     - { key: interface-style, value: "'system'" }
 
-- name: Configure Ptyxis — profile-level dconf
+- name: ptyxis | Configure Ptyxis — profile-level dconf
   community.general.dconf:
     key: "/org/gnome/Ptyxis/Profiles/2871e8027773ae74d6c87a5f659bbc74/{{ item.key }}"
     value: "{{ item.value }}"

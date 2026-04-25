@@ -14,53 +14,53 @@
 # Everything else (neovim, node, python, ripgrep, fd, fzf, lazygit, bc, jq)
 # is installed via brew (brew-packages.yml).
 
-- name: Check currently layered packages
+- name: host-packages | Check currently layered packages
   ansible.builtin.command: rpm-ostree status --json
   register: ostree_status
   changed_when: false
 
-- name: Compute required host layers
+- name: host-packages | Compute required host layers
   ansible.builtin.set_fact:
     required_layers:
       - zsh-syntax-highlighting
       - zsh-autosuggestions
       - gcc-c++
 
-- name: Determine missing layers
+- name: host-packages | Determine missing layers
   ansible.builtin.set_fact:
     missing_layers: >-
       {{ required_layers
          | reject('in', (ostree_status.stdout | from_json).deployments[0].packages | default([]))
          | list }}
 
-- name: Layer missing host packages via rpm-ostree
+- name: host-packages | Layer missing host packages via rpm-ostree
   become: true
   ansible.builtin.command: >
     rpm-ostree install --idempotent --assumeyes {{ missing_layers | join(' ') }}
   when: missing_layers | length > 0
   register: rpm_ostree_install
 
-- name: Notify about staged deployment
+- name: host-packages | Notify about staged deployment
   ansible.builtin.debug:
     msg: >
       Host packages layered into the next deployment: {{ missing_layers | join(', ') }}.
-      Reboot to activate them. Re-run 'chezmoi apply' after reboot to continue.
+      The play continues — brew, flatpaks, and configs will install on the
+      currently booted deployment. After this apply finishes, reboot once
+      to activate the rpm-ostree layers (and any other layered tasks below
+      such as Insync and VS Code).
   when: missing_layers | length > 0
 
-# Read the current shell first so we only invoke `user:` (which needs sudo)
-# when the shell actually differs. Without this guard, every apply prompts
-# for sudo even on machines where zsh is already the login shell.
-- name: Read current user record
+# zsh ships in Aurora's base image (/usr/bin/zsh exists from day one), so
+# changing the login shell does NOT depend on missing_layers. Read first
+# to avoid a sudo prompt on every apply when the shell already matches.
+- name: host-packages | Read current user record
   ansible.builtin.getent:
     database: passwd
     key: "{{ lookup('env', 'USER') }}"
-  when: missing_layers | length == 0
 
-- name: Set zsh as default shell
+- name: host-packages | Set zsh as default shell
   become: true
   ansible.builtin.user:
     name: "{{ lookup('env', 'USER') }}"
     shell: /usr/bin/zsh
-  when:
-    - missing_layers | length == 0
-    - getent_passwd[lookup('env', 'USER')][5] != '/usr/bin/zsh'
+  when: getent_passwd[lookup('env', 'USER')][5] != '/usr/bin/zsh'

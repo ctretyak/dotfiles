@@ -1,4 +1,4 @@
-- name: Install Steam (Flatpak)
+- name: steam | Install Steam (Flatpak)
   community.general.flatpak:
     name: com.valvesoftware.Steam
     remote: flathub

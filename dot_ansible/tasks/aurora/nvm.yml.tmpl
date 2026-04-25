@@ -1,9 +1,9 @@
-- name: Install NVM
+- name: nvm | Install NVM
   shell: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash
   args:
     creates: "{{ .chezmoi.homeDir }}/.nvm/nvm.sh"
 
-- name: Install Node LTS
+- name: nvm | Install Node LTS
   shell: |
     export NVM_DIR="$HOME/.nvm"
     . "$NVM_DIR/nvm.sh"

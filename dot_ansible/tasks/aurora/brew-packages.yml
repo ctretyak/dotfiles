@@ -1,6 +1,9 @@
-# Aurora ships Homebrew preinstalled at /home/linuxbrew/.linuxbrew.
-# ublue's brew-upgrade.timer handles self-updates (OnBootSec=30min,
-# OnUnitInactiveSec=8h) so we only need to ensure formulae are present.
+# Aurora ships Homebrew preinstalled at /home/linuxbrew/.linuxbrew with
+# /etc/profile.d/brew.sh adding it to interactive PATH. Updates run via
+# `uupd.timer` (Universal blue update daemon) which on Aurora supplants
+# rpm-ostreed-automatic / flatpak-system-update / brew-upgrade.timer and
+# itself shells `brew upgrade` at the end — so we don't enable any brew
+# timers ourselves.
 #
 # Dev stack via brew (Aurora-preferred over rpm-ostree):
 #   - neovim, python@3.12       — editor + runtime
@@ -12,8 +15,15 @@
 #
 # Compared to Kinoite's rpm-ostree list: gcc/gcc-c++/make stay on rpm-ostree
 # (brew's gcc formula is huge; Fedora gcc is a small, well-integrated layer).
+#
+# First provision takes 5–15 min while bottles for python@3.12 and neovim
+# (perl, openssl, sqlite, mpdecimal, luajit, libuv, tree-sitter, …) install.
+# Ansible buffers stdout — no live progress shown — so the task line will
+# stay quiet until brew returns. This is an architectural limitation of
+# ansible's connection layer (Popen + communicate), not a bug. Steady-state
+# runs are fast (one `brew info` check, no network).
 
-- name: Install dev stack via Homebrew
+- name: brew-packages | Install dev stack via Homebrew
   community.general.homebrew:
     name:
       - neovim

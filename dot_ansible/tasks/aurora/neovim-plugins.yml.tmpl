@@ -1,9 +1,12 @@
 # Headless Lazy.nvim sync. Idempotent via creates-check.
-# Neovim binary: rpm-ostree on Kinoite, brew on Aurora.
-# On Aurora the brew shim is in /home/linuxbrew/.linuxbrew/bin which is
-# expected to be in PATH via Aurora's /etc/zsh/zshrc brew shellenv init.
+#
+# Absolute brew path: /etc/profile.d/brew.sh exports the brew prefix only
+# in interactive shells (`$- == *i*`), and ansible's command module spawns
+# a non-interactive subprocess. Relying on PATH inheritance from the user
+# shell that launched chezmoi works only by accident — pinning the path
+# is the contract.
 
-- name: Install Neovim plugins
-  ansible.builtin.command: nvim --headless "+Lazy! sync" +qa
+- name: neovim-plugins | Install Neovim plugins
+  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/nvim --headless "+Lazy! sync" +qa
   args:
     creates: "{{ .chezmoi.homeDir }}/.local/share/nvim/lazy"

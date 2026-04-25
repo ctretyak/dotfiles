@@ -1,15 +1,9 @@
-# Claude Code ships a statically-linked binary via official installer that
-# lands in ~/.local/bin and self-updates. Previously installed via brew, but
-# native install avoids brew-upgrade timer conflicts and gives direct control
-# over update timing.
+# Claude Code: official statically-linked installer that lands in
+# ~/.local/bin and self-updates. Brew formula was used briefly, but
+# native install gives direct control over update timing and matches
+# the Kinoite path.
 
-- name: Uninstall Claude Code from Homebrew (migration)
-  ansible.builtin.command: /home/linuxbrew/.linuxbrew/bin/brew uninstall claude-code
-  register: brew_uninstall_claude
-  changed_when: brew_uninstall_claude.rc == 0
-  failed_when: false
-
-- name: Install Claude Code
+- name: claude-code | Install Claude Code
   ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
   args:
     creates: "{{ lookup('env', 'HOME') }}/.local/bin/claude"

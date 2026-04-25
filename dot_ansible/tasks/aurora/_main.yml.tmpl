@@ -5,21 +5,29 @@
 # already ships: zsh, tmux, git, gcc, distrobox, podman-docker, ptyxis,
 # fastfetch, htop, glow, gum, just, kate — see build_files/base/01-packages.sh.
 #
-# Install model on Aurora (ublue philosophy: brew + flatpak over rpm-ostree):
-#   - rpm-ostree: only what brew can't cleanly cover (zsh plugins, g++, make)
-#   - brew (preinstalled): dev CLI + Claude Code, self-updates via brew-upgrade.timer
-#   - flatpak: all GUI apps. Flathub remote is preconfigured by the ublue
-#     systemd service flatpak-add-flathub-repos.service — we don't re-add it
+# Install model on Aurora (ublue philosophy: brew + flatpak over rpm-ostree;
+# rpm-ostree layering is "last resort" per Aurora's own docs):
+#   - rpm-ostree: only what brew can't cleanly cover (zsh plugins, g++)
+#   - brew (preinstalled): dev CLI. Updates are handled by ublue's
+#     uupd.timer, which on Aurora supplants rpm-ostreed-automatic +
+#     flatpak-system-update + brew-upgrade.timer (the brew-upgrade unit
+#     isn't even shipped here; uupd shells `brew upgrade` itself).
+#   - flatpak: all GUI apps. Flathub is preconfigured two ways: a static
+#     /etc/flatpak/remotes.d/flathub.flatpakrepo (always present) and
+#     ublue's flatpak-add-flathub-repos.service (one-shot first-boot,
+#     guarded by ConditionPathExists on a marker file). Either way, we
+#     don't re-add the remote.
 #   - rpm-ostree for VS Code: Microsoft's yum repo, since the Flatpak sandbox
 #     breaks Remote-SSH / Remote-Containers / debug adapters
+#   - HOME installers: Claude Code via official curl|bash into ~/.local/bin
 
 - import_tasks: host-packages.yml
 - import_tasks: brew-packages.yml
 - import_tasks: fonts.yml
 - import_tasks: ptyxis.yml
 - import_tasks: touchpad.yml
-- import_tasks: sddm-keyboard.yml
 - import_tasks: systray.yml
+- import_tasks: pager.yml
 - import_tasks: kwin-shortcuts.yml
 - import_tasks: nvm.yml
 - import_tasks: claude-code.yml

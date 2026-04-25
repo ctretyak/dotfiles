@@ -1,22 +1,25 @@
-- name: Check if JetBrainsMono Nerd Font is installed
-  shell: fc-list | grep -qi "JetBrainsMono Nerd"
+# Install JetBrains Mono Nerd Font via brew cask.
+#
+# Aurora's base image only ships /usr/share/fonts/nerd-fonts/NerdFontsSymbolsOnly
+# (a fontconfig fallback for Nerd-Font glyphs over any base font), not the full
+# JetBrains Mono Nerd Font that p10k / nvim / Ptyxis are configured against.
+#
+# Aurora patches linuxbrew to support font casks (the same path `ujust
+# install-fonts` uses with /usr/share/ublue-os/homebrew/fonts.Brewfile).
+# The cask drops .ttf files into ~/.local/share/fonts and triggers fc-cache,
+# so no separate cache refresh is needed.
+#
+# Idempotency is handled by an fc-list probe rather than `creates:` because
+# the cask installs many .ttf files and any of them is a valid signal.
+
+- name: fonts | Check JetBrains Mono Nerd Font present
+  ansible.builtin.shell:
+    cmd: fc-list | grep -qi "JetBrainsMono Nerd"
   register: font_check
   changed_when: false
   failed_when: false
 
-- name: Create fonts directory
-  file:
-    path: "{{ lookup('env', 'HOME') }}/.local/share/fonts"
-    state: directory
-  when: font_check.rc != 0
-
-- name: Download JetBrainsMono Nerd Font
-  unarchive:
-    src: https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz
-    dest: "{{ lookup('env', 'HOME') }}/.local/share/fonts"
-    remote_src: true
-  when: font_check.rc != 0
-
-- name: Refresh font cache
-  command: fc-cache -fv
+- name: fonts | Install JetBrains Mono Nerd Font (brew cask)
+  ansible.builtin.command:
+    cmd: /home/linuxbrew/.linuxbrew/bin/brew install --cask font-jetbrains-mono-nerd-font
   when: font_check.rc != 0
