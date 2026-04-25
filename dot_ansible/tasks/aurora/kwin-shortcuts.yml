@@ -57,6 +57,23 @@
   loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
   register: plasmashell_shortcuts_changed
 
+# Window actions. Format is `current,default,name` — keep upstream default in
+# the default slot so KDE's "Reset to defaults" still restores Meta+PgUp.
+- name: kwin-shortcuts | Configure KWin window action shortcuts
+  community.general.ini_file:
+    path: "{{ lookup('env', 'HOME') }}/.config/kglobalshortcutsrc"
+    section: kwin
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+    no_extra_spaces: true
+    mode: "0600"
+    create: true
+  loop: "{{ kwin_window_shortcuts | dict2items }}"
+  vars:
+    kwin_window_shortcuts:
+      "Window Maximize": "Meta+M,Meta+PgUp,Maximize Window"
+  register: kwin_window_shortcuts_changed
+
 # kwinrc is reread at runtime via D-Bus reconfigure (covers TabBox + Desktops).
 # kglobalshortcutsrc is NOT — KGlobalAccel components register their actions
 # via doRegister at session startup only. KDE Plasma 6 exposes no D-Bus method
@@ -75,4 +92,4 @@
       runtime reload — log out of the Plasma session and back in to activate
       the new bindings. Both the kwin Meta+1..9 desktop bindings and the
       plasmashell rebinds that free those keys need this.
-  when: kwin_shortcuts_changed is changed or plasmashell_shortcuts_changed is changed
+  when: kwin_shortcuts_changed is changed or plasmashell_shortcuts_changed is changed or kwin_window_shortcuts_changed is changed

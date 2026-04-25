@@ -1,0 +1,35 @@
+# Disable the per-desktop filter on the Task Manager widget so clicking a
+# pinned launcher activates an existing window on another virtual desktop
+# instead of spawning a new instance. With Meta+1..9 wired up in
+# kwin-shortcuts.yml the visual per-desktop separation is redundant, and
+# cross-desktop activation matters more than per-desktop window lists.
+#
+# Direct edits to plasma-org.kde.plasma.desktop-appletsrc are unsafe:
+# plasmashell holds the file in memory and rewrites it on quit. The
+# supported path is plasmashell scripting via qdbus-qt6 evaluateScript —
+# the change applies live and persists to disk. Same pattern as pager.yml.
+#
+# Aurora ships icontasks; we cover plain taskmanager too in case a panel
+# layout swap brings it back.
+
+- name: taskbar | Disable per-desktop filter on Task Manager widgets
+  ansible.builtin.command:
+    argv:
+      - qdbus-qt6
+      - org.kde.plasmashell
+      - /PlasmaShell
+      - org.kde.PlasmaShell.evaluateScript
+      - >-
+        var plugins = ["org.kde.plasma.icontasks", "org.kde.plasma.taskmanager"];
+        var ps = panels();
+        for (var i = 0; i < ps.length; i++) {
+          for (var k = 0; k < plugins.length; k++) {
+            var ws = ps[i].widgets(plugins[k]);
+            for (var j = 0; j < ws.length; j++) {
+              ws[j].currentConfigGroup = ["General"];
+              ws[j].writeConfig("showOnlyCurrentDesktop", false);
+              ws[j].reloadConfig();
+            }
+          }
+        }
+  changed_when: false
