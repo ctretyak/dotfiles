@@ -11,7 +11,7 @@
      linux/_main.yml chain assumes a classic package manager, so skip it.
      All CLI tools for Kinoite are installed via host-packages.yml (rpm-ostree
      layered). Aurora's CLI stack is split between rpm-ostree (minimal) and
-     brew (brew-packages.yml). */}}
+     brew (brew-packages.yml) */}}
 {{ if and (ne .os.idLike "kinoite") (ne .os.idLike "aurora") }}
     - import_tasks: tasks/{{ .chezmoi.os }}/_main.yml
 {{ end }}
