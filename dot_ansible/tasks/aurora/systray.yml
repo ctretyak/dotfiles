@@ -1,0 +1,23 @@
+- name: Find system tray applet group
+  ansible.builtin.shell: |
+    set -euo pipefail
+    awk '
+      /^\[Containments\]\[[0-9]+\]\[Applets\]\[[0-9]+\]\]?$/ {
+        section=$0; sub(/^\[/,"",section); sub(/\]$/,"",section); next
+      }
+      /^\[/ { next }
+      /^plugin=org\.kde\.plasma\.systemtray$/ { print section "][General"; exit }
+    ' "$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
+  register: systray_group
+  changed_when: false
+  check_mode: false
+  failed_when: systray_group.stdout == ""
+
+- name: Hide items from system tray
+  community.general.ini_file:
+    path: "{{ lookup('env', 'HOME') }}/.config/plasma-org.kde.plasma.desktop-appletsrc"
+    section: "{{ systray_group.stdout }}"
+    option: hiddenItems
+    value: Insync,org.kde.plasma.brightness,org.kde.plasma.clipboard
+    no_extra_spaces: true
+    mode: "0600"

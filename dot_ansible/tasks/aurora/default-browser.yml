@@ -1,0 +1,26 @@
+- name: Set Google Chrome as default browser (XDG)
+  community.general.ini_file:
+    path: "{{ lookup('env', 'HOME') }}/.config/mimeapps.list"
+    section: Default Applications
+    option: "{{ item }}"
+    value: com.google.Chrome.desktop
+    no_extra_spaces: true
+    mode: "0644"
+    create: true
+  loop:
+    - x-scheme-handler/http
+    - x-scheme-handler/https
+    - x-scheme-handler/about
+    - x-scheme-handler/unknown
+    - text/html
+    - application/xhtml+xml
+
+- name: Set Google Chrome as default browser (KDE)
+  community.general.ini_file:
+    path: "{{ lookup('env', 'HOME') }}/.config/kdeglobals"
+    section: General
+    option: BrowserApplication
+    value: com.google.Chrome.desktop
+    no_extra_spaces: true
+    mode: "0644"
+    create: true
