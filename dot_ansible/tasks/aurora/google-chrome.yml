@@ -3,3 +3,17 @@
     name: com.google.Chrome
     remote: flathub
     state: present
+
+# Chrome's Flatpak override grants write access to ~/.local/share/applications
+# and ~/.local/share/icons (where PWA .desktop files and icons land), but
+# bwrap can only bind-mount paths that already exist. On a fresh profile
+# these XDG dirs are absent, so Chrome's PWA installer fails with
+# "Flatpak does not have write access". Pre-create them.
+- name: google-chrome | Ensure XDG dirs for PWA shortcuts exist
+  ansible.builtin.file:
+    path: "{{ lookup('env', 'HOME') }}/.local/share/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - applications
+    - icons
