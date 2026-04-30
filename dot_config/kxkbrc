@@ -2,7 +2,7 @@
 DisplayNames=,
 LayoutList=us,ru
 Model=pc104
-Options=grp:ctrl_space_toggle
+Options=grp:caps_toggle
 ResetOldOptions=true
 SwitchMode=WinClass
 Use=true
