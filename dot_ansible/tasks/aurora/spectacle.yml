@@ -1,0 +1,18 @@
+# Disable Spectacle's auto-save side effect. The default Meta+Shift+Print
+# binding (RectangularRegionScreenShot → `spectacle -r`) still selects a
+# region and pops the preview window, but with autoSaveImage=false no PNG
+# is written to ~/Pictures/Screenshots/ behind the user's back. The user
+# can still click "Save As" explicitly from the preview, and the image is
+# already on the clipboard via Spectacle's default after-screenshot action.
+#
+# Key location verified against upstream kcfg:
+# https://invent.kde.org/graphics/spectacle/-/blob/master/src/Gui/SettingsDialog/spectacle.kcfg
+- name: spectacle | Disable Spectacle auto-save to file
+  community.general.ini_file:
+    path: "{{ lookup('env', 'HOME') }}/.config/spectaclerc"
+    section: General
+    option: autoSaveImage
+    value: "false"
+    no_extra_spaces: true
+    mode: "0644"
+    create: true
