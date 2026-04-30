@@ -39,8 +39,12 @@ if vim.g.vscode then
     map("n", "[e", "editor.action.marker.prevInFiles", "Previous Error (VSCode)")
     map("n", "]e", "editor.action.marker.nextInFiles", "Next Error (VSCode)")
 
-    map("n", "]h", "workbench.action.editor.nextChange", "Next Hunk (VSCode)")
-    map("n", "[h", "workbench.action.editor.previousChange", "Previous Hunk (VSCode)")
+    map("n", "]h", {"workbench.action.compareEditor.nextChange", "workbench.action.editor.nextChange"}, "Next Hunk (VSCode)")
+    map("n", "[h", {"workbench.action.compareEditor.previousChange", "workbench.action.editor.previousChange"}, "Previous Hunk (VSCode)")
+
+    map({"n", "v"}, "<leader>ghs", {"git.diff.stageHunk", "git.stageSelectedRanges"}, "Stage Hunk (VSCode)")
+    map({"n", "v"}, "<leader>ghr", "git.revertSelectedRanges", "Revert Hunk (VSCode)")
+    map({"n", "v"}, "<leader>ghu", "git.unstageSelectedRanges", "Unstage Hunk (VSCode)")
 
     map("n", "<leader>ft", "workbench.action.terminal.toggleTerminal", "Toggle Terminal")
 
