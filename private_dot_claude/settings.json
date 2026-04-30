@@ -3,7 +3,11 @@
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "300000"
   },
   "permissions": {
-    "defaultMode": "auto"
+    "defaultMode": "auto",
+    "ask": [
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs"
+    ]
   },
   "statusLine": {
     "type": "command",
