@@ -2,21 +2,22 @@
   "env": {
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "300000"
   },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "permissions": {
-    "defaultMode": "auto",
     "ask": [
       "mcp__context7__resolve-library-id",
       "mcp__context7__query-docs"
-    ]
+    ],
+    "defaultMode": "auto"
   },
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh"
   },
   "language": "Русский",
-  "skipAutoPermissionPrompt": true,
-  "attribution": {
-    "commit": "",
-    "pr": ""
-  }
+  "theme": "auto",
+  "skipAutoPermissionPrompt": true
 }
