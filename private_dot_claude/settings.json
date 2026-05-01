@@ -1,6 +1,6 @@
 {
   "env": {
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "300000"
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000"
   },
   "attribution": {
     "commit": "",
