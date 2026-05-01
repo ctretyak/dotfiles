@@ -21,17 +21,9 @@ set -g status-left-length 40
 # ==============================================================================
 # Copy mode
 # ==============================================================================
-{{ if eq .chezmoi.os "linux" }}
-set -s copy-command 'wl-copy'
-{{ else if eq .chezmoi.os "darwin" }}
-set -s copy-command 'pbcopy'
-{{ end }}
 bind -T copy-mode-vi v   send-keys -X begin-selection
 bind -T copy-mode-vi C-v send-keys -X rectangle-toggle
 bind -T copy-mode-vi V   send-keys -X select-line
-bind -T copy-mode-vi y   send-keys -X copy-pipe
-bind -T copy-mode-vi Y   send-keys -X copy-pipe-end-of-line
-bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel
 
 # ==============================================================================
 # Key bindings
@@ -78,6 +70,7 @@ bind f display-popup -E "$HOME/.local/bin/tmux-sessionizer"
 # ==============================================================================
 set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-sensible'
+set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'christoomey/vim-tmux-navigator'
