@@ -1,4 +1,4 @@
-- name: Install Telegram
+- name: telegram | Install Telegram
   become: true
   package:
     name: telegram-desktop

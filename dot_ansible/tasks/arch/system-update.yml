@@ -1,41 +1,41 @@
-- name: Install linux-lts (fallback kernel)
+- name: system-update | Install linux-lts (fallback kernel)
   become: true
   package:
     name: linux-lts
     state: present
 
-- name: Install pacman-contrib (paccache, pacdiff, checkupdates)
+- name: system-update | Install pacman-contrib (paccache, pacdiff, checkupdates)
   become: true
   package:
     name: pacman-contrib
     state: present
 
-- name: Enable paccache timer (weekly package cache cleanup)
+- name: system-update | Enable paccache timer (weekly package cache cleanup)
   become: true
   systemd:
     name: paccache.timer
     enabled: true
     state: started
 
-- name: Install rebuild-detector (check AUR rebuilds after updates)
+- name: system-update | Install rebuild-detector (check AUR rebuilds after updates)
   become: true
   package:
     name: rebuild-detector
     state: present
 
-- name: Check if root filesystem is btrfs
+- name: system-update | Check if root filesystem is btrfs
   command: stat -f -c %T /
   register: root_fstype
   changed_when: false
 
-- name: Install snap-pac (auto btrfs snapshots on pacman transactions)
+- name: system-update | Install snap-pac (auto btrfs snapshots on pacman transactions)
   become: true
   package:
     name: snap-pac
     state: present
   when: root_fstype.stdout == 'btrfs'
 
-- name: Enable snapper cleanup timer
+- name: system-update | Enable snapper cleanup timer
   become: true
   systemd:
     name: snapper-cleanup.timer
@@ -43,27 +43,27 @@
     state: started
   when: root_fstype.stdout == 'btrfs'
 
-- name: Install arch-update (AUR)
+- name: system-update | Install arch-update (AUR)
   become: true
   become_user: aur_builder
   kewlfft.aur.aur:
     name: arch-update
 
-- name: Enable arch-update timer (user)
+- name: system-update | Enable arch-update timer (user)
   systemd:
     name: arch-update.timer
     scope: user
     enabled: true
     state: started
 
-- name: Enable arch-update tray service (user)
+- name: system-update | Enable arch-update tray service (user)
   systemd:
     name: arch-update-tray.service
     scope: user
     enabled: true
     state: started
 
-- name: Install informant (AUR)
+- name: system-update | Install informant (AUR)
   become: true
   become_user: aur_builder
   kewlfft.aur.aur:

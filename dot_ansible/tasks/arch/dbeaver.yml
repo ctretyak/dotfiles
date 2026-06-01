@@ -1,4 +1,4 @@
-- name: Install DBeaver
+- name: dbeaver | Install DBeaver
   become: true
   package:
     name: dbeaver

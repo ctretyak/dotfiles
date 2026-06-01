@@ -1,9 +1,9 @@
-- name: Install iTerm2
+- name: iterm2 | Install iTerm2
   homebrew_cask:
     name: iterm2
     state: present
 
-- name: Configure iTerm2 to load preferences from custom folder
+- name: iterm2 | Configure iTerm2 to load preferences from custom folder
   community.general.osx_defaults:
     domain: com.googlecode.iterm2
     key: "{{ item.key }}"

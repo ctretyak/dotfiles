@@ -1,4 +1,4 @@
-- name: Install GnuPG
+- name: gnupg | Install GnuPG
   become: true
   package:
     name: gnupg

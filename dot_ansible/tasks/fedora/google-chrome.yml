@@ -1,4 +1,4 @@
-- name: Install Google Chrome
+- name: google-chrome | Install Google Chrome
   become: true
   package:
     name: google-chrome-stable

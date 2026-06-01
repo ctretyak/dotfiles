@@ -1,4 +1,4 @@
-- name: Install Obsidian
+- name: obsidian | Install Obsidian
   community.general.flatpak:
     name: md.obsidian.Obsidian
     remote: flathub

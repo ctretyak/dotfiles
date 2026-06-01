@@ -1,22 +1,22 @@
-- name: Install AppArmor
+- name: apparmor | Install AppArmor
   become: true
   package:
     name: apparmor
     state: present
 
-- name: Enable AppArmor service
+- name: apparmor | Enable AppArmor service
   become: true
   systemd:
     name: apparmor
     enabled: true
     state: started
 
-- name: Check if UKI cmdline config exists
+- name: apparmor | Check if UKI cmdline config exists
   stat:
     path: /etc/kernel/cmdline
   register: uki_cmdline
 
-- name: Add AppArmor LSM to kernel parameters
+- name: apparmor | Add AppArmor LSM to kernel parameters
   become: true
   lineinfile:
     path: /etc/kernel/cmdline
@@ -25,7 +25,7 @@
     backrefs: true
   when: uki_cmdline.stat.exists and lookup('file', '/etc/kernel/cmdline') is not search('apparmor')
 
-- name: Add AppArmor LSM to GRUB kernel parameters
+- name: apparmor | Add AppArmor LSM to GRUB kernel parameters
   become: true
   lineinfile:
     path: /etc/default/grub
@@ -35,24 +35,24 @@
   register: grub_apparmor
   when: not uki_cmdline.stat.exists
 
-- name: Regenerate GRUB config
+- name: apparmor | Regenerate GRUB config
   become: true
   command: grub-mkconfig -o /boot/grub/grub.cfg
   when: not uki_cmdline.stat.exists and grub_apparmor.changed
 
-- name: Check if UKI needs regeneration
+- name: apparmor | Check if UKI needs regeneration
   shell: grep -q 'apparmor' /proc/cmdline
   register: cmdline_check
   changed_when: false
   failed_when: false
   when: uki_cmdline.stat.exists
 
-- name: Regenerate UKI
+- name: apparmor | Regenerate UKI
   become: true
   command: mkinitcpio -P
   when: uki_cmdline.stat.exists and cmdline_check.rc != 0 and lookup('file', '/etc/kernel/cmdline') is search('apparmor')
 
-- name: Reboot reminder
+- name: apparmor | Reboot reminder
   debug:
     msg: "Kernel parameters updated. Reboot required to activate AppArmor."
   when: >

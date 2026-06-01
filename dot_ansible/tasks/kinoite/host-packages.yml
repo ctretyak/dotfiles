@@ -17,12 +17,12 @@
 # - Editor: neovim (Mason/treesitter will find node/gcc natively)
 # - Dev runtimes: nodejs, npm, python3-pip, gcc, make, gcc-c++
 
-- name: Check currently layered packages
+- name: host-packages | Check currently layered packages
   ansible.builtin.command: rpm-ostree status --json
   register: ostree_status
   changed_when: false
 
-- name: Compute required host layers
+- name: host-packages | Compute required host layers
   ansible.builtin.set_fact:
     required_layers:
       # Shell
@@ -48,28 +48,28 @@
       - gcc-c++
       - make
 
-- name: Determine missing layers
+- name: host-packages | Determine missing layers
   ansible.builtin.set_fact:
     missing_layers: >-
       {{ required_layers
          | reject('in', (ostree_status.stdout | from_json).deployments[0].packages | default([]))
          | list }}
 
-- name: Layer missing host packages via rpm-ostree
+- name: host-packages | Layer missing host packages via rpm-ostree
   become: true
   ansible.builtin.command: >
     rpm-ostree install --idempotent --assumeyes {{ missing_layers | join(' ') }}
   when: missing_layers | length > 0
   register: rpm_ostree_install
 
-- name: Notify about staged deployment
+- name: host-packages | Notify about staged deployment
   ansible.builtin.debug:
     msg: >
       Host packages layered into the next deployment: {{ missing_layers | join(', ') }}.
       Reboot to activate them. Re-run 'chezmoi apply' after reboot to continue.
   when: missing_layers | length > 0
 
-- name: Set zsh as default shell (requires zsh layered first)
+- name: host-packages | Set zsh as default shell (requires zsh layered first)
   become: true
   ansible.builtin.user:
     name: "{{ lookup('env', 'USER') }}"

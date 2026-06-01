@@ -1,4 +1,4 @@
-- name: Install GnuPG
+- name: gpg | Install GnuPG
   homebrew:
     update_homebrew: no
     name:

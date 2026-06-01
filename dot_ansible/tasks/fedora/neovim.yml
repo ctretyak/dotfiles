@@ -1,10 +1,10 @@
-- name: Enable lazygit COPR
+- name: neovim | Enable lazygit COPR
   become: true
   command: dnf copr enable atim/lazygit -y
   args:
     creates: /etc/yum.repos.d/_copr:copr.fedorainfracloud.org:atim:lazygit.repo
 
-- name: Install Neovim
+- name: neovim | Install Neovim
   become: true
   package:
     name:

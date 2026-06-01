@@ -1,4 +1,4 @@
-- name: Install bc
+- name: bc | Install bc
   become: true
   package:
     name: bc

@@ -1,4 +1,4 @@
-- name: Install Obsidian
+- name: obsidian | Install Obsidian
   homebrew:
     update_homebrew: no
     name: obsidian

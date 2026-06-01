@@ -1,4 +1,4 @@
-- name: Install Docker
+- name: docker | Install Docker
   homebrew:
     update_homebrew: no
     name:

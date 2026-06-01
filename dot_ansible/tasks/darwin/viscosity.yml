@@ -1,4 +1,4 @@
-- name: Install Viscosity
+- name: viscosity | Install Viscosity
   homebrew:
     update_homebrew: no
     name: viscosity

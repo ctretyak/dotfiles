@@ -1,4 +1,4 @@
-- name: Install Docker
+- name: docker | Install Docker
   become: true
   package:
     name:

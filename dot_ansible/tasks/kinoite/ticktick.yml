@@ -1,4 +1,4 @@
-- name: Install TickTick (Flatpak)
+- name: ticktick | Install TickTick (Flatpak)
   community.general.flatpak:
     name: com.ticktick.TickTick
     remote: flathub

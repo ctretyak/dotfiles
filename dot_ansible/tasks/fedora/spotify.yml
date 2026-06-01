@@ -1,4 +1,4 @@
-- name: Install Spotify
+- name: spotify | Install Spotify
   become: true
   package:
     name: spotify

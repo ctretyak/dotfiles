@@ -5,104 +5,78 @@ README.md
 
 old_*/**
 
-# Windows only
+# OS partitioning. Each block lists paths to IGNORE unless its condition holds,
+# using the form: {{ "{{ if not <keep-condition> }}" }} ... {{ "{{ end }}" }}
+
+# Windows
 {{ if ne .chezmoi.os "windows" }}
-
-    .chezmoiscripts/windows/**
-    AppData/**
-    .ansible/tasks/windows
-
+.chezmoiscripts/windows/**
+AppData/**
+.ansible/tasks/windows
 {{ end }}
 
-# Unix-like only
-{{ if not (or (eq .chezmoi.os "darwin") (eq .chezmoi.os "linux")) }}
-    .ansible
-    .chezmoiscripts/*.sh
-    .config
-    .gnupg
-    .local
-    .p10k.zsh
-    .zshrc
-    .zshrc_custom
-    git
+# Windows-only exclusions (these are Unix-like configs)
+{{ if eq .chezmoi.os "windows" }}
+.ansible
+.chezmoiscripts/*.sh
+.config
+.gnupg
+.local
+.p10k.zsh
+.zshrc
+.zshrc_custom
+git
 {{ end }}
 
-# Linux only
-{{ if ne .chezmoi.os "linux" }}
-
-    .ansible/tasks/linux
-    .ansible/tasks/arch
-    .ansible/tasks/pop
-    .ansible/tasks/fedora
-    .ansible/tasks/kinoite
-    .ansible/tasks/aurora
-    .chezmoiscripts/linux/**
-    .chezmoiscripts/linux/arch/**
-    .chezmoiscripts/linux/pop/**
-    .chezmoiscripts/linux/fedora/**
-    .chezmoiscripts/linux/kinoite/**
-    .chezmoiscripts/linux/aurora/**
-
-{{ end }}
-
-# Arch-only configs (Chrome/font rendering tuned for Arch)
-{{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "arch")) }}
-
-    .config/fontconfig
-    .config/chrome-flags.conf
-    .config/environment.d
-
-{{ end }}
-
-# macOS only
+# macOS
 {{ if ne .chezmoi.os "darwin" }}
-
-    .ansible/tasks/darwin
-    .chezmoiscripts/darwin/**
-    .config/iterm2
-    .aerospace.toml
-    Library
-
+.ansible/tasks/darwin
+.chezmoiscripts/darwin/**
+.config/iterm2
+.aerospace.toml
+Library
 {{ end }}
 
-{{ if eq .chezmoi.os "linux" }}
-
-{{ if ne .os.idLike "arch" }}
-    .chezmoiscripts/linux/arch/**
-    .ansible/tasks/arch
-{{ end }}
-{{ if ne .os.idLike "pop" }}
-    .chezmoiscripts/linux/pop/**
-    .ansible/tasks/pop
-    .config/cosmic
-{{ end }}
-{{ if ne .os.idLike "fedora" }}
-    .chezmoiscripts/linux/fedora/**
-    .ansible/tasks/fedora
-{{ end }}
-{{ if ne .os.idLike "kinoite" }}
-    .chezmoiscripts/linux/kinoite/**
-    .ansible/tasks/kinoite
-{{ end }}
-{{ if ne .os.idLike "aurora" }}
-    .chezmoiscripts/linux/aurora/**
-    .ansible/tasks/aurora
+# Linux — common tree (all distros)
+{{ if ne .chezmoi.os "linux" }}
+.ansible/tasks/linux
+.chezmoiscripts/linux/**
 {{ end }}
 
+# Linux — per-distro: keep a distro's tasks/scripts/configs only on that distro
+{{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "arch")) }}
+.ansible/tasks/arch
+.chezmoiscripts/linux/arch/**
+.config/fontconfig
+.config/chrome-flags.conf
+.config/environment.d
+{{ end }}
+{{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "pop")) }}
+.ansible/tasks/pop
+.chezmoiscripts/linux/pop/**
+.config/cosmic
+{{ end }}
+{{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "fedora")) }}
+.ansible/tasks/fedora
+.chezmoiscripts/linux/fedora/**
+{{ end }}
+{{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "kinoite")) }}
+.ansible/tasks/kinoite
+.chezmoiscripts/linux/kinoite/**
+{{ end }}
+{{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "aurora")) }}
+.ansible/tasks/aurora
+.chezmoiscripts/linux/aurora/**
 {{ end }}
 
-# KDE Plasma only (Kinoite, Aurora)
+# KDE Plasma (Kinoite, Aurora)
 {{ if not (and (eq .chezmoi.os "linux") (or (eq .os.idLike "kinoite") (eq .os.idLike "aurora"))) }}
-
-    .config/kwinrulesrc
-    .config/kxkbrc
-    .config/plasmarc
-
+.config/kwinrulesrc
+.config/kxkbrc
+.config/plasmarc
 {{ end }}
 
 # Aurora only (ublue-os MOTD suppression flag)
 {{ if not (and (eq .chezmoi.os "linux") (eq .os.idLike "aurora")) }}
-
-    .config/no-show-user-motd
-
+.config/no-show-user-motd
 {{ end }}

@@ -1,4 +1,4 @@
-- name: Install KeePassXC
+- name: keepassxc | Install KeePassXC
   homebrew:
     update_homebrew: no
     name: keepassxc

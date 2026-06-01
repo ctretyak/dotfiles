@@ -1,10 +1,10 @@
-- name: Install NVM
+- name: nvm | Install NVM
   homebrew:
     update_homebrew: no
     name: nvm
     state: present
 
-- name: Install Node LTS
+- name: nvm | Install Node LTS
   shell: |
     export NVM_DIR="$HOME/.nvm"
     mkdir -p "$NVM_DIR"

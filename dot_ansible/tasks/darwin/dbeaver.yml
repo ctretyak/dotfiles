@@ -1,4 +1,4 @@
-- name: Install DBeaver
+- name: dbeaver | Install DBeaver
   homebrew:
     update_homebrew: no
     name: dbeaver-community

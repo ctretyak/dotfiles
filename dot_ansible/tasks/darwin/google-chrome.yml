@@ -1,4 +1,4 @@
-- name: Install Google Chrome
+- name: google-chrome | Install Google Chrome
   homebrew:
     update_homebrew: no
     name: google-chrome

@@ -14,16 +14,16 @@
 
 # Check rpm-ostree state first so a fully installed layer short-circuits
 # both the yum repo add and the install — no sudo prompt on steady-state.
-- name: Check currently layered packages
+- name: vscode | Check currently layered packages
   ansible.builtin.command: rpm-ostree status --json
   register: ostree_status_vscode
   changed_when: false
 
-- name: Determine whether VS Code is already layered
+- name: vscode | Determine whether VS Code is already layered
   ansible.builtin.set_fact:
     vscode_layered: "{{ 'code' in ((ostree_status_vscode.stdout | from_json).deployments[0].packages | default([])) }}"
 
-- name: Add Microsoft VS Code yum repo
+- name: vscode | Add Microsoft VS Code yum repo
   become: true
   ansible.builtin.yum_repository:
     name: vscode
@@ -34,13 +34,13 @@
     enabled: true
   when: not vscode_layered
 
-- name: Layer VS Code
+- name: vscode | Layer VS Code
   become: true
   ansible.builtin.command: rpm-ostree install --idempotent --assumeyes code
   when: not vscode_layered
   register: vscode_layer
 
-- name: Notify if VS Code needs a reboot to activate
+- name: vscode | Notify if VS Code needs a reboot to activate
   ansible.builtin.debug:
     msg: "VS Code layered into next deployment. Reboot to activate."
   when: vscode_layer is changed

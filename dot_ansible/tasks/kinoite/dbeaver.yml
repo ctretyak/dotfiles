@@ -1,4 +1,4 @@
-- name: Install DBeaver Community (Flatpak)
+- name: dbeaver | Install DBeaver Community (Flatpak)
   community.general.flatpak:
     name: io.dbeaver.DBeaverCommunity
     remote: flathub

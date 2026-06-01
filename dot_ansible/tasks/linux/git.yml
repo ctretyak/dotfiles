@@ -1,4 +1,4 @@
-- name: Install Git
+- name: git | Install Git
   become: true
   package:
     name: git

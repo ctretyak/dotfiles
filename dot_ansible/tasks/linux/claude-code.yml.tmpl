@@ -1,4 +1,4 @@
-- name: Install Claude Code
+- name: claude-code | Install Claude Code
   shell: curl -fsSL https://claude.ai/install.sh | bash
   args:
     creates: "{{ .chezmoi.homeDir }}/.local/bin/claude"

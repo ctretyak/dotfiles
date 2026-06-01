@@ -1,4 +1,4 @@
-- name: Install TickTick
+- name: ticktick | Install TickTick
   homebrew:
     update_homebrew: no
     name: ticktick

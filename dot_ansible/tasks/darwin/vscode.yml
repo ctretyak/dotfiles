@@ -1,4 +1,4 @@
-- name: Install Visual Studio Code
+- name: vscode | Install Visual Studio Code
   homebrew:
     update_homebrew: no
     name: visual-studio-code

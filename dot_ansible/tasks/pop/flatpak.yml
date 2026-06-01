@@ -1,10 +1,10 @@
-- name: Install Flatpak
+- name: flatpak | Install Flatpak
   become: true
   apt:
     name: flatpak
     state: present
 
-- name: Add Flathub remote
+- name: flatpak | Add Flathub remote
   become: true
   community.general.flatpak_remote:
     name: flathub

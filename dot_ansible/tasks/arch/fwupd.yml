@@ -1,4 +1,4 @@
-- name: Install fwupd
+- name: fwupd | Install fwupd
   become: true
   package:
     name: fwupd

@@ -9,16 +9,16 @@
 # Check the rpm-ostree state first — once Insync is already layered the
 # yum_repository add is also pointless, and skipping it keeps sudo out of
 # the apply loop on every subsequent run.
-- name: Check currently layered packages
+- name: insync | Check currently layered packages
   ansible.builtin.command: rpm-ostree status --json
   register: ostree_status_insync
   changed_when: false
 
-- name: Determine whether Insync is already layered
+- name: insync | Determine whether Insync is already layered
   ansible.builtin.set_fact:
     insync_layered: "{{ 'insync' in ((ostree_status_insync.stdout | from_json).deployments[0].packages | default([])) }}"
 
-- name: Add Insync yum repo
+- name: insync | Add Insync yum repo
   become: true
   ansible.builtin.yum_repository:
     name: insync
@@ -31,13 +31,13 @@
     metadata_expire: 120m
   when: not insync_layered
 
-- name: Layer Insync
+- name: insync | Layer Insync
   become: true
   ansible.builtin.command: rpm-ostree install --idempotent --assumeyes insync
   when: not insync_layered
   register: insync_layer
 
-- name: Notify if Insync needs a reboot to activate
+- name: insync | Notify if Insync needs a reboot to activate
   ansible.builtin.debug:
     msg: "Insync layered into next deployment. Reboot to activate."
   when: insync_layer is changed

@@ -1,9 +1,9 @@
-- name: Import Insync GPG key
+- name: insync | Import Insync GPG key
   become: true
   rpm_key:
     key: https://d2t3ff60b2tol4.cloudfront.net/repomd.xml.key
 
-- name: Create insync.repo
+- name: insync | Create insync.repo
   become: true
   copy:
     dest: /etc/yum.repos.d/insync.repo
@@ -19,7 +19,7 @@
     group: root
     mode: '0644'
 
-- name: Install Insync
+- name: insync | Install Insync
   become: true
   package:
     name: insync

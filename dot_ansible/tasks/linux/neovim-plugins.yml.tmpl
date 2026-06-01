@@ -1,4 +1,4 @@
-- name: Install Neovim plugins
+- name: neovim-plugins | Install Neovim plugins
   command: nvim --headless "+Lazy! sync" +qa
   args:
     creates: "{{ .chezmoi.homeDir }}/.local/share/nvim/lazy"

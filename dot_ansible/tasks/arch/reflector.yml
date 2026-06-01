@@ -1,10 +1,10 @@
-- name: Install reflector
+- name: reflector | Install reflector
   become: true
   package:
     name: reflector
     state: present
 
-- name: Configure reflector
+- name: reflector | Configure reflector
   become: true
   copy:
     content: |
@@ -17,7 +17,7 @@
     group: root
     mode: "0644"
 
-- name: Enable reflector timer (weekly mirror update)
+- name: reflector | Enable reflector timer (weekly mirror update)
   become: true
   systemd:
     name: reflector.timer

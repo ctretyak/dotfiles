@@ -1,4 +1,4 @@
-- name: Install Docker
+- name: docker | Install Docker
   become: true
   package:
     name:
@@ -6,7 +6,7 @@
       - docker-compose
     state: present
 
-- name: Enable Docker service
+- name: docker | Enable Docker service
   become: true
   systemd:
     name: docker

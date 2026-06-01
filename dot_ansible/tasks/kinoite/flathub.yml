@@ -1,4 +1,4 @@
-- name: Add Flathub remote (system scope)
+- name: flathub | Add Flathub remote (system scope)
   become: true
   community.general.flatpak_remote:
     name: flathub

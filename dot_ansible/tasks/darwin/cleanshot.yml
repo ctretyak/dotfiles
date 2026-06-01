@@ -1,10 +1,10 @@
-- name: Install CleanShot
+- name: cleanshot | Install CleanShot
   homebrew:
     update_homebrew: no
     name: cleanshot
     state: present
 
-- name: Configure CleanShot
+- name: cleanshot | Configure CleanShot
   community.general.osx_defaults:
     domain: pl.maketheweb.cleanshotx
     key: "{{ item.key }}"

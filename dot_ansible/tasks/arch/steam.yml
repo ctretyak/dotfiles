@@ -1,4 +1,4 @@
-- name: Enable multilib repository
+- name: steam | Enable multilib repository
   become: true
   blockinfile:
     path: /etc/pacman.conf
@@ -8,13 +8,13 @@
       Include = /etc/pacman.d/mirrorlist
   register: multilib_result
 
-- name: Update pacman cache after enabling multilib
+- name: steam | Update pacman cache after enabling multilib
   become: true
   pacman:
     update_cache: true
   when: multilib_result.changed
 
-- name: Install Steam
+- name: steam | Install Steam
   become: true
   package:
     name: steam

@@ -1,4 +1,4 @@
-- name: Install Telegram
+- name: telegram | Install Telegram
   homebrew:
     update_homebrew: no
     name: telegram

@@ -1,4 +1,4 @@
-- name: Install Google Chrome (Flatpak)
+- name: google-chrome | Install Google Chrome (Flatpak)
   community.general.flatpak:
     name: com.google.Chrome
     remote: flathub

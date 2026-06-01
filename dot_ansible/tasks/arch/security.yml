@@ -1,12 +1,12 @@
 # --- Firewall (nftables) ---
 
-- name: Install nftables
+- name: security | Install nftables
   become: true
   package:
     name: nftables
     state: present
 
-- name: Configure nftables firewall
+- name: security | Configure nftables firewall
   become: true
   copy:
     content: |
@@ -49,13 +49,13 @@
     mode: "0644"
   register: nftables_config
 
-- name: Enable nftables service
+- name: security | Enable nftables service
   become: true
   systemd:
     name: nftables
     enabled: true
 
-- name: Start or restart nftables
+- name: security | Start or restart nftables
   become: true
   systemd:
     name: nftables
@@ -63,7 +63,7 @@
 
 # --- Sysctl hardening ---
 
-- name: Deploy sysctl hardening config
+- name: security | Deploy sysctl hardening config
   become: true
   copy:
     content: |
@@ -103,14 +103,14 @@
     mode: "0644"
   register: sysctl_config
 
-- name: Apply sysctl settings
+- name: security | Apply sysctl settings
   become: true
   shell: sysctl --system
   when: sysctl_config.changed
 
 # --- Mount hardening ---
 
-- name: Harden /dev/shm mount options (noexec,nosuid,nodev)
+- name: security | Harden /dev/shm mount options (noexec,nosuid,nodev)
   become: true
   mount:
     path: /dev/shm
@@ -121,7 +121,7 @@
 
 # --- Core dumps ---
 
-- name: Disable systemd core dump storage
+- name: security | Disable systemd core dump storage
   become: true
   copy:
     content: |
@@ -133,7 +133,7 @@
     group: root
     mode: "0644"
 
-- name: Ensure limits.d directory exists
+- name: security | Ensure limits.d directory exists
   become: true
   file:
     path: /etc/security/limits.d
@@ -142,7 +142,7 @@
     group: root
     mode: "0755"
 
-- name: Disable core dumps via limits
+- name: security | Disable core dumps via limits
   become: true
   copy:
     content: |
@@ -154,7 +154,7 @@
 
 # --- Kernel module blacklist ---
 
-- name: Deploy modprobe blacklist for unused kernel modules
+- name: security | Deploy modprobe blacklist for unused kernel modules
   become: true
   copy:
     content: |
@@ -177,7 +177,7 @@
 
 # --- Faillock ---
 
-- name: Set faillock deny to 6 attempts
+- name: security | Set faillock deny to 6 attempts
   become: true
   lineinfile:
     path: /etc/security/faillock.conf
@@ -186,31 +186,31 @@
 
 # --- Secure Boot (sbctl) ---
 
-- name: Install sbctl
+- name: security | Install sbctl
   become: true
   package:
     name: sbctl
     state: present
 
-- name: Check sbctl setup status
+- name: security | Check sbctl setup status
   become: true
   command: sbctl status --json
   register: sbctl_status
   changed_when: false
 
-- name: Create Secure Boot keys
+- name: security | Create Secure Boot keys
   become: true
   command: sbctl create-keys
   when: not (sbctl_status.stdout | from_json).installed
 
-- name: Enroll Secure Boot keys (with Microsoft keys)
+- name: security | Enroll Secure Boot keys (with Microsoft keys)
   become: true
   command: sbctl enroll-keys --microsoft
   when:
     - (sbctl_status.stdout | from_json).setup_mode
     - not (sbctl_status.stdout | from_json).secure_boot
 
-- name: Find EFI binaries to sign
+- name: security | Find EFI binaries to sign
   become: true
   find:
     paths: /boot/EFI
@@ -218,7 +218,7 @@
     recurse: true
   register: efi_binaries
 
-- name: Sign EFI binaries with sbctl
+- name: security | Sign EFI binaries with sbctl
   become: true
   command: "sbctl sign -s {{ item.path }}"
   loop: "{{ efi_binaries.files }}"

@@ -1,4 +1,4 @@
-- name: Install Git
+- name: git | Install Git
   homebrew:
     update_homebrew: no
     name: git

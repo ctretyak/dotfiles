@@ -1,4 +1,4 @@
-- name: Install Obsidian
+- name: obsidian | Install Obsidian
   become: true
   package:
     name: obsidian

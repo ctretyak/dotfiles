@@ -1,4 +1,4 @@
-- name: Install Spotify
+- name: spotify | Install Spotify
   homebrew:
     update_homebrew: no
     name: spotify

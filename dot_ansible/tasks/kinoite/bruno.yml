@@ -1,4 +1,4 @@
-- name: Install Bruno (Flatpak)
+- name: bruno | Install Bruno (Flatpak)
   community.general.flatpak:
     name: com.usebruno.Bruno
     remote: flathub

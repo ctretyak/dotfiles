@@ -1,4 +1,4 @@
-- name: Install jq
+- name: jq | Install jq
   become: true
   package:
     name: jq

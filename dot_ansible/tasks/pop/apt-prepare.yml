@@ -3,7 +3,7 @@
 # The `code` .deb postinst script drops /etc/apt/sources.list.d/vscode.sources
 # pointing at /usr/share/keyrings/microsoft.gpg, which conflicts with our own
 # vscode.list (signed-by /etc/apt/keyrings/packages.microsoft.asc) for the same URI.
-- name: Opt out of Microsoft auto-adding its VS Code repo
+- name: apt-prepare | Opt out of Microsoft auto-adding its VS Code repo
   become: true
   ansible.builtin.debconf:
     name: code
@@ -11,7 +11,7 @@
     vtype: boolean
     value: 'false'
 
-- name: Remove Microsoft-managed vscode.sources if present
+- name: apt-prepare | Remove Microsoft-managed vscode.sources if present
   become: true
   ansible.builtin.file:
     path: /etc/apt/sources.list.d/vscode.sources

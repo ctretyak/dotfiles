@@ -2,7 +2,7 @@
 # lands in ~/.local/bin and self-updates. No node, no rpm-ostree layer, no
 # distrobox needed — HOME is writable on Kinoite.
 
-- name: Install Claude Code
+- name: claude-code | Install Claude Code
   ansible.builtin.shell: curl -fsSL https://claude.ai/install.sh | bash
   args:
     creates: "{{ lookup('env', 'HOME') }}/.local/bin/claude"

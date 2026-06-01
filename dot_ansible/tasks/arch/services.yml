@@ -1,22 +1,22 @@
-- name: Install cronie
+- name: services | Install cronie
   become: true
   pacman:
     name: cronie
 
-- name: Enable cronie service
+- name: services | Enable cronie service
   become: true
   systemd:
     name: cronie
     enabled: true
     state: started
 
-- name: Check if Bluetooth adapter exists
+- name: services | Check if Bluetooth adapter exists
   command: rfkill list bluetooth
   register: bluetooth_check
   changed_when: false
   failed_when: false
 
-- name: Enable bluetooth service
+- name: services | Enable bluetooth service
   become: true
   systemd:
     name: bluetooth.service

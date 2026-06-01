@@ -1,10 +1,10 @@
-- name: Install Zsh
+- name: zsh | Install Zsh
   become: true
   package:
     name: zsh
     state: present
 
-- name: Set Zsh as default shell
+- name: zsh | Set Zsh as default shell
   become: true
   user:
     name: "{{ lookup('env', 'USER') }}"

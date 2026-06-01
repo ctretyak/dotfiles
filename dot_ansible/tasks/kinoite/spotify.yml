@@ -1,4 +1,4 @@
-- name: Install Spotify (Flatpak)
+- name: spotify | Install Spotify (Flatpak)
   community.general.flatpak:
     name: com.spotify.Client
     remote: flathub

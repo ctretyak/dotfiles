@@ -1,4 +1,4 @@
-- name: Install TickTick (AUR)
+- name: ticktick | Install TickTick (AUR)
   become: true
   become_user: aur_builder
   kewlfft.aur.aur:

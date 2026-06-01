@@ -3,7 +3,7 @@
 # On Aurora the brew shim is in /home/linuxbrew/.linuxbrew/bin which is
 # expected to be in PATH via Aurora's /etc/zsh/zshrc brew shellenv init.
 
-- name: Install Neovim plugins
+- name: neovim-plugins | Install Neovim plugins
   ansible.builtin.command: nvim --headless "+Lazy! sync" +qa
   args:
     creates: "{{ .chezmoi.homeDir }}/.local/share/nvim/lazy"

@@ -1,9 +1,9 @@
-- name: Check if Telegram is installed
+- name: telegram | Check if Telegram is installed
   ansible.builtin.stat:
     path: /opt/Telegram/Telegram
   register: tg_binary
 
-- name: Install Telegram from upstream tarball
+- name: telegram | Install Telegram from upstream tarball
   become: true
   ansible.builtin.unarchive:
     src: https://telegram.org/dl/desktop/linux
@@ -11,7 +11,7 @@
     remote_src: true
   when: not tg_binary.stat.exists
 
-- name: Symlink telegram-desktop to /usr/local/bin
+- name: telegram | Symlink telegram-desktop to /usr/local/bin
   become: true
   ansible.builtin.file:
     src: /opt/Telegram/Telegram
@@ -21,29 +21,29 @@
 # Telegram self-installs PNG + symbolic icons on first launch,
 # but no scalable SVG — COSMIC dock needs one at small sizes.
 # breeze-icon-theme ships one we can borrow.
-- name: Install breeze-icon-theme (source of scalable Telegram SVG)
+- name: telegram | Install breeze-icon-theme (source of scalable Telegram SVG)
   become: true
   ansible.builtin.apt:
     name: breeze-icon-theme
     state: present
 
-- name: Ensure user hicolor scalable apps directory exists
+- name: telegram | Ensure user hicolor scalable apps directory exists
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.local/share/icons/hicolor/scalable/apps"
     state: directory
 
-- name: Install scalable Telegram icon from breeze
+- name: telegram | Install scalable Telegram icon from breeze
   ansible.builtin.copy:
     src: /usr/share/icons/breeze/apps/48/telegram.svg
     dest: "{{ lookup('env', 'HOME') }}/.local/share/icons/hicolor/scalable/apps/org.telegram.desktop.svg"
     remote_src: true
 
-- name: Ensure user applications directory exists
+- name: telegram | Ensure user applications directory exists
   ansible.builtin.file:
     path: "{{ lookup('env', 'HOME') }}/.local/share/applications"
     state: directory
 
-- name: Install Telegram desktop entry
+- name: telegram | Install Telegram desktop entry
   ansible.builtin.copy:
     dest: "{{ lookup('env', 'HOME') }}/.local/share/applications/org.telegram.desktop.desktop"
     mode: '0644'
@@ -71,6 +71,6 @@
       Name=Quit Telegram
       Icon=application-exit
 
-- name: Refresh icon cache
+- name: telegram | Refresh icon cache
   ansible.builtin.command: gtk-update-icon-cache -f -t {{ lookup('env', 'HOME') }}/.local/share/icons/hicolor
   changed_when: false

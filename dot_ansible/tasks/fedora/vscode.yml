@@ -1,4 +1,4 @@
-- name: Install Visual Studio Code
+- name: vscode | Install Visual Studio Code
   become: true
   package:
     name: code

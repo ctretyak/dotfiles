@@ -1,4 +1,4 @@
-- name: Install Bruno
+- name: bruno | Install Bruno
   homebrew:
     update_homebrew: no
     name: bruno

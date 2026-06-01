@@ -1,4 +1,4 @@
-- name: Install Insync
+- name: insync | Install Insync
   become: true
   become_user: aur_builder
   kewlfft.aur.aur:

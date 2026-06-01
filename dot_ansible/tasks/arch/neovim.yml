@@ -1,4 +1,4 @@
-- name: Install Neovim
+- name: neovim | Install Neovim
   become: true
   package:
     name:

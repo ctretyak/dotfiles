@@ -1,16 +1,16 @@
-- name: Install DarkModeBuddy
+- name: darkmodebuddy | Install DarkModeBuddy
   homebrew_cask:
     name: darkmodebuddy
     state: present
 
-- name: Configure DarkModeBuddy darkness threshold
+- name: darkmodebuddy | Configure DarkModeBuddy darkness threshold
   community.general.osx_defaults:
     domain: codes.rambo.DarkModeBuddy
     key: darknessThreshold
     type: float
     value: 29.82
 
-- name: Enable DarkModeBuddy auto-switch
+- name: darkmodebuddy | Enable DarkModeBuddy auto-switch
   community.general.osx_defaults:
     domain: codes.rambo.DarkModeBuddy
     key: isChangeSystemAppearanceBasedOnAmbientLightEnabled
