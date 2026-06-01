@@ -7,17 +7,35 @@
 # Idempotent: queries existing state first and only adds/installs what's missing.
 # Assumes `claude` is already installed (claude-code.yml runs before this) and
 # can run non-interactively (a fresh machine may need a one-time login first).
-# `uv` is installed because the serena plugin's MCP server launches via
-# `uvx --from git+https://github.com/oraios/serena ...` at runtime.
+#
+# The typescript-lsp plugin launches a bare `typescript-language-server --stdio`
+# (not via npx), so the server must be on PATH — we install it globally with npm.
+# node/npm come from nvm (darwin/linux/aurora) or the system (kinoite), so this
+# task is ordered AFTER nvm/node provisioning in each _main.yml.tmpl.
 
 - name: claude-code-plugins | Provision plugins
   environment:
     PATH: "{{ lookup('env', 'HOME') }}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin"
   block:
-    - name: claude-code-plugins | Install uv (serena MCP launcher)
-      ansible.builtin.shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+    - name: claude-code-plugins | Check for typescript-language-server (typescript-lsp backend)
+      ansible.builtin.shell: |
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
+        command -v typescript-language-server
       args:
-        creates: "{{ lookup('env', 'HOME') }}/.local/bin/uv"
+        executable: /bin/bash
+      register: ccp_tsls
+      changed_when: false
+      failed_when: false
+
+    - name: claude-code-plugins | Install typescript-language-server globally
+      ansible.builtin.shell: |
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
+        npm install -g typescript-language-server typescript
+      args:
+        executable: /bin/bash
+      when: ccp_tsls.rc != 0
 
     - name: claude-code-plugins | Query installed plugins
       ansible.builtin.command: claude plugin list
@@ -46,7 +64,7 @@
         - octo@nyldn-plugins
         - ralph-loop@claude-plugins-official
         - playwright@claude-plugins-official
-        - serena@claude-plugins-official
+        - typescript-lsp@claude-plugins-official
         - security-guidance@claude-plugins-official
         - claude-code-setup@claude-plugins-official
       when: item not in ccp_installed.stdout
