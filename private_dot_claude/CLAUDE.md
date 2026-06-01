@@ -29,6 +29,7 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 
 ## Git
 - Do NOT commit or push to git unless explicitly asked by the user. Each commit/push requires separate explicit permission — authorization does NOT carry over from previous tasks in the same conversation
+- NEVER add Claude/Claude Code attribution to commit messages or PR/MR descriptions — no `🤖 Generated with Claude Code` line, no `Co-Authored-By: Claude` trailer, no equivalent free-text mention. The `attribution` setting suppresses the automatic block; this rule covers the case where you'd otherwise type it by hand.
 
 ## Projects
 - Work projects live in `~/git/x`. If a task spans multiple projects, look for them there.
