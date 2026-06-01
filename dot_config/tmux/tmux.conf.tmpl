@@ -74,7 +74,10 @@ set -g @plugin 'tmux-plugins/tmux-yank'
 set -g @plugin 'tmux-plugins/tmux-resurrect'
 set -g @plugin 'tmux-plugins/tmux-continuum'
 set -g @plugin 'christoomey/vim-tmux-navigator'
+set -g @plugin 'ctretyak/tmux-agents-inbox'
 
 set -g @continuum-restore 'on'
+# Remap the inbox popup off prefix+I (collides with TPM's install-plugins binding).
+set -g @agents-inbox-popup-key 'g'
 
 run '~/.tmux/plugins/tpm/tpm'
