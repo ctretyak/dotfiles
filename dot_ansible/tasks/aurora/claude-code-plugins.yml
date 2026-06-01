@@ -1,0 +1,52 @@
+# Installs the Claude Code plugins that settings.json declares as enabled.
+# chezmoi writes only settings.json (the enabledPlugins / extraKnownMarketplaces
+# *declarations*); it does not install plugin code. This task materializes the
+# marketplaces and plugins via the `claude` CLI so a fresh machine matches the
+# tracked config. Identical across OS trees — the claude CLI is cross-platform.
+#
+# Idempotent: queries existing state first and only adds/installs what's missing.
+# Assumes `claude` is already installed (claude-code.yml runs before this) and
+# can run non-interactively (a fresh machine may need a one-time login first).
+# `uv` is installed because the serena plugin's MCP server launches via
+# `uvx --from git+https://github.com/oraios/serena ...` at runtime.
+
+- name: claude-code-plugins | Provision plugins
+  environment:
+    PATH: "{{ lookup('env', 'HOME') }}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin"
+  block:
+    - name: claude-code-plugins | Install uv (serena MCP launcher)
+      ansible.builtin.shell: curl -LsSf https://astral.sh/uv/install.sh | sh
+      args:
+        creates: "{{ lookup('env', 'HOME') }}/.local/bin/uv"
+
+    - name: claude-code-plugins | Query installed plugins
+      ansible.builtin.command: claude plugin list
+      register: ccp_installed
+      changed_when: false
+
+    - name: claude-code-plugins | Query configured marketplaces
+      ansible.builtin.command: claude plugin marketplace list
+      register: ccp_marketplaces
+      changed_when: false
+
+    - name: claude-code-plugins | Add missing marketplaces
+      ansible.builtin.command: "claude plugin marketplace add {{ item.src }}"
+      loop:
+        - { name: claude-plugins-official, src: anthropics/claude-plugins-official }
+        - { name: nyldn-plugins, src: "https://github.com/nyldn/plugins.git" }
+      loop_control:
+        label: "{{ item.name }}"
+      when: item.name not in ccp_marketplaces.stdout
+
+    - name: claude-code-plugins | Install enabled plugins
+      ansible.builtin.command: "claude plugin install {{ item }} --scope user"
+      loop:
+        - superpowers@claude-plugins-official
+        - frontend-design@claude-plugins-official
+        - octo@nyldn-plugins
+        - ralph-loop@claude-plugins-official
+        - playwright@claude-plugins-official
+        - serena@claude-plugins-official
+        - security-guidance@claude-plugins-official
+        - claude-code-setup@claude-plugins-official
+      when: item not in ccp_installed.stdout
