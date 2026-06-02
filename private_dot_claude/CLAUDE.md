@@ -58,6 +58,7 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 ## Quality
 - Do NOT state facts (performance improvements, feature claims, library capabilities, dates, statistics, etc.) without verifying them first — check changelogs, docs, or source before making claims in specs, proposals, commit messages, or any artifact.
 - If you are uncertain about any fact, statistic, date, or technical detail and cannot verify it, say so explicitly instead of filling the gap with plausible-sounding information.
+- Before updating any library/dependency version, always check the migration guide and "what's new"/changelog/release notes for the target version first — review breaking changes, deprecations, and required code changes before bumping.
 
 ## octo:debate
 - When running `/octo:debate`: always use **≥3 rounds**. If the user passes `--rounds <3` or a style implying fewer (quick/collaborative), raise to 3 and say so.
