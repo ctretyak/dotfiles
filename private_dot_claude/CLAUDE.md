@@ -55,6 +55,9 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 - Don't execute individual subtasks (1.2, 1.3) in the main context — it pollutes the context.
 - The main context only coordinates: launch a subagent for a scope, get the result, launch the next.
 
+### Plan → worktree → dev (superpowers)
+- After every plan stage and before starting the dev/implementation stage, offer to start a new git worktree via the `superpowers:using-git-worktrees` skill. Make it an offer, not an automatic action — wait for my yes before creating the worktree.
+
 ## Quality
 - Do NOT state facts (performance improvements, feature claims, library capabilities, dates, statistics, etc.) without verifying them first — check changelogs, docs, or source before making claims in specs, proposals, commit messages, or any artifact.
 - If you are uncertain about any fact, statistic, date, or technical detail and cannot verify it, say so explicitly instead of filling the gap with plausible-sounding information.
