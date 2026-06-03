@@ -55,6 +55,11 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 - Only pull when the working tree is clean and you're on the intended branch. If there are uncommitted changes, a detached HEAD, or it's unclear which branch is the base, stop and surface it instead of pulling.
 - This is a fast-forward pull of the integration branch — never force, reset, or discard local work to sync.
 
+### Token budget for workflows / deep research
+- Default ceiling: **200k tokens max** for any dynamic workflow, multi-agent orchestration, or deep-research fan-out, unless I explicitly raise it for a given request.
+- Enforce it in the script itself — bound fleet size, round counts, and source/verify caps so the run stays under budget regardless of any per-turn directive. Don't rely on a `+Nk` directive alone.
+- Before launching, state the rough expected budget; if a request can't be done meaningfully under 200k, say so and ask before exceeding it.
+
 ### opsx:apply
 - Execute task scopes (1, 2, 3, ...) sequentially, each scope via a separate subagent.
 - Don't execute individual subtasks (1.2, 1.3) in the main context — it pollutes the context.
