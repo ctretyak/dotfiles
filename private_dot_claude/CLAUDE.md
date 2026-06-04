@@ -60,6 +60,13 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 - Enforce it in the script itself — bound fleet size, round counts, and source/verify caps so the run stays under budget regardless of any per-turn directive. Don't rely on a `+Nk` directive alone.
 - Before launching, state the rough expected budget; if a request can't be done meaningfully under 200k, say so and ask before exceeding it.
 
+### Model routing in workflows
+- Workflow subagents inherit the session model by default — on an Opus session that makes every fan-out agent an Opus agent. Set the tier explicitly per `agent()` call (`opts.model`) to match the stage; don't let mechanical stages silently inherit Opus.
+- **Mechanical / parallel stages** → **Haiku** (`opts.model: 'haiku'`): finders, readers, extractors, grep/map/transform — anything that gathers or restructures without deep reasoning. This is where token volume concentrates, so it's where routing saves the most.
+- **Reasoning stages** → **Opus**: synthesis, judging, adversarial verification, design/architecture decisions, final report. Few agents, high stakes — don't cheap out.
+- If a stage doesn't cleanly classify, default it to Opus (correctness over savings) and note the choice.
+- This is a cost lever, NOT a volume lever — it does not replace the 200k cap above. Keep both: the cap bounds how many tokens run, routing bounds what each token costs.
+
 ### opsx:apply
 - Execute task scopes (1, 2, 3, ...) sequentially, each scope via a separate subagent.
 - Don't execute individual subtasks (1.2, 1.3) in the main context — it pollutes the context.
