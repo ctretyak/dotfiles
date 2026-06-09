@@ -73,7 +73,7 @@ if vim.g.vscode then
         require("vscode").call("workbench.action.files.saveAll")
     end, {})
 
-    local keys_to_remove = {"grn", "grr", "gra", "gri", "grt"}
+    local keys_to_remove = {"grn", "grr", "gra", "gri", "grt", "grx"}
     for _, key in ipairs(keys_to_remove) do
         pcall(vim.keymap.del, "n", key)
     end
