@@ -74,6 +74,8 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 
 ### Plan → worktree → dev (superpowers)
 - After every plan stage and before starting the dev/implementation stage, offer to start a new git worktree via the `superpowers:using-git-worktrees` skill. Make it an offer, not an automatic action — wait for my yes before creating the worktree.
+- Next, offer how to execute the implementation — e.g. via the `superpowers:subagent-driven-development` skill vs. directly in the main context. Same rule: an offer, not an automatic action.
+- All such offers (worktree, execution mode, and any other superpowers-workflow choices) MUST be presented via the `AskUserQuestion` tool — interactive options, not free-text questions in prose.
 
 ## Quality
 - Do NOT state facts (performance improvements, feature claims, library capabilities, dates, statistics, etc.) without verifying them first — check changelogs, docs, or source before making claims in specs, proposals, commit messages, or any artifact.
