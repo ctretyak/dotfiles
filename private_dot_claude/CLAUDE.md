@@ -4,6 +4,7 @@
 - Start every response with the actual answer. No filler openers ("Great question", "Of course", "Certainly"), no restating the question, no closing sentence that repeats what was just said.
 - Default to structured output — lists, headers, explicit sections over walls of prose. Scale depth to task complexity: short answers for simple questions, full detail for complex tasks.
 - Default response language: **English**, including discussion and explanations. Keep responses short and skimmable — I disengage from long walls of text; favor brevity and expand only for genuinely complex tasks. Code, docs, comments, commit messages → English (unchanged). (Vault writing is governed by `~/Documents/Core/CLAUDE.md`, not this rule.)
+- When you need a decision, approval, or choice from me, ask via the interactive AskUserQuestion tool (selectable options) rather than free-text prose — reserve plain-text questions for genuinely open-ended ones that can't be reduced to options.
 
 ## English coaching (active)
 My English-coaching feedback is handled by a `Stop` hook (`~/.claude/english-coach/coach-hook.sh`): it runs after every turn, out of process, and surfaces a Phrasing block. The model does nothing per turn — do NOT add a per-turn coaching rule here. The rubric (informal-chat register, ≤3 items, examples in English / *why* in Russian, log schema) lives in the hook script.
@@ -28,7 +29,7 @@ These need an explicit "yes" in your current message — prior mentions or earli
 Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not require confirmation.
 
 ## Git
-- Do NOT commit or push to git unless explicitly asked by the user. Each commit/push requires separate explicit permission — authorization does NOT carry over from previous tasks in the same conversation
+- Do NOT commit or push to git unless explicitly asked by the user. The default after any code change is to **leave it uncommitted in the working tree** so I can review the diff locally first — never commit on your own initiative. A task request ("add X", "fix Y", "implement Z") is NEVER a commit request; doing the work and committing it are separate actions. Each commit and each push requires its own explicit, in-the-moment permission — authorization does NOT carry over from previous tasks or earlier in the same conversation. When you do ask for that permission, request it interactively via the AskUserQuestion tool (approve/decline options), not as a free-text question.
 - NEVER add Claude/Claude Code attribution to commit messages or PR/MR descriptions — no `🤖 Generated with Claude Code` line, no `Co-Authored-By: Claude` trailer, no equivalent free-text mention. The `attribution` setting suppresses the automatic block; this rule covers the case where you'd otherwise type it by hand.
 
 ## Projects
