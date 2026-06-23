@@ -29,7 +29,8 @@ These need an explicit "yes" in your current message — prior mentions or earli
 Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not require confirmation.
 
 ## Git
-- Do NOT commit or push to git unless explicitly asked by the user. The default after any code change is to **leave it uncommitted in the working tree** so I can review the diff locally first — never commit on your own initiative. A task request ("add X", "fix Y", "implement Z") is NEVER a commit request; doing the work and committing it are separate actions. Each commit and each push requires its own explicit, in-the-moment permission — authorization does NOT carry over from previous tasks or earlier in the same conversation. When you do ask for that permission, request it interactively via the AskUserQuestion tool (approve/decline options), not as a free-text question.
+- You may commit **and** push freely **without asking ONLY** on merge-request (MR/PR) branches.
+- NEVER commit or push to the protected branches — `main`/`master` and `develop` — under any circumstances. Integration into those branches is done by me (via merge/PR), not by you.
 - NEVER add Claude/Claude Code attribution to commit messages or PR/MR descriptions — no `🤖 Generated with Claude Code` line, no `Co-Authored-By: Claude` trailer, no equivalent free-text mention. The `attribution` setting suppresses the automatic block; this rule covers the case where you'd otherwise type it by hand.
 
 ## Projects
