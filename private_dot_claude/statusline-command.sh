@@ -2,6 +2,17 @@
 
 input=$(cat)
 
+source "$(dirname "$0")/statusline-ema.sh"
+
+# EMA tuning (env-overridable) + injectable clock for tests
+EMA_HL_5H=${STATUSLINE_EMA_HALFLIFE_5H_SEC:-3600}
+EMA_HL_7D=${STATUSLINE_EMA_HALFLIFE_7D_SEC:-86400}
+EMA_MINEL_5H=${STATUSLINE_EMA_MINELAPSED_5H_SEC:-1800}
+EMA_MINEL_7D=${STATUSLINE_EMA_MINELAPSED_7D_SEC:-14400}
+EMA_MIN_DT=${STATUSLINE_EMA_MIN_DT_SEC:-20}
+EMA_FLAT_PP=${STATUSLINE_EMA_FLAT_THRESHOLD_PP:-2}
+EMA_NOW=${STATUSLINE_NOW:-$(date +%s)}
+
 model=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
 used=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 
@@ -39,6 +50,17 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 MAGENTA='\033[0;35m'
 
+# Pick a color for a projection value by the existing threshold ladder.
+# Emits the raw escape sequence (literal \033...), interpreted by the final printf "%b".
+color_for() {
+  local v="$1"
+  if   [ "$v" -le 80 ];  then printf '%s' "$BLUE"
+  elif [ "$v" -le 100 ]; then printf '%s' "$GREEN"
+  elif [ "$v" -le 130 ]; then printf '%s' "$YELLOW"
+  else                        printf '%s' "$RED"
+  fi
+}
+
 # Git status for current workspace dir
 cwd=$(echo "$input" | jq -r '.workspace.current_dir // empty')
 git_part=""
@@ -66,36 +88,65 @@ if [ -n "$cwd" ] && git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&
   git_part="${MAGENTA}${branch}${RESET}${dirty}${ab}"
 fi
 
-# Format rate limit with projected end-of-period usage
-# Args: used_pct, resets_at (epoch), window_seconds, label
+# Format one rate-limit window: used% + linear projection + EMA projection.
+# Args: used_pct resets_at window_sec label state_file halflife min_elapsed
 fmt_rate_limit() {
   local used_pct="$1" resets_at="$2" window_sec="$3" label="$4"
+  local state_file="$5" halflife="$6" min_elapsed="$7"
   [ -z "$used_pct" ] && return
-  used_pct=$(printf "%.0f" "$used_pct")
+  [ -z "$resets_at" ] && return
+  local used_int; used_int=$(printf "%.0f" "$used_pct")
 
-  local now remaining_sec elapsed_sec projected color
-  now=$(date +%s)
-  remaining_sec=$(( resets_at - now ))
-  [ "$remaining_sec" -lt 0 ] && remaining_sec=0
+  local now="$EMA_NOW" remaining_sec elapsed_sec
+  remaining_sec=$(( resets_at - now )); [ "$remaining_sec" -lt 0 ] && remaining_sec=0
   elapsed_sec=$(( window_sec - remaining_sec ))
 
-  # Project usage at end of period; require >=10% of window elapsed
-  local min_elapsed=$(( window_sec / 10 ))
-  if [ "$elapsed_sec" -gt "$min_elapsed" ] && [ "$used_pct" -gt 0 ]; then
-    projected=$(( used_pct * window_sec / elapsed_sec ))
-    if [ "$projected" -le 80 ]; then
-      color="$BLUE"
-    elif [ "$projected" -le 100 ]; then
-      color="$GREEN"
-    elif [ "$projected" -le 130 ]; then
-      color="$YELLOW"
-    else
-      color="$RED"
-    fi
-    printf "${color}${used_pct}%%→${projected}%%${RESET}"
-  else
-    printf "${DIM}${used_pct}%%${RESET}"
+  # Linear projection + existing 10% guard
+  local min_lin=$(( window_sec / 10 )) lin_proj="NA" lin_shown=0
+  if [ "$elapsed_sec" -gt "$min_lin" ] && [ "$used_int" -gt 0 ]; then
+    lin_proj=$(( used_int * window_sec / elapsed_sec )); lin_shown=1
   fi
+
+  # Prior EMA state
+  local p_ts="NA" p_used="NA" p_rate="NA" p_rst="NA"
+  if [ -f "$state_file" ]; then
+    read -r p_ts p_used p_rate p_rst < "$state_file"
+    [ -z "$p_ts" ] && p_ts="NA"
+  fi
+
+  # Pure projection
+  local result
+  result=$(ema_project "$now" "$used_pct" "$resets_at" "$window_sec" \
+    "$halflife" "$EMA_MIN_DT" "$min_elapsed" "$EMA_FLAT_PP" \
+    "$lin_proj" "$lin_shown" "$p_ts" "$p_used" "$p_rate" "$p_rst")
+  local n_ts n_used n_rate n_rst ema_ready ema_proj ema_glyph reset_flag
+  read -r n_ts n_used n_rate n_rst ema_ready ema_proj ema_glyph reset_flag <<<"$result"
+
+  # Persist state atomically
+  local tmp="${state_file}.tmp.$$"
+  printf '%s %s %s %s\n' "$n_ts" "$n_used" "$n_rate" "$n_rst" > "$tmp" \
+    && mv -f "$tmp" "$state_file"
+
+  # Temporary validation sample log (remove once the formula is trusted)
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+    "$now" "$used_pct" "$resets_at" "$n_rate" "$lin_proj" "$ema_proj" "$ema_glyph" "$reset_flag" \
+    >> "${state_file}.samples.tsv"
+
+  # Assemble: used% (neutral) + →linear (colored) + glyph (neutral) + ema (colored)
+  if [ "$lin_shown" = "0" ] && [ "$ema_ready" = "0" ]; then
+    printf "%b" "${DIM}${used_int}%%${RESET}"
+    return
+  fi
+  local s="${used_int}%"
+  if [ "$lin_shown" = "1" ]; then
+    s="${s}$(color_for "$lin_proj")→${lin_proj}${RESET}"
+  fi
+  if [ "$ema_ready" = "1" ]; then
+    local g="~"
+    case "$ema_glyph" in UP) g="↗" ;; DOWN) g="↘" ;; FLAT) g="~" ;; esac
+    s="${s}${g}$(color_for "$ema_proj")${ema_proj}${RESET}"
+  fi
+  printf "%b" "$s"
 }
 
 # Rate limits
@@ -104,8 +155,10 @@ rl_5h_reset=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 rl_7d=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
 rl_7d_reset=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 
-rl_5h_fmt=$(fmt_rate_limit "$rl_5h" "$rl_5h_reset" 18000 "5h")
-rl_7d_fmt=$(fmt_rate_limit "$rl_7d" "$rl_7d_reset" 604800 "7d")
+rl_5h_fmt=$(fmt_rate_limit "$rl_5h" "$rl_5h_reset" 18000 "5h" \
+  "${HOME}/.claude/.statusline-ema-5h" "$EMA_HL_5H" "$EMA_MINEL_5H")
+rl_7d_fmt=$(fmt_rate_limit "$rl_7d" "$rl_7d_reset" 604800 "7d" \
+  "${HOME}/.claude/.statusline-ema-7d" "$EMA_HL_7D" "$EMA_MINEL_7D")
 
 # Assemble output
 parts="\033[0;36m${model}\033[0m"
