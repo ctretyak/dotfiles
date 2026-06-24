@@ -28,8 +28,18 @@ out=$(STATUSLINE_NOW=$NOW HOME="$tmp" bash "$SCRIPT" <<<"$JSON")
 plain=$(printf '%s' "$out" | sed 's/\x1b\[[0-9;]*m//g')
 
 # EMA: dt=100, rate=(12-10)/100=0.02 -> proj=12+0.02*9000=192; linear=12*18000/9000=24; 192>24 -> UP (↗)
+fail=0
 if printf '%s' "$plain" | grep -q '12%→24↗192'; then
-  echo "PASS render-5h-token"; rm -rf "$tmp"; exit 0
+  echo "PASS render-5h-token"
 else
-  echo "FAIL render-5h-token"; echo "  plain output: $plain"; rm -rf "$tmp"; exit 1
+  echo "FAIL render-5h-token"; echo "  plain output: $plain"; fail=1
 fi
+
+# 7d window: elapsed < 10% of 604800 -> cold-start fallback -> must render single %, never %%
+if printf '%s' "$plain" | grep -q '5%' && ! printf '%s' "$plain" | grep -q '5%%'; then
+  echo "PASS no-double-percent-fallback"
+else
+  echo "FAIL no-double-percent-fallback"; echo "  plain output: $plain"; fail=1
+fi
+
+rm -rf "$tmp"; exit "$fail"

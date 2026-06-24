@@ -134,7 +134,7 @@ fmt_rate_limit() {
 
   # Assemble: used% (neutral) + →linear (colored) + glyph (neutral) + ema (colored)
   if [ "$lin_shown" = "0" ] && [ "$ema_ready" = "0" ]; then
-    printf "%b" "${DIM}${used_int}%%${RESET}"
+    printf "%b" "${DIM}${used_int}%${RESET}"
     return
   fi
   local s="${used_int}%"
