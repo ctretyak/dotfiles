@@ -42,4 +42,28 @@ else
   echo "FAIL no-double-percent-fallback"; echo "  plain output: $plain"; fail=1
 fi
 
-rm -rf "$tmp"; exit "$fail"
+rm -rf "$tmp"
+
+# --- Reset truncates the samples log so the new period starts fresh ---
+tmp2=$(mktemp -d); mkdir -p "${tmp2}/.claude"
+NOW2=1000000000; RST2=$((NOW2+9000))
+# Prior state at 90% usage; the new render drops to 2% -> window reset detected.
+printf '%s %s %s %s\n' "$((NOW2-100))" 90 0.01 "$RST2" > "${tmp2}/.claude/.statusline-ema-5h"
+# Stale log rows from the previous period that must be wiped on reset.
+printf 'old1\nold2\nold3\n' > "${tmp2}/.claude/.statusline-ema-5h.samples.tsv"
+
+JSON2='{"model":{"display_name":"Test"},"context_window":{"used_percentage":40},"workspace":{"current_dir":"'"${tmp2}"'"},"rate_limits":{"five_hour":{"used_percentage":2,"resets_at":'"$RST2"'}}}'
+STATUSLINE_NOW=$NOW2 HOME="$tmp2" bash "$SCRIPT" <<<"$JSON2" >/dev/null
+
+log2="${tmp2}/.claude/.statusline-ema-5h.samples.tsv"
+lines=$(wc -l < "$log2" | tr -d ' ')
+reset_col=$(tail -n 1 "$log2" | awk '{print $8}')
+if [ "$lines" = "1" ] && [ "$reset_col" = "1" ]; then
+  echo "PASS reset-truncates-samples"
+else
+  echo "FAIL reset-truncates-samples (lines=$lines reset_flag=$reset_col)"
+  echo "  log contents: $(cat "$log2")"; fail=1
+fi
+rm -rf "$tmp2"
+
+exit "$fail"

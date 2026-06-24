@@ -127,10 +127,13 @@ fmt_rate_limit() {
   printf '%s %s %s %s\n' "$n_ts" "$n_used" "$n_rate" "$n_rst" > "$tmp" \
     && mv -f "$tmp" "$state_file"
 
-  # Temporary validation sample log (remove once the formula is trusted)
+  # Temporary validation sample log (remove once the formula is trusted).
+  # On window reset, truncate the log so it starts fresh for the new period.
+  local log_file="${state_file}.samples.tsv"
+  [ "$reset_flag" = "1" ] && : > "$log_file"
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
     "$now" "$used_pct" "$resets_at" "$n_rate" "$lin_proj" "$ema_proj" "$ema_glyph" "$reset_flag" \
-    >> "${state_file}.samples.tsv"
+    >> "$log_file"
 
   # Assemble: used% (neutral) + →linear (colored) + glyph (neutral) + ema (colored)
   if [ "$lin_shown" = "0" ] && [ "$ema_ready" = "0" ]; then
