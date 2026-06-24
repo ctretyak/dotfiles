@@ -52,10 +52,16 @@ C=$(ema_project $T 10.52 $((T+9000)) 18000 3600 20 1800 2 21 1 $((T-100)) 10.5 0
 check      "C cooling-down" "$C" 1 18 DOWN 0
 check_rate "C cooling-rate" "$C" 0.000789 0.00005
 
-# D: usage dropped -> reset; re-anchored; cleared; not ready
-check "D reset-drop" \
-  "$(ema_project $T 2 $((T+18000)) 18000 3600 20 1800 2 NA 0 $((T-100)) 90 0.005 $((T-50)))" \
+# D: genuine reset via resets_at jump (used need not drop) -> re-anchored, cleared, not ready
+check "D reset-via-resets_at" \
+  "$(ema_project $T 2 $((T+18000)) 18000 3600 20 1800 2 NA 0 $((T-100)) 1 0.005 $((T-50)))" \
   0 NA NA 1
+
+# I: used dips (66->47) with resets_at UNCHANGED -> NOT a reset (non-monotonic noise);
+#    rate is clamped to >=0 so the dip doesn't whiplash the EMA.
+Idip=$(ema_project $T 47 $((T+9000)) 18000 3600 20 1800 2 94 1 $((T-100)) 66 0.001 $((T+9000)))
+check      "I dip-no-reset" "$Idip" 1 56 DOWN 0
+check_rate "I dip-rate"     "$Idip" 0.000981 0.0001
 
 # E: Δt below min -> skip update, keep anchor, still display held rate
 E=$(ema_project $T 10.3 $((T+9000)) 18000 3600 20 1800 2 21 1 $((T-5)) 10 0.004 $((T+9000)))

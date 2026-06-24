@@ -44,25 +44,28 @@ fi
 
 rm -rf "$tmp"
 
-# --- Reset truncates the samples log so the new period starts fresh ---
+# --- Samples log prunes rows older than ~7 days (no truncate-on-reset) ---
 tmp2=$(mktemp -d); mkdir -p "${tmp2}/.claude"
-NOW2=1000000000; RST2=$((NOW2+9000))
-# Prior state at 90% usage; the new render drops to 2% -> window reset detected.
-printf '%s %s %s %s\n' "$((NOW2-100))" 90 0.01 "$RST2" > "${tmp2}/.claude/.statusline-ema-5h"
-# Stale log rows from the previous period that must be wiped on reset.
-printf 'old1\nold2\nold3\n' > "${tmp2}/.claude/.statusline-ema-5h.samples.tsv"
+NOW2=2000000000; RST2=$((NOW2+9000))
+# Normal prior state (no reset) so a regular render appends one row.
+printf '%s %s %s %s\n' "$((NOW2-100))" 10 0.001 "$RST2" > "${tmp2}/.claude/.statusline-ema-5h"
+log2="${tmp2}/.claude/.statusline-ema-5h.samples.tsv"
+# One stale row (~8.1d old, must be pruned) and one recent row (must stay).
+printf '%s\t10\t%s\t0\t18\t18\tFLAT\t0\n' "$((NOW2-700000))" "$RST2" >  "$log2"
+printf '%s\t10\t%s\t0\t18\t18\tFLAT\t0\n' "$((NOW2-100))"    "$RST2" >> "$log2"
 
-JSON2='{"model":{"display_name":"Test"},"context_window":{"used_percentage":40},"workspace":{"current_dir":"'"${tmp2}"'"},"rate_limits":{"five_hour":{"used_percentage":2,"resets_at":'"$RST2"'}}}'
+JSON2='{"model":{"display_name":"Test"},"context_window":{"used_percentage":40},"workspace":{"current_dir":"'"${tmp2}"'"},"rate_limits":{"five_hour":{"used_percentage":10,"resets_at":'"$RST2"'}}}'
 STATUSLINE_NOW=$NOW2 HOME="$tmp2" bash "$SCRIPT" <<<"$JSON2" >/dev/null
 
-log2="${tmp2}/.claude/.statusline-ema-5h.samples.tsv"
-lines=$(wc -l < "$log2" | tr -d ' ')
-reset_col=$(tail -n 1 "$log2" | awk '{print $8}')
-if [ "$lines" = "1" ] && [ "$reset_col" = "1" ]; then
-  echo "PASS reset-truncates-samples"
+field1(){ awk -F'\t' -v t="$1" '$1==t{print "y"; exit}' "$log2"; }
+old_present=$(field1 "$((NOW2-700000))")
+recent_present=$(field1 "$((NOW2-100))")
+new_present=$(field1 "$NOW2")
+if [ -z "$old_present" ] && [ "$recent_present" = "y" ] && [ "$new_present" = "y" ]; then
+  echo "PASS samples-prune-old"
 else
-  echo "FAIL reset-truncates-samples (lines=$lines reset_flag=$reset_col)"
-  echo "  log contents: $(cat "$log2")"; fail=1
+  echo "FAIL samples-prune-old (old=$old_present recent=$recent_present new=$new_present)"
+  echo "  log: $(cat "$log2")"; fail=1
 fi
 rm -rf "$tmp2"
 

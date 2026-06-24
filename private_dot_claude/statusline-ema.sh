@@ -27,11 +27,11 @@ ema_project() {
     OFMT = "%.9g"
     cold = (pts == "NA")
 
+    # A reset is a genuine window rollover, signalled by resets_at jumping
+    # forward. used_percentage is NOT monotonic (it can dip and recover), so a
+    # mere decrease is treated as noise, never a reset.
     reset = 0
-    if (!cold) {
-      if (used + 0 < pu + 0) reset = 1
-      if ((rst + 0) - (prst + 0) > win / 2) reset = 1
-    }
+    if (!cold && (rst + 0) - (prst + 0) > win / 2) reset = 1
 
     remaining = rst - now
     if (remaining < 0) remaining = 0
@@ -47,6 +47,7 @@ ema_project() {
       out_ts = pts; out_used = pu; out_rate = pr; out_rst = prst
     } else {
       rate = (used - pu) / dt
+      if (rate < 0) rate = 0   # used can dip (non-monotonic); a decrease is not negative burn
       if (pr == "NA") {
         out_rate = rate
       } else {

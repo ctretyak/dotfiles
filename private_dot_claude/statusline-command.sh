@@ -101,10 +101,13 @@ fmt_rate_limit() {
   remaining_sec=$(( resets_at - now )); [ "$remaining_sec" -lt 0 ] && remaining_sec=0
   elapsed_sec=$(( window_sec - remaining_sec ))
 
-  # Linear projection + existing 10% guard
+  # Linear projection + existing 10% guard. Computed from the fractional used_pct
+  # (round only the final number), so linear and EMA share the same input.
   local min_lin=$(( window_sec / 10 )) lin_proj="NA" lin_shown=0
   if [ "$elapsed_sec" -gt "$min_lin" ] && [ "$used_int" -gt 0 ]; then
-    lin_proj=$(( used_int * window_sec / elapsed_sec )); lin_shown=1
+    lin_proj=$(awk -v u="$used_pct" -v w="$window_sec" -v e="$elapsed_sec" \
+      'BEGIN { printf "%.0f", u * w / e }')
+    lin_shown=1
   fi
 
   # Prior EMA state
@@ -128,12 +131,18 @@ fmt_rate_limit() {
     && mv -f "$tmp" "$state_file"
 
   # Temporary validation sample log (remove once the formula is trusted).
-  # On window reset, truncate the log so it starts fresh for the new period.
+  # Keep ~7 days of rows; prune older ones. The rewrite is batched (only once the
+  # oldest row passes 8 days) so we don't rewrite the file on every render.
   local log_file="${state_file}.samples.tsv"
-  [ "$reset_flag" = "1" ] && : > "$log_file"
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
     "$now" "$used_pct" "$resets_at" "$n_rate" "$lin_proj" "$ema_proj" "$ema_glyph" "$reset_flag" \
     >> "$log_file"
+  local oldest
+  oldest=$(head -n 1 "$log_file" 2>/dev/null | cut -f1)
+  if [ -n "$oldest" ] && [ "$oldest" -lt "$(( now - 691200 ))" ] 2>/dev/null; then
+    awk -F'\t' -v c="$(( now - 604800 ))" '$1 >= c' "$log_file" > "${log_file}.prune.$$" \
+      && mv -f "${log_file}.prune.$$" "$log_file"
+  fi
 
   # Assemble: used% (neutral) + →linear (colored) + glyph (neutral) + ema (colored)
   if [ "$lin_shown" = "0" ] && [ "$ema_ready" = "0" ]; then
