@@ -2,6 +2,8 @@
 
 CLAUDE.md
 README.md
+docs/**
+tests/**
 
 old_*/**
 
