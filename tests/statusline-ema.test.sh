@@ -58,10 +58,10 @@ check "D reset-via-resets_at" \
   0 NA NA 1
 
 # I: used dips (66->47) with resets_at UNCHANGED -> NOT a reset (non-monotonic noise);
-#    rate is clamped to >=0 so the dip doesn't whiplash the EMA.
+#    the dip HOLDS the anchor (rate untouched), so a later recovery can't whiplash it.
 Idip=$(ema_project $T 47 $((T+9000)) 18000 3600 20 1800 2 94 1 $((T-100)) 66 0.001 $((T+9000)))
-check      "I dip-no-reset" "$Idip" 1 56 DOWN 0
-check_rate "I dip-rate"     "$Idip" 0.000981 0.0001
+check      "I dip-no-reset"  "$Idip" 1 56 DOWN 0
+check_rate "I dip-rate-held" "$Idip" 0.001 0.00001
 
 # E: Δt below min -> skip update, keep anchor, still display held rate
 E=$(ema_project $T 10.3 $((T+9000)) 18000 3600 20 1800 2 21 1 $((T-5)) 10 0.004 $((T+9000)))
@@ -91,6 +91,26 @@ for i in $(seq 1 30); do
   read -r pts pu pr _ <<<"$H"
 done
 check_rate "H steady-converge" "$H" 0.0001 0.00003
+
+# J: stale resets_at (rst <= now) is input noise -> ignore the sample entirely.
+#    Prior state is held and (critically) the good FUTURE resets_at is preserved, so
+#    the next real sample is NOT seen as a forward jump / phantom window reset.
+J=$(ema_project $T 18 $((T-50000)) 18000 3600 20 1800 2 NA 0 $((T-100)) 10 0.0003 $((T+9000)))
+check "J stale-ignored" "$J" 0 NA NA 0
+read -r j_ts j_used j_rate j_rst _ <<<"$J"
+if [ "$j_rst" = "$((T+9000))" ] && [ "$j_rate" = "0.0003" ] && [ "$j_used" = "10" ]; then
+  pass=$((pass+1)); echo "PASS J state-held (good resets_at preserved)"
+else
+  fail=$((fail+1)); echo "FAIL J state-held got ts=$j_ts used=$j_used rate=$j_rate rst=$j_rst"
+fi
+
+# K: a single-sample dip then recovery (78->67->78) must NOT whiplash the rate.
+#    Real 7d bug: the dip moved the anchor to 67, then the 67->78 recovery seeded a
+#    huge burst. With the dip-hold guard the anchor stays at 78 across both steps.
+K1=$(ema_project $T 67 $((T+255000)) 604800 86400 20 14400 2 135 1 $((T-100)) 78 0.0000822 $((T+255000)))
+read -r k_ts k_used k_rate _ <<<"$K1"
+K2=$(ema_project $((T+21)) 78 $((T+255000)) 604800 86400 20 14400 2 135 1 "$k_ts" "$k_used" "$k_rate" $((T+255000)))
+check_rate "K recovery-no-whiplash" "$K2" 0.0000822 0.00001
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

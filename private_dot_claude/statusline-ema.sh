@@ -27,6 +27,16 @@ ema_project() {
     OFMT = "%.9g"
     cold = (pts == "NA")
 
+    # Stale-sample guard: a window whose resets_at is already at/in the past cannot
+    # be the current window — it is noise in the input JSON. Ignore the sample
+    # entirely: hold prior state and, crucially, do NOT persist the stale resets_at
+    # (which would later look like a forward jump and trigger a phantom reset).
+    if ((rst + 0) <= (now + 0)) {
+      if (cold) print "NA", "NA", "NA", "NA", 0, "NA", "NA", 0
+      else      print pts, pu, pr, prst, 0, "NA", "NA", 0
+      exit
+    }
+
     # A reset is a genuine window rollover, signalled by resets_at jumping
     # forward. used_percentage is NOT monotonic (it can dip and recover), so a
     # mere decrease is treated as noise, never a reset.
@@ -43,11 +53,15 @@ ema_project() {
     }
 
     dt = now - pts
-    if (dt < mindt) {
+    # Hold the anchor when the sample is too close in time (dt < mindt) OR when used
+    # dipped below the anchor. used is non-monotonic; moving the anchor down to a
+    # transient dip makes the subsequent recovery read as a huge burst (whiplash).
+    # Holding keeps the dip-then-recover net rate near zero.
+    if (dt < mindt || (used + 0) < (pu + 0)) {
       out_ts = pts; out_used = pu; out_rate = pr; out_rst = prst
     } else {
       rate = (used - pu) / dt
-      if (rate < 0) rate = 0   # used can dip (non-monotonic); a decrease is not negative burn
+      if (rate < 0) rate = 0   # defensive: float noise only; real dips are held above
       if (pr == "NA") {
         out_rate = rate
       } else {
