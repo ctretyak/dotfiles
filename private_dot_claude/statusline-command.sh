@@ -16,14 +16,16 @@ EMA_NOW=${STATUSLINE_NOW:-$(date +%s)}
 model=$(echo "$input" | jq -r '.model.display_name // "Unknown"')
 used=$(echo "$input" | jq -r '.context_window.used_percentage // empty')
 
-# effortLevel is a setting in settings.json, not part of the statusline stdin JSON
-effort=$(jq -r '.effortLevel // empty' "${HOME}/.claude/settings.json" 2>/dev/null)
+# effort.level is the live session value from stdin, reflecting mid-session /effort changes
+effort=$(echo "$input" | jq -r '.effort.level // empty')
 
-# Format effort level as orange bars: low=|   medium=||  high=|||
+# Format effort level as orange bars: low=|  medium=||  high=|||  xhigh=||||  max=|||||
 ORANGE='\033[38;5;208m'
 DIM='\033[2m'
 RESET='\033[0m'
 case "$effort" in
+  max)    effort_dots="${ORANGE}|||||${RESET}" ;;
+  xhigh)  effort_dots="${ORANGE}||||${RESET}" ;;
   high)   effort_dots="${ORANGE}|||${RESET}" ;;
   medium) effort_dots="${ORANGE}||${RESET}${DIM}|${RESET}" ;;
   low)    effort_dots="${ORANGE}|${RESET}${DIM}||${RESET}" ;;

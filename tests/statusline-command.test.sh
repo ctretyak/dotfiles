@@ -69,4 +69,19 @@ else
 fi
 rm -rf "$tmp2"
 
+# --- Effort level is read from stdin (.effort.level), not settings.json ---
+tmp3=$(mktemp -d); mkdir -p "${tmp3}/.claude"
+# Stale settings.json source must be IGNORED: it says high (3 bars)...
+printf '{"effortLevel":"high"}\n' > "${tmp3}/.claude/settings.json"
+# ...but stdin says xhigh, which must win and render 4 bars.
+JSON3='{"model":{"display_name":"Test"},"effort":{"level":"xhigh"},"workspace":{"current_dir":"'"${tmp3}"'"}}'
+out3=$(STATUSLINE_NOW=$NOW HOME="$tmp3" bash "$SCRIPT" <<<"$JSON3")
+plain3=$(printf '%s' "$out3" | sed 's/\x1b\[[0-9;]*m//g')
+if printf '%s' "$plain3" | grep -q '||||' && ! printf '%s' "$plain3" | grep -q '|||||'; then
+  echo "PASS effort-from-stdin-xhigh"
+else
+  echo "FAIL effort-from-stdin-xhigh"; echo "  plain output: $plain3"; fail=1
+fi
+rm -rf "$tmp3"
+
 exit "$fail"
