@@ -29,8 +29,8 @@ These need an explicit "yes" in your current message — prior mentions or earli
 Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not require confirmation.
 
 ## Git
-- You may commit **and** push freely **without asking ONLY** on merge-request (MR/PR) branches.
-- NEVER commit or push to the protected branches — `main`/`master` and `develop` — under any circumstances. Integration into those branches is done by me (via merge/PR), not by you.
+- You may commit **and** push freely **without asking** on merge-request (MR/PR) branches.
+- Do NOT commit or push to the protected branches — `main`/`master` and `develop` — **automatically or on your own initiative**. Two exceptions, and only these: (1) when I **explicitly ask in my current message** to commit/push to a protected branch, do it — prior or earlier authorization does NOT count; (2) when you're about to integrate finished work and I have **not** asked, do not pick for me — surface an `AskUserQuestion` dialog offering the choice (push to the protected branch vs. branch + PR) and let me decide. Otherwise default to branch + PR.
 - NEVER add Claude/Claude Code attribution to commit messages or PR/MR descriptions — no `🤖 Generated with Claude Code` line, no `Co-Authored-By: Claude` trailer, no equivalent free-text mention. The `attribution` setting suppresses the automatic block; this rule covers the case where you'd otherwise type it by hand.
 
 ## Projects
