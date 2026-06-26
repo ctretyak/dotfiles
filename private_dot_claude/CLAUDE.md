@@ -32,6 +32,8 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 - You may commit **and** push freely **without asking** on merge-request (MR/PR) branches.
 - Do NOT commit or push to the protected branches — `main`/`master` and `develop` — **automatically or on your own initiative**. Two exceptions, and only these: (1) when I **explicitly ask in my current message** to commit/push to a protected branch, do it — prior or earlier authorization does NOT count; (2) when you're about to integrate finished work and I have **not** asked, do not pick for me — surface an `AskUserQuestion` dialog offering the choice (push to the protected branch vs. branch + PR) and let me decide. Otherwise default to branch + PR.
 - NEVER add Claude/Claude Code attribution to commit messages or PR/MR descriptions — no `🤖 Generated with Claude Code` line, no `Co-Authored-By: Claude` trailer, no equivalent free-text mention. The `attribution` setting suppresses the automatic block; this rule covers the case where you'd otherwise type it by hand.
+- After **every push to an MR/PR branch**, send me the link to that MR/PR in your response.
+- After **every push to an MR/PR branch**, track the pipeline that the push triggered: watch it to completion and inspect every job for errors and warnings. For any error or warning caused by changes in this MR, fix it. Ignore failures that are pre-existing or unrelated to this MR's changes, but say so explicitly rather than silently skipping them.
 
 ## Projects
 - Work projects live in `~/git/x`. If a task spans multiple projects, look for them there.
