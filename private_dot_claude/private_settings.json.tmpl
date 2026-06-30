@@ -22,20 +22,20 @@
         ]
       },
       {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh PreToolUse",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
             "command": "rtk hook claude"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh PreToolUse",
+            "timeout": 5
           }
         ]
       }
@@ -120,6 +120,17 @@
           {
             "type": "command",
             "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh PreCompact",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh PostToolUse",
             "timeout": 5
           }
         ]
