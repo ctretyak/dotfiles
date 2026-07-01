@@ -1,70 +1,28 @@
-# Installs the Claude Code plugins that settings.json declares as enabled.
-# chezmoi writes only settings.json (the enabledPlugins / extraKnownMarketplaces
-# *declarations*); it does not install plugin code. This task materializes the
-# marketplaces and plugins via the `claude` CLI so a fresh machine matches the
-# tracked config. Identical across OS trees — the claude CLI is cross-platform.
+# Installs and enables all Claude Code plugins via the `claude` CLI. This is the
+# single source of truth for plugins: settings.json no longer declares them — its
+# modify_ script leaves enabledPlugins machine-local, and `claude plugin install`
+# writes the enablement there. The official marketplace (claude-plugins-official)
+# is built in, so no marketplace needs to be added. Identical across OS trees.
 #
-# Idempotent: queries existing state first and only adds/installs what's missing.
+# Idempotent: queries installed plugins first and only installs what's missing.
 # Assumes `claude` is already installed (claude-code.yml runs before this) and
 # can run non-interactively (a fresh machine may need a one-time login first).
-#
-# The typescript-lsp plugin launches a bare `typescript-language-server --stdio`
-# (not via npx), so the server must be on PATH — we install it globally with npm.
-# node/npm come from nvm (darwin/linux/aurora) or the system (kinoite), so this
-# task is ordered AFTER nvm/node provisioning in each _main.yml.tmpl.
 
 - name: claude-code-plugins | Provision plugins
   environment:
     PATH: "{{ lookup('env', 'HOME') }}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin"
   block:
-    - name: claude-code-plugins | Check for typescript-language-server (typescript-lsp backend)
-      ansible.builtin.shell: |
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
-        command -v typescript-language-server
-      args:
-        executable: /bin/bash
-      register: ccp_tsls
-      changed_when: false
-      failed_when: false
-
-    - name: claude-code-plugins | Install typescript-language-server globally
-      ansible.builtin.shell: |
-        export NVM_DIR="$HOME/.nvm"
-        [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
-        npm install -g typescript-language-server typescript
-      args:
-        executable: /bin/bash
-      when: ccp_tsls.rc != 0
-
     - name: claude-code-plugins | Query installed plugins
       ansible.builtin.command: claude plugin list
       register: ccp_installed
       changed_when: false
-
-    - name: claude-code-plugins | Query configured marketplaces
-      ansible.builtin.command: claude plugin marketplace list
-      register: ccp_marketplaces
-      changed_when: false
-
-    - name: claude-code-plugins | Add missing marketplaces
-      ansible.builtin.command: "claude plugin marketplace add {{ item.src }}"
-      loop:
-        - { name: claude-plugins-official, src: anthropics/claude-plugins-official }
-        - { name: nyldn-plugins, src: "https://github.com/nyldn/plugins.git" }
-      loop_control:
-        label: "{{ item.name }}"
-      when: item.name not in ccp_marketplaces.stdout
 
     - name: claude-code-plugins | Install enabled plugins
       ansible.builtin.command: "claude plugin install {{ item }} --scope user"
       loop:
         - superpowers@claude-plugins-official
         - frontend-design@claude-plugins-official
-        - octo@nyldn-plugins
         - ralph-loop@claude-plugins-official
         - playwright@claude-plugins-official
-        - typescript-lsp@claude-plugins-official
         - security-guidance@claude-plugins-official
-        - claude-code-setup@claude-plugins-official
       when: item not in ccp_installed.stdout

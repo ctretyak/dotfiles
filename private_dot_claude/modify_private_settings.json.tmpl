@@ -1,3 +1,23 @@
+#!/bin/bash
+# chezmoi modify_ script for ~/.claude/settings.json.
+#
+# Rather than owning the whole file, chezmoi enforces only a managed subset of keys
+# and leaves everything else machine-local. This lets each machine keep its own
+# settings.json while a core set of keys stays synced from chezmoi.
+#
+# Notably, "enabledPlugins" is deliberately NOT managed: ansible
+# (claude-code-plugins.yml) is the single source of truth for plugins and the
+# `claude plugin install` CLI writes the enablement into settings.json locally.
+# The merge below preserves whatever the machine has there.
+#
+# chezmoi passes the current target contents on stdin (empty on a fresh machine)
+# and writes this script's stdout back to ~/.claude/settings.json.
+set -euo pipefail
+
+# The keys chezmoi owns and syncs across every machine. Anything not listed here
+# (enabledPlugins, extraKnownMarketplaces, MCP servers, per-machine permissions, …)
+# is left untouched.
+managed=$(cat <<'JSON'
 {
   "env": {
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000"
@@ -142,18 +162,22 @@
     "command": "bash ~/.claude/statusline-command.sh",
     "refreshInterval": 120
   },
-  "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
-    "frontend-design@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "claude-code-setup@claude-plugins-official": true
-  },
-  "extraKnownMarketplaces": {},
   "language": "English",
   "skipWorkflowUsageWarning": true,
   "theme": "auto",
   "skipAutoPermissionPrompt": true
 }
+JSON
+)
+
+existing="$(cat)"
+[ -z "$existing" ] && existing='{}'
+
+if command -v jq >/dev/null 2>&1; then
+  # Deep-merge: managed keys win on conflicts, every machine-local key is preserved.
+  printf '%s' "$existing" | jq --argjson managed "$managed" '. * $managed'
+else
+  # No jq yet (fresh-machine bootstrap, before ansible installs it). Emit the managed
+  # set as-is; the next apply — with jq present — merges machine-local keys back in.
+  printf '%s\n' "$managed"
+fi
