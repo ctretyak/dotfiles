@@ -174,8 +174,34 @@ existing="$(cat)"
 [ -z "$existing" ] && existing='{}'
 
 if command -v jq >/dev/null 2>&1; then
-  # Deep-merge: managed keys win on conflicts, every machine-local key is preserved.
-  printf '%s' "$existing" | jq --argjson managed "$managed" '. * $managed'
+  # Apply an explicit, per-property rule. A property that is never referenced below
+  # (enabledPlugins, extraKnownMarketplaces, mcpServers, …) is left exactly as the
+  # machine has it. "merge" keeps machine-local sibling keys; "replace" overwrites
+  # the whole value.
+  printf '%s' "$existing" | jq --argjson managed "$managed" '
+      # env: enforce the managed vars, keep any other machine-local env var.
+      .env = ((.env // {}) + $managed.env)
+
+      # attribution: fully owned by chezmoi.
+    | .attribution = $managed.attribution
+
+      # permissions: enforce defaultMode only; keep machine-local allow/deny/ask
+      # lists and additionalDirectories.
+    | .permissions = ((.permissions // {}) + { defaultMode: $managed.permissions.defaultMode })
+
+      # hooks: enforce the events chezmoi defines (each replaces that event whole);
+      # keep any hook event chezmoi does not define.
+    | .hooks = ((.hooks // {}) + $managed.hooks)
+
+      # statusLine: fully owned by chezmoi.
+    | .statusLine = $managed.statusLine
+
+      # global preferences: replace outright.
+    | .language = $managed.language
+    | .skipWorkflowUsageWarning = $managed.skipWorkflowUsageWarning
+    | .theme = $managed.theme
+    | .skipAutoPermissionPrompt = $managed.skipAutoPermissionPrompt
+  '
 else
   # No jq yet (fresh-machine bootstrap, before ansible installs it). Emit the managed
   # set as-is; the next apply — with jq present — merges machine-local keys back in.
