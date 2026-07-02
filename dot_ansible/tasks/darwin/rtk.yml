@@ -1,0 +1,9 @@
+# RTK — token-reducing CLI proxy for Claude Code. The PreToolUse Bash hook
+# (`rtk hook claude` in ~/.claude/settings.json) and ~/.claude/RTK.md are
+# chezmoi-managed; this only installs the binary.
+
+- name: rtk | Install rtk
+  homebrew:
+    update_homebrew: no
+    name: rtk
+    state: present

@@ -1,0 +1,9 @@
+# RTK — token-reducing CLI proxy for Claude Code. Official installer drops a
+# static binary into ~/.local/bin, same model as claude-code.yml.tmpl. The
+# PreToolUse Bash hook (`rtk hook claude` in ~/.claude/settings.json) and
+# ~/.claude/RTK.md are chezmoi-managed; this only installs the binary.
+
+- name: rtk | Install rtk
+  shell: curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh
+  args:
+    creates: "{{ lookup('env', 'HOME') }}/.local/bin/rtk"

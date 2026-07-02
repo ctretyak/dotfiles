@@ -9,6 +9,8 @@
 #   - neovim, python@3.12       — editor + runtime
 #   - ripgrep, fd, fzf, lazygit  — search / git TUI
 #   - bc, jq                     — shell utilities
+#   - rtk                        — token-reducing CLI proxy for Claude Code
+#                                  (PreToolUse Bash hook in ~/.claude/settings.json)
 #
 # wl-clipboard is NOT here — Aurora's base image already ships it
 # (/usr/bin/wl-copy, /usr/bin/wl-paste) and Homebrew has no such formula.
@@ -34,5 +36,6 @@
       - lazygit
       - bc
       - jq
+      - rtk
     state: present
     path: /home/linuxbrew/.linuxbrew/bin
