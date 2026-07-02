@@ -1,36 +1,45 @@
 #!/bin/bash
 # chezmoi modify_ script for ~/.claude/settings.json.
 #
-# Rather than owning the whole file, chezmoi enforces only a managed subset of keys
-# and leaves everything else machine-local. This lets each machine keep its own
-# settings.json while a core set of keys stays synced from chezmoi.
+# chezmoi does not own the whole file. It keeps a "managed" block (below) whose
+# entries are applied over the machine's current settings.json by path: each entry
+# key names a path (dot-separated for nesting) and its value replaces exactly that
+# path, leaving everything else the machine has untouched. This lets each machine
+# keep its own settings.json while a core set of keys stays synced from chezmoi.
 #
-# Notably, "enabledPlugins" is deliberately NOT managed: ansible
-# (claude-code-plugins.yml) is the single source of truth for plugins and the
-# `claude plugin install` CLI writes the enablement into settings.json locally.
-# The merge below preserves whatever the machine has there.
+# The managed block is the single source of truth for what syncs: add a key to
+# sync it, delete a key to stop syncing it (the machine then keeps whatever it
+# had — no stray nulls).
+#
+# Granularity is chosen per entry:
+#   "theme": "auto"                  -> replaces the whole top-level "theme"
+#   "permissions.defaultMode": "..." -> replaces only permissions.defaultMode and
+#                                       keeps permissions.allow / deny / etc.
+# Use a plain key when chezmoi should own the whole value; use a dotted path when
+# a sub-key should be enforced but its siblings left machine-local.
+#
+# "enabledPlugins" is deliberately NOT managed: ansible (claude-code-plugins.yml)
+# is the single source of truth for plugins; the `claude plugin install` CLI writes
+# the enablement into settings.json locally and this merge leaves it alone.
 #
 # chezmoi passes the current target contents on stdin (empty on a fresh machine)
 # and writes this script's stdout back to ~/.claude/settings.json.
 set -euo pipefail
 
-# The keys chezmoi owns and syncs across every machine. Anything not listed here
-# (enabledPlugins, extraKnownMarketplaces, MCP servers, per-machine permissions, …)
-# is left untouched.
+# The paths chezmoi owns and syncs across every machine. A dotted key targets a
+# sub-key (env vars, permissions.defaultMode, individual hooks.* events), keeping
+# its machine-local siblings; a plain key owns the whole value. Any path not listed
+# (enabledPlugins, extraKnownMarketplaces, MCP servers, permissions.allow, a
+# machine-only hook event, …) is left untouched.
 managed=$(cat <<'JSON'
 {
-  "env": {
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000"
-  },
+  "env.CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000",
   "attribution": {
     "commit": "",
     "pr": ""
   },
-  "permissions": {
-    "defaultMode": "auto"
-  },
-  "hooks": {
-    "PreToolUse": [
+  "permissions.defaultMode": "auto",
+  "hooks.PreToolUse": [
       {
         "matcher": "ExitPlanMode|AskUserQuestion",
         "hooks": [
@@ -60,7 +69,7 @@ managed=$(cat <<'JSON'
         ]
       }
     ],
-    "UserPromptSubmit": [
+  "hooks.UserPromptSubmit": [
       {
         "hooks": [
           {
@@ -81,7 +90,7 @@ managed=$(cat <<'JSON'
         ]
       }
     ],
-    "Stop": [
+  "hooks.Stop": [
       {
         "hooks": [
           {
@@ -101,7 +110,7 @@ managed=$(cat <<'JSON'
         ]
       }
     ],
-    "SessionStart": [
+  "hooks.SessionStart": [
       {
         "hooks": [
           {
@@ -112,7 +121,7 @@ managed=$(cat <<'JSON'
         ]
       }
     ],
-    "Notification": [
+  "hooks.Notification": [
       {
         "hooks": [
           {
@@ -123,7 +132,7 @@ managed=$(cat <<'JSON'
         ]
       }
     ],
-    "SessionEnd": [
+  "hooks.SessionEnd": [
       {
         "hooks": [
           {
@@ -134,7 +143,7 @@ managed=$(cat <<'JSON'
         ]
       }
     ],
-    "PreCompact": [
+  "hooks.PreCompact": [
       {
         "hooks": [
           {
@@ -145,7 +154,7 @@ managed=$(cat <<'JSON'
         ]
       }
     ],
-    "PostToolUse": [
+  "hooks.PostToolUse": [
       {
         "hooks": [
           {
@@ -155,17 +164,14 @@ managed=$(cat <<'JSON'
           }
         ]
       }
-    ]
-  },
+  ],
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh",
     "refreshInterval": 120
   },
   "language": "English",
-  "skipWorkflowUsageWarning": true,
-  "theme": "auto",
-  "skipAutoPermissionPrompt": true
+  "theme": "auto"
 }
 JSON
 )
@@ -174,36 +180,19 @@ existing="$(cat)"
 [ -z "$existing" ] && existing='{}'
 
 if command -v jq >/dev/null 2>&1; then
-  # Apply an explicit, per-property rule. A property that is never referenced below
-  # (enabledPlugins, extraKnownMarketplaces, mcpServers, …) is left exactly as the
-  # machine has it. "merge" keeps machine-local sibling keys; "replace" overwrites
-  # the whole value.
+  # For each entry in $managed, split its key on "." into a path and set exactly
+  # that path — replacing only the leaf while leaving its siblings untouched.
+  # A plain key ("theme") replaces the whole top-level value; a dotted key
+  # ("permissions.defaultMode") replaces just that sub-key and keeps the rest of
+  # the object (permissions.allow, …). Any path not listed is never touched, so
+  # deleting a key from the managed block simply stops syncing it — never null.
+  # (Managed keys must not contain a literal "." in a single path segment.)
   printf '%s' "$existing" | jq --argjson managed "$managed" '
-      # env: enforce the managed vars, keep any other machine-local env var.
-      .env = ((.env // {}) + $managed.env)
-
-      # attribution: fully owned by chezmoi.
-    | .attribution = $managed.attribution
-
-      # permissions: enforce defaultMode only; keep machine-local allow/deny/ask
-      # lists and additionalDirectories.
-    | .permissions = ((.permissions // {}) + { defaultMode: $managed.permissions.defaultMode })
-
-      # hooks: enforce the events chezmoi defines (each replaces that event whole);
-      # keep any hook event chezmoi does not define.
-    | .hooks = ((.hooks // {}) + $managed.hooks)
-
-      # statusLine: fully owned by chezmoi.
-    | .statusLine = $managed.statusLine
-
-      # global preferences: replace outright.
-    | .language = $managed.language
-    | .skipWorkflowUsageWarning = $managed.skipWorkflowUsageWarning
-    | .theme = $managed.theme
-    | .skipAutoPermissionPrompt = $managed.skipAutoPermissionPrompt
+    reduce ($managed | to_entries[]) as $e (.; setpath($e.key | split("."); $e.value))
   '
 else
-  # No jq yet (fresh-machine bootstrap, before ansible installs it). Emit the managed
-  # set as-is; the next apply — with jq present — merges machine-local keys back in.
-  printf '%s\n' "$managed"
+  # No jq (fresh-machine bootstrap, before ansible installs it). $managed is a
+  # dot-path map, not valid settings.json, so we cannot expand it here — pass the
+  # current file through unchanged; the next apply (jq present) enforces the keys.
+  printf '%s\n' "$existing"
 fi
