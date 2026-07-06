@@ -94,3 +94,36 @@ ema_project() {
     print out_ts, out_used, out_rate, out_rst, 1, proj, glyph, 0
   }'
 }
+
+# --- Portable advisory lock (macOS ships no flock) --------------------------
+# Serializes the shared-state read-modify-write so concurrent Claude sessions
+# can't feed one EMA file interleaved, differently-timed samples. mkdir is
+# atomic across processes. Best-effort: bounded wait, reclaim a lock abandoned
+# by a crashed session, and fall back to lockless rather than hang the prompt.
+STATUSLINE_LOCK_STALE_SEC=${STATUSLINE_LOCK_STALE_SEC:-10}
+STATUSLINE_LOCK_TRIES=${STATUSLINE_LOCK_TRIES:-15}
+
+# acquire_lock <lockdir> <now_epoch> -> 0 held, 1 gave up (caller runs lockless)
+acquire_lock() {
+  local lock="$1" now="$2" i=0 ts
+  while ! mkdir "$lock" 2>/dev/null; do
+    # Reclaim a lock whose holder crashed without releasing it. The counter
+    # below always advances, so a reclaim that can't remove the dir still
+    # degrades to lockless instead of spinning forever.
+    ts=$(cat "$lock/ts" 2>/dev/null)
+    case "$ts" in
+      ''|*[!0-9]*) : ;;
+      *) [ $(( now - ts )) -ge "$STATUSLINE_LOCK_STALE_SEC" ] && rm -rf "$lock" 2>/dev/null ;;
+    esac
+    i=$(( i + 1 ))
+    [ "$i" -ge "$STATUSLINE_LOCK_TRIES" ] && return 1
+    sleep 0.02
+  done
+  printf '%s' "$now" > "$lock/ts" 2>/dev/null
+  return 0
+}
+
+# release_lock <lockdir>
+release_lock() {
+  rm -rf "$1" 2>/dev/null
+}

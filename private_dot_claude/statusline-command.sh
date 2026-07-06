@@ -112,6 +112,12 @@ fmt_rate_limit() {
     lin_shown=1
   fi
 
+  # Serialize the read-modify-write below: concurrent Claude sessions share this
+  # state file, so an unlocked reader could act on a stale snapshot and corrupt
+  # the EMA. The lock makes each session read the latest committed state.
+  local lock="${state_file}.lock" locked=0
+  acquire_lock "$lock" "$now" && locked=1
+
   # Prior EMA state
   local p_ts="NA" p_used="NA" p_rate="NA" p_rst="NA"
   if [ -f "$state_file" ]; then
@@ -145,6 +151,8 @@ fmt_rate_limit() {
     awk -F'\t' -v c="$(( now - 604800 ))" '$1 >= c' "$log_file" > "${log_file}.prune.$$" \
       && mv -f "${log_file}.prune.$$" "$log_file"
   fi
+
+  [ "$locked" = 1 ] && release_lock "$lock"
 
   # Assemble: used% (neutral) + →linear (colored) + glyph (neutral) + ema (colored)
   if [ "$lin_shown" = "0" ] && [ "$ema_ready" = "0" ]; then
