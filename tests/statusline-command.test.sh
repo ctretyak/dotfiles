@@ -114,4 +114,25 @@ else
 fi
 rm -rf "$tmp5"
 
+# --- Legacy unkeyed state is adopted once into the current account's keyed path ---
+tmp6=$(mktemp -d); mkdir -p "${tmp6}/.claude"
+printf '{"oauthAccount":{"accountUuid":"acctA"}}\n' > "${tmp6}/.claude.json"
+NOW6=1000000000; RST6=$((NOW6+9000))
+# Seed ONLY the legacy unkeyed files (state + samples); no keyed file yet.
+printf '%s %s %s %s\n' "$((NOW6-100))" 10 0.02 "$RST6" > "${tmp6}/.claude/.statusline-ema-5h"
+printf '%s\t10\t%s\t0\t18\t18\tFLAT\t0\n' "$((NOW6-100))" "$RST6" > "${tmp6}/.claude/.statusline-ema-5h.samples.tsv"
+JSON6='{"model":{"display_name":"Test"},"context_window":{"used_percentage":40},"workspace":{"current_dir":"'"${tmp6}"'"},"rate_limits":{"five_hour":{"used_percentage":12,"resets_at":'"$RST6"'}}}'
+out6=$(STATUSLINE_NOW=$NOW6 HOME="$tmp6" bash "$SCRIPT" <<<"$JSON6")
+plain6=$(printf '%s' "$out6" | sed 's/\x1b\[[0-9;]*m//g')
+# Adopted warmup must yield the same EMA token as a directly-seeded keyed file.
+if [ -f "${tmp6}/.claude/.statusline-ema-5h-acctA" ] \
+   && [ ! -f "${tmp6}/.claude/.statusline-ema-5h" ] \
+   && [ -f "${tmp6}/.claude/.statusline-ema-5h-acctA.samples.tsv" ] \
+   && printf '%s' "$plain6" | grep -q '12%→24↗192'; then
+  echo "PASS adopts-legacy-unkeyed"
+else
+  echo "FAIL adopts-legacy-unkeyed"; echo "  plain: $plain6"; ls "${tmp6}/.claude/"; fail=1
+fi
+rm -rf "$tmp6"
+
 exit "$fail"

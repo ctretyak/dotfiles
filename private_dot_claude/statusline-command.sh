@@ -115,6 +115,7 @@ fmt_rate_limit() {
   # Key the EMA state by account so switching accounts can't cross-contaminate.
   # All derived paths (.samples.tsv/.lock/.tmp) follow because they hang off
   # state_file, which we reassign to the keyed path here.
+  local legacy="$state_file"
   state_file="${state_file}-${account_key}"
 
   # Serialize the read-modify-write below: concurrent Claude sessions share this
@@ -122,6 +123,13 @@ fmt_rate_limit() {
   # the EMA. The lock makes each session read the latest committed state.
   local lock="${state_file}.lock" locked=0
   acquire_lock "$lock" "$now" && locked=1
+
+  # One-time adoption: inherit pre-keying warmup for the real active account.
+  # Guarded so the degraded 'unknown' bucket never steals a real account's state.
+  if [ "$account_key" != "unknown" ] && [ ! -f "$state_file" ] && [ -f "$legacy" ]; then
+    mv -f "$legacy" "$state_file"
+    [ -f "${legacy}.samples.tsv" ] && mv -f "${legacy}.samples.tsv" "${state_file}.samples.tsv"
+  fi
 
   # Prior EMA state
   local p_ts="NA" p_used="NA" p_rate="NA" p_rst="NA"
