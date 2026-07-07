@@ -7,10 +7,11 @@ SCRIPT="${DIR}/private_dot_claude/statusline-command.sh"
 
 tmp=$(mktemp -d)
 mkdir -p "${tmp}/.claude"
+printf '{"oauthAccount":{"accountUuid":"acctA"}}\n' > "${tmp}/.claude.json"
 # Pre-seed 5h state: prior sample 100s ago at 10%, rate 0.02 %/s, same reset epoch.
 NOW=1000000000
 RST5=$((NOW+9000))            # elapsed 9000 of 18000 -> half window
-printf '%s %s %s %s\n' "$((NOW-100))" 10 0.02 "$RST5" > "${tmp}/.claude/.statusline-ema-5h"
+printf '%s %s %s %s\n' "$((NOW-100))" 10 0.02 "$RST5" > "${tmp}/.claude/.statusline-ema-5h-acctA"
 
 read -r -d '' JSON <<JSON
 {
@@ -46,10 +47,11 @@ rm -rf "$tmp"
 
 # --- Samples log prunes rows older than ~7 days (no truncate-on-reset) ---
 tmp2=$(mktemp -d); mkdir -p "${tmp2}/.claude"
+printf '{"oauthAccount":{"accountUuid":"acctA"}}\n' > "${tmp2}/.claude.json"
 NOW2=2000000000; RST2=$((NOW2+9000))
 # Normal prior state (no reset) so a regular render appends one row.
-printf '%s %s %s %s\n' "$((NOW2-100))" 10 0.001 "$RST2" > "${tmp2}/.claude/.statusline-ema-5h"
-log2="${tmp2}/.claude/.statusline-ema-5h.samples.tsv"
+printf '%s %s %s %s\n' "$((NOW2-100))" 10 0.001 "$RST2" > "${tmp2}/.claude/.statusline-ema-5h-acctA"
+log2="${tmp2}/.claude/.statusline-ema-5h-acctA.samples.tsv"
 # One stale row (~8.1d old, must be pruned) and one recent row (must stay).
 printf '%s\t10\t%s\t0\t18\t18\tFLAT\t0\n' "$((NOW2-700000))" "$RST2" >  "$log2"
 printf '%s\t10\t%s\t0\t18\t18\tFLAT\t0\n' "$((NOW2-100))"    "$RST2" >> "$log2"
@@ -83,5 +85,33 @@ else
   echo "FAIL effort-from-stdin-xhigh"; echo "  plain output: $plain3"; fail=1
 fi
 rm -rf "$tmp3"
+
+# --- State file is keyed by accountUuid; unkeyed path is not written ---
+tmp4=$(mktemp -d); mkdir -p "${tmp4}/.claude"
+printf '{"oauthAccount":{"accountUuid":"acctA"}}\n' > "${tmp4}/.claude.json"
+NOW4=1000000000; RST4=$((NOW4+9000))
+JSON4='{"model":{"display_name":"Test"},"context_window":{"used_percentage":40},"workspace":{"current_dir":"'"${tmp4}"'"},"rate_limits":{"five_hour":{"used_percentage":12,"resets_at":'"$RST4"'}}}'
+STATUSLINE_NOW=$NOW4 HOME="$tmp4" bash "$SCRIPT" <<<"$JSON4" >/dev/null
+if [ -f "${tmp4}/.claude/.statusline-ema-5h-acctA" ] && [ ! -f "${tmp4}/.claude/.statusline-ema-5h" ]; then
+  echo "PASS state-keyed-by-account"
+else
+  echo "FAIL state-keyed-by-account"; ls "${tmp4}/.claude/"; fail=1
+fi
+rm -rf "$tmp4"
+
+# --- No oauthAccount -> shared 'unknown' bucket, legacy file left untouched ---
+tmp5=$(mktemp -d); mkdir -p "${tmp5}/.claude"
+printf '{}\n' > "${tmp5}/.claude.json"
+NOW5=1000000000; RST5b=$((NOW5+9000))
+printf 'legacy\n' > "${tmp5}/.claude/.statusline-ema-5h"   # sentinel legacy file
+JSON5='{"model":{"display_name":"Test"},"context_window":{"used_percentage":40},"workspace":{"current_dir":"'"${tmp5}"'"},"rate_limits":{"five_hour":{"used_percentage":12,"resets_at":'"$RST5b"'}}}'
+STATUSLINE_NOW=$NOW5 HOME="$tmp5" bash "$SCRIPT" <<<"$JSON5" >/dev/null
+if [ -f "${tmp5}/.claude/.statusline-ema-5h-unknown" ] \
+   && [ "$(cat "${tmp5}/.claude/.statusline-ema-5h")" = "legacy" ]; then
+  echo "PASS fallback-unknown-bucket"
+else
+  echo "FAIL fallback-unknown-bucket"; ls "${tmp5}/.claude/"; fail=1
+fi
+rm -rf "$tmp5"
 
 exit "$fail"

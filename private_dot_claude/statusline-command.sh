@@ -94,7 +94,7 @@ fi
 # Args: used_pct resets_at window_sec label state_file halflife min_elapsed
 fmt_rate_limit() {
   local used_pct="$1" resets_at="$2" window_sec="$3" label="$4"
-  local state_file="$5" halflife="$6" min_elapsed="$7"
+  local state_file="$5" halflife="$6" min_elapsed="$7" account_key="$8"
   [ -z "$used_pct" ] && return
   [ -z "$resets_at" ] && return
   local used_int; used_int=$(printf "%.0f" "$used_pct")
@@ -111,6 +111,11 @@ fmt_rate_limit() {
       'BEGIN { printf "%.0f", u * w / e }')
     lin_shown=1
   fi
+
+  # Key the EMA state by account so switching accounts can't cross-contaminate.
+  # All derived paths (.samples.tsv/.lock/.tmp) follow because they hang off
+  # state_file, which we reassign to the keyed path here.
+  state_file="${state_file}-${account_key}"
 
   # Serialize the read-modify-write below: concurrent Claude sessions share this
   # state file, so an unlocked reader could act on a stale snapshot and corrupt
@@ -177,10 +182,17 @@ rl_5h_reset=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
 rl_7d=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
 rl_7d_reset=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 
+# Resolve the active account so each account keeps its own EMA state; switching
+# accounts can't pollute another's forecast. Fall back to a shared bucket if the
+# UUID can't be read (logged out / partial write) so the forecast still renders.
+account_key=$(jq -r '.oauthAccount.accountUuid // empty' "${HOME}/.claude.json" 2>/dev/null \
+  | tr -cd 'A-Za-z0-9_-')
+[ -z "$account_key" ] && account_key="unknown"
+
 rl_5h_fmt=$(fmt_rate_limit "$rl_5h" "$rl_5h_reset" 18000 "5h" \
-  "${HOME}/.claude/.statusline-ema-5h" "$EMA_HL_5H" "$EMA_MINEL_5H")
+  "${HOME}/.claude/.statusline-ema-5h" "$EMA_HL_5H" "$EMA_MINEL_5H" "$account_key")
 rl_7d_fmt=$(fmt_rate_limit "$rl_7d" "$rl_7d_reset" 604800 "7d" \
-  "${HOME}/.claude/.statusline-ema-7d" "$EMA_HL_7D" "$EMA_MINEL_7D")
+  "${HOME}/.claude/.statusline-ema-7d" "$EMA_HL_7D" "$EMA_MINEL_7D" "$account_key")
 
 # Assemble output
 parts="\033[0;36m${model}\033[0m"
