@@ -35,6 +35,7 @@ git
 .ansible/tasks/darwin
 .chezmoiscripts/darwin/**
 .config/iterm2
+.config/herdr
 .aerospace.toml
 Library
 {{ end }}
