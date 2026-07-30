@@ -58,15 +58,6 @@ managed=$(cat <<'JSON'
             "command": "rtk hook claude"
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh PreToolUse",
-            "timeout": 5
-          }
-        ]
       }
     ],
   "hooks.UserPromptSubmit": [
@@ -77,15 +68,6 @@ managed=$(cat <<'JSON'
             "command": "bash {{ .chezmoi.homeDir }}/.claude/english-coach/coach-precompute.sh",
             "timeout": 30,
             "async": true
-          }
-        ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh UserPromptSubmit",
-            "timeout": 5
           }
         ]
       }
@@ -99,27 +81,9 @@ managed=$(cat <<'JSON'
             "timeout": 30
           }
         ]
-      },
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh Stop",
-            "timeout": 5
-          }
-        ]
       }
     ],
   "hooks.SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh SessionStart",
-            "timeout": 5
-          }
-        ]
-      },
       {
         "matcher": "startup|clear",
         "hooks": [
@@ -141,50 +105,6 @@ managed=$(cat <<'JSON'
         ]
       }{{ end }}
     ],
-  "hooks.Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh Notification",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-  "hooks.SessionEnd": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh SessionEnd",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-  "hooks.PreCompact": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh PreCompact",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-  "hooks.PostToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.config/tmux/plugins/tmux-agents-inbox/hooks/inbox-hook.sh PostToolUse",
-            "timeout": 5
-          }
-        ]
-      }
-  ],
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh",
