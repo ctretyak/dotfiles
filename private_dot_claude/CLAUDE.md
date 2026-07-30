@@ -58,30 +58,9 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 - Only pull when the working tree is clean and you're on the intended branch. If there are uncommitted changes, a detached HEAD, or it's unclear which branch is the base, stop and surface it instead of pulling.
 - This is a fast-forward pull of the integration branch — never force, reset, or discard local work to sync.
 
-### Model routing in workflows
-- Workflow subagents inherit the session model by default — on an Opus session that makes every fan-out agent an Opus agent. Set the tier explicitly per `agent()` call (`opts.model`) to match the stage; don't let mechanical stages silently inherit Opus.
-- **Mechanical / parallel stages** → **Haiku** (`opts.model: 'haiku'`): finders, readers, extractors, grep/map/transform — anything that gathers or restructures without deep reasoning. This is where token volume concentrates, so it's where routing saves the most.
-- **Reasoning stages** → **Opus**: synthesis, judging, adversarial verification, design/architecture decisions, final report. Few agents, high stakes — don't cheap out.
-- If a stage doesn't cleanly classify, default it to Opus (correctness over savings) and note the choice.
-
-### opsx:apply
-- Execute task scopes (1, 2, 3, ...) sequentially, each scope via a separate subagent.
-- Don't execute individual subtasks (1.2, 1.3) in the main context — it pollutes the context.
-- The main context only coordinates: launch a subagent for a scope, get the result, launch the next.
-
-### Plan → worktree → dev (superpowers)
-- After every plan stage and before starting the dev/implementation stage, offer to start a new git worktree via the `superpowers:using-git-worktrees` skill. Make it an offer, not an automatic action — wait for my yes before creating the worktree.
-- Next, offer how to execute the implementation — e.g. via the `superpowers:subagent-driven-development` skill vs. directly in the main context. Same rule: an offer, not an automatic action.
-- All such offers (worktree, execution mode, and any other superpowers-workflow choices) MUST be presented via the `AskUserQuestion` tool — interactive options, not free-text questions in prose.
-
 ## Quality
 - Do NOT state facts (performance improvements, feature claims, library capabilities, dates, statistics, etc.) without verifying them first — check changelogs, docs, or source before making claims in specs, proposals, commit messages, or any artifact.
 - If you are uncertain about any fact, statistic, date, or technical detail and cannot verify it, say so explicitly instead of filling the gap with plausible-sounding information.
 - Before updating any library/dependency version, always check the migration guide and "what's new"/changelog/release notes for the target version first — review breaking changes, deprecations, and required code changes before bumping.
-
-## octo:debate
-- When running `/octo:debate`: always use **≥3 rounds**. If the user passes `--rounds <3` or a style implying fewer (quick/collaborative), raise to 3 and say so.
-- Every debater stays **adversarial in every round**: each must attack the other proposals and defend its own with concrete technical evidence. Forbid rubber-stamping — no "I agree" without a remaining objection. Do not converge for agreement's sake.
-- **Synthesis must NOT declare a consensus or hybrid winner.** Output a map of the standing disagreement: each debater's final position + the unresolved conflict points. You MAY end with a clearly-labeled non-binding "My lean" — never framed as consensus.
 
 @RTK.md
