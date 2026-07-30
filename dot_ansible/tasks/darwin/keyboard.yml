@@ -33,3 +33,30 @@
     key: TISRomanSwitchState
     type: int
     value: 1
+
+# Symbolic hotkey 60 is "Select the previous input source", bound to Ctrl+Space,
+# which collides with code completion in IDEs. Caps Lock (above) already switches
+# layouts, so the shortcut is redundant. osx_defaults cannot patch a key nested
+# inside AppleSymbolicHotKeys, hence the raw `defaults ... -dict-add`.
+- name: keyboard | Check whether the Ctrl+Space input source shortcut is enabled
+  ansible.builtin.shell: >-
+    defaults export com.apple.symbolichotkeys -
+    | plutil -extract 'AppleSymbolicHotKeys.60.enabled' raw -o - -- -
+  register: input_source_shortcut
+  changed_when: false
+  failed_when: false
+
+- name: keyboard | Free Ctrl+Space by disabling the input source shortcut
+  ansible.builtin.shell: |
+    defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 60 \
+      '<dict>
+         <key>enabled</key><false/>
+         <key>value</key>
+         <dict>
+           <key>type</key><string>standard</string>
+           <key>parameters</key>
+           <array><integer>32</integer><integer>49</integer><integer>262144</integer></array>
+         </dict>
+       </dict>'
+    /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+  when: input_source_shortcut.stdout | trim != "false"
