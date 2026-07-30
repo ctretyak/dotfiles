@@ -6,6 +6,11 @@
 # Design: ~/.claude/plans/recursive-jumping-cake.md
 #
 # Never hard-fails: any problem -> exit 0 with no output, so it can't disrupt the user.
+#
+# NOTE FOR CLAUDE: English coaching lives entirely here, out of process. The model does
+# nothing per turn -- do NOT add a per-turn coaching rule to CLAUDE.md. The rubric
+# (informal-chat register, <=3 items, examples in English / *why* in Russian, log schema)
+# lives in coach-precompute.sh; this script only renders and logs the result.
 
 if [ -n "${COACH_HOOK_RUNNING:-}" ]; then exit 0; fi
 command -v jq >/dev/null 2>&1 || exit 0
