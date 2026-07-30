@@ -1,14 +1,9 @@
-# RTK - Rust Token Killer
+# RTK
 
-Token-optimized CLI proxy (60-90% savings on dev operations). Bash commands are rewritten to `rtk <cmd>` automatically by a `PreToolUse` hook — transparent, 0 tokens overhead, nothing to do.
+Bash commands are auto-rewritten to `rtk <cmd>` by a PreToolUse hook — nothing to do.
 
-Meta commands, always run `rtk` directly:
-
-```bash
-rtk gain              # Token savings analytics
-rtk gain --history    # Command usage history with savings
-rtk discover          # Analyze Claude Code history for missed opportunities
-rtk proxy <cmd>       # Run a raw command without filtering (debugging)
-```
-
-If `rtk gain` errors out, the wrong `rtk` is on PATH — likely reachingforthejack/rtk ("Rust Type Kit").
+These are NOT rewritten; run them explicitly when relevant:
+- `rtk gain` / `rtk gain --history` — token savings
+- `rtk discover` — missed optimization opportunities
+- `rtk cc-economics` — spending vs savings
+- `rtk proxy <cmd>` — run a command bypassing the filter
