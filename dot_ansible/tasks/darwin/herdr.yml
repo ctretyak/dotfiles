@@ -1,0 +1,27 @@
+- name: herdr | Install herdr
+  homebrew:
+    update_homebrew: no
+    name: herdr
+    state: present
+
+- name: herdr | List installed plugins
+  command: herdr plugin list
+  register: herdr_plugins
+  changed_when: false
+
+# `herdr plugin install` is not idempotent — a second run fails with
+# invalid_plugin_source, so it is guarded by the list above.
+- name: herdr | Install vim-herdr-navigation plugin
+  command: herdr plugin install paulbkim-dev/vim-herdr-navigation --yes
+  when: "'vim-herdr-navigation' not in herdr_plugins.stdout"
+
+- name: herdr | Check agent integrations
+  command: herdr integration status
+  register: herdr_integrations
+  changed_when: false
+
+# Reports agent state (working/waiting/done) into herdr's sidebar. Requires
+# ~/.claude to exist, hence the import order after claude-code.yml.
+- name: herdr | Install Claude Code integration
+  command: herdr integration install claude
+  when: "'claude: current' not in herdr_integrations.stdout"
