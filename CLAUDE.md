@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## What this is
 
 Chezmoi dotfiles repository. Manages configs across macOS, Linux (Arch, Debian/Ubuntu/Pop!_OS, Fedora, Fedora Kinoite, Aurora), and Windows. Package installation is delegated to Ansible, triggered automatically by chezmoi.
@@ -75,12 +73,4 @@ Defined in `.chezmoi.yaml.tmpl`:
 
 **When adding new files**, always check if the file is OS-specific and add an exclusion rule to `.chezmoiignore` if needed. Without this, files deploy to all systems (e.g., fontconfig on macOS, aerospace.toml on Linux).
 
-## File naming
-
-Chezmoi prefixes map to target attributes:
-- `dot_` → `.` (hidden file)
-- `private_` → 0600 permissions
-- `executable_` → 0755 permissions
-- `create_` → only create if doesn't exist, never overwrite
-- `run_onchange_` → re-run when content hash changes
-- `run_once_` → run only once ever
+`CLAUDE.md`, `README.md`, `docs/**` and `tests/**` are ignored — repo-only, never deployed.

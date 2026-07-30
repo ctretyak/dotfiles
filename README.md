@@ -123,16 +123,11 @@ chezmoi init --apply
 
 **Chezmoi scripts** (`.chezmoiscripts/`) bootstrap Ansible per distro, then trigger the playbook.
 
-**Ansible tasks** (`dot_ansible/tasks/`) are organized by OS:
-- `linux/` &mdash; common Linux tasks (zsh, git, tmux, neovim, claude-code, nvm, keepassxc). Skipped on Kinoite and Aurora (no `package:` support — atomic OS).
-- `arch/`, `pop/`, `fedora/` &mdash; distro-specific packages and repos (including insync, which uses different package managers per distro)
-- `kinoite/` &mdash; plain Fedora Kinoite (atomic KDE). rpm-ostree for the full dev stack (shell + CLI + editor + dev runtimes), Flatpak for GUI, Claude Code via `curl | bash` into `$HOME`
-- `aurora/` &mdash; ublue-os Aurora (KDE remix of Kinoite). Kept as a separate tree rather than branching `kinoite/` &mdash; easier to read, worth the duplicated Flatpak tasks. Minimal rpm-ostree layer (just zsh plugins + `gcc-c++` + `make`), dev CLI via preinstalled brew, same Flatpak GUI list, Claude Code via `brew install`. No `flathub.yml` &mdash; Aurora preconfigures Flathub in its image
-- `darwin/` &mdash; macOS apps via Homebrew
-
-Each directory has `_main.yml.tmpl` that imports individual task files. Work/home conditionals live at `_main.yml` level.
+**Ansible tasks** (`dot_ansible/tasks/`) are organized by OS &mdash; one directory per distro (`linux/`, `arch/`, `pop/`, `fedora/`, `kinoite/`, `aurora/`, `darwin/`), each with an `_main.yml.tmpl` that imports one task file per app. Work/home conditionals live at `_main.yml` level. Kinoite and Aurora are atomic and skip the shared `linux/` tree entirely.
 
 **Templates** (`.chezmoitemplates/zsh/`) are shared zsh config fragments included by `dot_zshrc.tmpl`.
+
+For the per-distro breakdown see [`CLAUDE.md`](CLAUDE.md); for why each distro installs things the way it does &mdash; dropped alternatives, base-image quirks &mdash; see [`docs/architecture-decisions.md`](docs/architecture-decisions.md).
 
 ## Git identities
 
@@ -140,10 +135,4 @@ The `git/setup-git-identities.sh` script manages multiple git identities stored 
 
 ## Configuration
 
-`~/.config/chezmoi/chezmoi.yaml` is generated from `.chezmoi.yaml.tmpl` and sets:
-- `hosttype` &mdash; `home` or `work` (controls which apps are installed)
-- `os.idLike` &mdash; normalized distro family:
-  - `"pop"` for Pop!_OS (from `ID=pop`)
-  - `"kinoite"` for plain Fedora Kinoite (from `ID=fedora` + `VARIANT_ID=kinoite`)
-  - `"aurora"` for ublue-os Aurora (from `ID=fedora` + `VARIANT_ID=aurora`)
-  - `"arch"` / `"fedora"` otherwise (from `ID_LIKE`)
+`~/.config/chezmoi/chezmoi.yaml` is generated from `.chezmoi.yaml.tmpl` and sets two variables: `hosttype` (`home` or `work` &mdash; controls which apps are installed) and `os.idLike` (normalized distro family). Detection rules and the full value list are in [`CLAUDE.md`](CLAUDE.md).
