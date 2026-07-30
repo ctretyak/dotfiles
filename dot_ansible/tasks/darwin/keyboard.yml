@@ -23,3 +23,13 @@
     key: InitialKeyRepeat
     type: "{{ 'int' if macos_version.stdout | int >= 26 else 'float' }}"
     value: 15
+
+# Backs the "Use the Caps Lock key to switch to and from <non-Latin source>"
+# toggle in Keyboard > Text Input > Edit. Requires a non-Latin input source
+# (Russian) to be enabled, otherwise the toggle has nothing to switch to.
+- name: keyboard | Use Caps Lock to switch between Latin and non-Latin input sources
+  community.general.osx_defaults:
+    domain: NSGlobalDomain
+    key: TISRomanSwitchState
+    type: int
+    value: 1
