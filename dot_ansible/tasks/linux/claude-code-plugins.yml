@@ -2,7 +2,8 @@
 # single source of truth for plugins: settings.json no longer declares them — its
 # modify_ script leaves enabledPlugins machine-local, and `claude plugin install`
 # writes the enablement there. The official marketplace (claude-plugins-official)
-# is built in, so no marketplace needs to be added. Identical across OS trees.
+# is built in, but its bundled copy can be stale on a fresh machine, so we refresh
+# it before installing. Identical across OS trees.
 #
 # Idempotent: queries installed plugins first and only installs what's missing.
 # Assumes `claude` is already installed (claude-code.yml runs before this) and
@@ -12,6 +13,10 @@
   environment:
     PATH: "{{ lookup('env', 'HOME') }}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin"
   block:
+    - name: claude-code-plugins | Refresh marketplace metadata
+      ansible.builtin.command: claude plugin marketplace update claude-plugins-official
+      changed_when: false
+
     - name: claude-code-plugins | Query installed plugins
       ansible.builtin.command: claude plugin list
       register: ccp_installed
