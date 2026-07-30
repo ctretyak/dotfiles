@@ -1,9 +1,9 @@
 # Installs and enables all Claude Code plugins via the `claude` CLI. This is the
 # single source of truth for plugins: settings.json no longer declares them — its
 # modify_ script leaves enabledPlugins machine-local, and `claude plugin install`
-# writes the enablement there. The official marketplace (claude-plugins-official)
-# is built in, but its bundled copy can be stale on a fresh machine, so we refresh
-# it before installing. Identical across OS trees.
+# writes the enablement there. The claude-plugins-official marketplace is not
+# preconfigured on a fresh machine, so we add it (idempotent) before installing.
+# Identical across OS trees.
 #
 # Idempotent: queries installed plugins first and only installs what's missing.
 # Assumes `claude` is already installed (claude-code.yml runs before this) and
@@ -13,8 +13,8 @@
   environment:
     PATH: "{{ lookup('env', 'HOME') }}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin"
   block:
-    - name: claude-code-plugins | Refresh marketplace metadata
-      ansible.builtin.command: claude plugin marketplace update claude-plugins-official
+    - name: claude-code-plugins | Ensure official marketplace is configured
+      ansible.builtin.command: claude plugin marketplace add anthropics/claude-plugins-official --scope user
       changed_when: false
 
     - name: claude-code-plugins | Query installed plugins
