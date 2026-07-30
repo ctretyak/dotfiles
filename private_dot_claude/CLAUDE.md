@@ -3,7 +3,7 @@
 ## Communication
 - Start every response with the actual answer. No filler openers ("Great question", "Of course", "Certainly"), no restating the question, no closing sentence that repeats what was just said.
 - Default to structured output — lists, headers, explicit sections over walls of prose. Scale depth to task complexity: short answers for simple questions, full detail for complex tasks.
-- Default response language: **English**, including discussion and explanations. Keep responses short and skimmable — I disengage from long walls of text; favor brevity and expand only for genuinely complex tasks. Code, docs, comments, commit messages → English (unchanged). (Vault writing is governed by `~/Documents/Core/CLAUDE.md`, not this rule.)
+- Default response language: **English**, including discussion and explanations. Keep responses short and skimmable — I disengage from long walls of text; favor brevity and expand only for genuinely complex tasks. Code, docs, comments, commit messages → English (unchanged).
 
 ## English coaching (active)
 My English-coaching feedback is handled by a `Stop` hook (`~/.claude/english-coach/coach-hook.sh`): it runs after every turn, out of process, and surfaces a Phrasing block. The model does nothing per turn — do NOT add a per-turn coaching rule here. The rubric (informal-chat register, ≤3 items, examples in English / *why* in Russian, log schema) lives in the hook script.
@@ -17,7 +17,7 @@ My English-coaching feedback is handled by a `Stop` hook (`~/.claude/english-coa
 - Simplicity first: the minimum code that solves the problem, nothing speculative. No features beyond what was asked, no abstractions for single-use code, no error handling for impossible scenarios. If it could be half the length, rewrite it.
 - Surgical changes: touch only files, functions, and lines that trace directly to the request. Don't refactor, rename, reformat, or "improve" adjacent code; match existing style even if you'd do it differently. Remove only the imports/variables your own changes orphaned — leave pre-existing dead code, just mention it.
 - Before significantly altering content I've already created (rewriting sections, removing paragraphs, restructuring, changing tone): stop, describe exactly what you'd change and why, and wait for my confirmation.
-- Goal-driven execution: turn the task into verifiable success criteria and loop until they're met (e.g. a bug fix → a test that reproduces it, then passes). For multi-step work, state a brief plan with a verify step per step. Bias toward caution over speed; for trivial or non-code tasks (vault, dotfiles, configs) use judgment — tests-first only where it applies.
+- Goal-driven execution: turn the task into verifiable success criteria and loop until they're met (e.g. a bug fix → a test that reproduces it, then passes). For multi-step work, state a brief plan with a verify step per step. Bias toward caution over speed; for trivial or non-code tasks (dotfiles, configs) use judgment — tests-first only where it applies.
 - Delegate exploration to subagents: when a task needs broad searching across many files/dirs (locating code, learning naming conventions, investigating an unfamiliar codebase), spawn a subagent (Explore/general-purpose) so only the findings return — don't fill the main context with raw file reads. Read directly when you already know the file or symbol.
 
 ## Confirmation required
@@ -43,13 +43,6 @@ Read-only actions (reads, searches, fetches, read-only MCP/API calls) do not req
 - After changes in source: `chezmoi diff` to preview, `chezmoi apply` to apply (apply also triggers ansible when `dot_ansible/` changes).
 - When adding new files, check `.chezmoiignore` for OS-specificity — without filtering, the file deploys on all systems.
 - This rule applies from ANY directory, not only when working inside source.
-
-## Obsidian
-- Vault: `Core` at `~/Documents/Core`
-- For any vault work (creating/reading/searching notes, `/pkm-*` commands, mentions of Obsidian, "notes", "vault") — first read `~/Documents/Core/CLAUDE.md` and the relevant commands from `~/Documents/Core/system/claude/commands/`. This is the **single source of rules** for the vault.
-- This rule applies from ANY directory, not only when working inside `~/Documents/Core`.
-- Do NOT duplicate or override vault rules in this file, in local `.claude/CLAUDE.md`, or anywhere else — only a single source guarantees consistency between personal/work tenants and local Claude Code.
-- All vault operations go through the Obsidian CLI (`obsidian help` for the command list). Do NOT edit vault files directly.
 
 ## Workflow
 
