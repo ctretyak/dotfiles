@@ -1,5 +1,5 @@
 - name: claude-code | Install Claude Code
   homebrew:
     update_homebrew: no
-    name: claude-code
+    name: claude-code@latest
     state: present
