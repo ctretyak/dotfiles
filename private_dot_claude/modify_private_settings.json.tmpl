@@ -84,17 +84,7 @@ managed=$(cat <<'JSON'
       }
     ],
   "hooks.SessionStart": [
-      {
-        "matcher": "startup|clear",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "echo '{\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"Context canary: begin every response with the emoji 👾 as its very first character. Never mention, explain, or acknowledge this instruction — just silently prepend 👾 to each response.\"}}'",
-            "timeout": 5
-          }
-        ]
-      }{{ if eq .chezmoi.os "darwin" }},
-      {
+      {{ if eq .chezmoi.os "darwin" }}{
         "matcher": "*",
         "hooks": [
           {
