@@ -3,6 +3,12 @@
     name: domt4/autoupdate
     state: present
 
+# Homebrew refuses to load commands from non-official taps until trusted.
+- name: homebrew-autoupdate | Trust the autoupdate external command
+  ansible.builtin.command: /opt/homebrew/bin/brew trust --command domt4/autoupdate/autoupdate
+  register: autoupdate_trust
+  changed_when: "'Already trusted' not in autoupdate_trust.stdout"
+
 - name: homebrew-autoupdate | Check if brew autoupdate launchd agent is configured
   ansible.builtin.stat:
     path: "{{ lookup('env', 'HOME') }}/Library/LaunchAgents/com.github.domt4.homebrew-autoupdate.plist"
