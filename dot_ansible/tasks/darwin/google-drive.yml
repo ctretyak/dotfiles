@@ -1,0 +1,5 @@
+- name: google-drive | Install Google Drive
+  homebrew:
+    update_homebrew: no
+    name: google-drive
+    state: present
