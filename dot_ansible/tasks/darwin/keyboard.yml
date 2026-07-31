@@ -34,6 +34,37 @@
     type: int
     value: 1
 
+# macOS debounces the Caps Lock key before registering a press, so a fast tap is
+# discarded outright and the layout does not switch. hidutil can zero that
+# threshold, but the property is runtime state and resets on every reboot — hence
+# the LaunchAgent, which re-applies it at login.
+- name: keyboard | Install the Caps Lock no-delay LaunchAgent
+  ansible.builtin.copy:
+    dest: "{{ lookup('env', 'HOME') }}/Library/LaunchAgents/local.capslock-nodelay.plist"
+    mode: "0644"
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key><string>local.capslock-nodelay</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>/usr/bin/hidutil</string>
+          <string>property</string>
+          <string>--set</string>
+          <string>{"CapsLockDelayOverride":0}</string>
+        </array>
+        <key>RunAtLoad</key><true/>
+      </dict>
+      </plist>
+  register: capslock_agent
+
+- name: keyboard | Load the Caps Lock no-delay LaunchAgent
+  community.general.launchd:
+    name: local.capslock-nodelay
+    state: "{{ 'reloaded' if capslock_agent.changed else 'started' }}"
+
 # Symbolic hotkey 60 is "Select the previous input source", bound to Ctrl+Space,
 # which collides with code completion in IDEs. Caps Lock (above) already switches
 # layouts, so the shortcut is redundant. osx_defaults cannot patch a key nested
