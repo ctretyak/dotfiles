@@ -30,7 +30,7 @@ success() { echo -e "${GREEN}$*${RESET}"; }
 error()   { echo -e "${RED}$*${RESET}" >&2; }
 warn()    { echo -e "${YELLOW}$*${RESET}"; }
 header()  { echo -e "\n${BOLD}$*${RESET}"; echo -e "${DIM}$(printf '%.0s─' {1..40})${RESET}"; }
-lower()   { echo "$1" | tr '[:upper:]' '[:lower:]'; }
+lower()   { echo "$1" | LC_ALL=C tr 'A-Z' 'a-z'; }
 
 gpg_run() {
   if [[ "$DEBUG" == "1" ]]; then gpg "$@"; else gpg "$@" 2>/dev/null; fi
@@ -132,6 +132,7 @@ pick_gpg_key() {
   cat >"$KEYFILE" <<EOF
 %echo Generating GPG key for $name <$email>
 Key-Type: default
+Key-Curve: ed25519
 Expire-Date: 0
 Name-Real: $name
 Name-Email: $email
@@ -140,13 +141,18 @@ Name-Email: $email
 EOF
 
   echo -e "${BLUE}  Generating GPG key...${RESET}" >&2
-  if ! gpg_run --batch --homedir "$GNUPGHOME_TMP" \
-               --pinentry-mode loopback --passphrase-fd 3 \
-               --generate-key "$KEYFILE" 3<<<"$passphrase"; then
-    error "  Failed to generate GPG key. Re-run with DEBUG=1 for details."
+  local gpg_err
+  gpg_err=$(mktemp)
+  if ! gpg --batch --homedir "$GNUPGHOME_TMP" \
+           --pinentry-mode loopback --passphrase-fd 3 \
+           --generate-key "$KEYFILE" 3<<<"$passphrase" >/dev/null 2>"$gpg_err"; then
+    error "  Failed to generate GPG key:"
+    sed 's/^/    /' "$gpg_err" >&2
+    rm -f "$gpg_err"
     cleanup; GNUPGHOME_TMP=""; KEYFILE=""
     echo ""; return 0
   fi
+  rm -f "$gpg_err"
 
   key_id=$(gpg --homedir "$GNUPGHOME_TMP" --list-secret-keys --with-colons 2>/dev/null \
            | awk -F: '/^sec:/ {print $5; exit}')
@@ -156,8 +162,9 @@ EOF
     echo ""; return 0
   fi
 
-  if ! gpg_run --homedir "$GNUPGHOME_TMP" --export-secret-keys --armor "$key_id" \
-       | gpg_run --import; then
+  if ! gpg_run --homedir "$GNUPGHOME_TMP" --pinentry-mode loopback --passphrase-fd 3 \
+               --export-secret-keys --armor "$key_id" 3<<<"$passphrase" \
+       | gpg_run --batch --import; then
     error "  Failed to import key into main keyring."
     cleanup; GNUPGHOME_TMP=""; KEYFILE=""
     echo ""; return 0
