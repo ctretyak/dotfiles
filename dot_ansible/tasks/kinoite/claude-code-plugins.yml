@@ -1,33 +1,50 @@
 # Installs and enables all Claude Code plugins via the `claude` CLI. This is the
 # single source of truth for plugins: settings.json no longer declares them — its
-# modify_ script leaves enabledPlugins machine-local, and `claude plugin install`
+# modify_ script leaves enabledPlugins machine-local, and `claude plugin enable`
 # writes the enablement there. The claude-plugins-official marketplace is not
 # preconfigured on a fresh machine, so we add it (idempotent) before installing.
 # Identical across OS trees.
 #
-# Idempotent: queries installed plugins first and only installs what's missing.
-# Assumes `claude` is already installed (claude-code.yml runs before this) and
-# can run non-interactively (a fresh machine may need a one-time login first).
+# Install and enable are two distinct steps: `claude plugin install` only puts the
+# plugin code in the cache, it leaves the plugin disabled. Without the enable pass
+# below, /plugin shows nothing and none of the skills/hooks/MCP servers load.
+#
+# Idempotent: queries plugin state first and only installs what's missing / enables
+# what is disabled. Assumes `claude` is already installed (claude-code.yml runs
+# before this) and can run non-interactively (a fresh machine may need a one-time
+# login first).
 
 - name: claude-code-plugins | Provision plugins
   environment:
     PATH: "{{ lookup('env', 'HOME') }}/.local/bin:/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin:/bin"
+  vars:
+    ccp_plugins:
+      - superpowers@claude-plugins-official
+      - frontend-design@claude-plugins-official
+      - ralph-loop@claude-plugins-official
+      - playwright@claude-plugins-official
+      - security-guidance@claude-plugins-official
   block:
     - name: claude-code-plugins | Ensure official marketplace is configured
       ansible.builtin.command: claude plugin marketplace add anthropics/claude-plugins-official --scope user
       changed_when: false
 
     - name: claude-code-plugins | Query installed plugins
-      ansible.builtin.command: claude plugin list
+      ansible.builtin.command: claude plugin list --json
       register: ccp_installed
       changed_when: false
 
-    - name: claude-code-plugins | Install enabled plugins
+    - name: claude-code-plugins | Install missing plugins
       ansible.builtin.command: "claude plugin install {{ item }} --scope user"
-      loop:
-        - superpowers@claude-plugins-official
-        - frontend-design@claude-plugins-official
-        - ralph-loop@claude-plugins-official
-        - playwright@claude-plugins-official
-        - security-guidance@claude-plugins-official
+      loop: "{{ ccp_plugins }}"
       when: item not in ccp_installed.stdout
+
+    - name: claude-code-plugins | Re-query plugin state after install
+      ansible.builtin.command: claude plugin list --json
+      register: ccp_state
+      changed_when: false
+
+    - name: claude-code-plugins | Enable disabled plugins
+      ansible.builtin.command: "claude plugin enable {{ item }} --scope user"
+      loop: "{{ ccp_plugins }}"
+      when: item in (ccp_state.stdout | from_json | rejectattr('enabled') | map(attribute='id') | list)
