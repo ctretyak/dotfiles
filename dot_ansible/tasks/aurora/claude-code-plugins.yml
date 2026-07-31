@@ -24,6 +24,10 @@
       - ralph-loop@claude-plugins-official
       - playwright@claude-plugins-official
       - security-guidance@claude-plugins-official
+      # Thin wrapper around the Upstash context7 MCP server (npx @upstash/context7-mcp).
+      # Installed as a plugin rather than `claude mcp add` so it stays tracked here —
+      # settings.json mcpServers is machine-local and would not survive a reinstall.
+      - context7@claude-plugins-official
   block:
     - name: claude-code-plugins | Ensure official marketplace is configured
       ansible.builtin.command: claude plugin marketplace add anthropics/claude-plugins-official --scope user
