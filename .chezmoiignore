@@ -34,7 +34,6 @@ git
 {{ if ne .chezmoi.os "darwin" }}
 .ansible/tasks/darwin
 .chezmoiscripts/darwin/**
-.config/iterm2
 .config/herdr
 .aerospace.toml
 Library
