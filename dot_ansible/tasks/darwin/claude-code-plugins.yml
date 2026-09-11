@@ -35,6 +35,9 @@
       # Own plugin: out-of-process English coaching, shows native rewrites of the
       # user's prompt after each turn (used to be bare hooks in settings.json).
       - english-coach@ctretyak
+      # Own plugin: the rtk PreToolUse hook (Bash commands rewritten to `rtk <cmd>`),
+      # instead of the bare entry `rtk init -g` writes into settings.json.
+      - rtk@ctretyak
   block:
     - name: claude-code-plugins | Ensure official marketplace is configured
       ansible.builtin.command: claude plugin marketplace add anthropics/claude-plugins-official --scope user
