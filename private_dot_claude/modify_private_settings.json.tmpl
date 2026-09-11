@@ -9,7 +9,7 @@
 #
 # The managed block is the single source of truth for what syncs: add a key to
 # sync it, delete a key to stop syncing it (the machine then keeps whatever it
-# had), set a key to null to delete that path from the machine's file.
+# had — no stray nulls).
 #
 # Granularity is chosen per entry:
 #   "theme": "auto"                  -> replaces the whole top-level "theme"
@@ -24,9 +24,9 @@
 #
 # Hooks are deliberately NOT managed either: english-coach and rtk are plugins
 # (ctretyak marketplace) and herdr writes its own SessionStart entry via
-# `herdr integration install claude` (ansible). The null entries below delete the
-# inline hook entries that used to live here; once every machine has applied
-# them they can be dropped from the block.
+# `herdr integration install claude` (ansible). The inline hook entries that used
+# to live here are removed one by one via $retired_hooks below, leaving any other
+# hook on the machine alone.
 #
 # chezmoi passes the current target contents on stdin (empty on a fresh machine)
 # and writes this script's stdout back to ~/.claude/settings.json.
@@ -34,9 +34,9 @@ set -euo pipefail
 
 # The paths chezmoi owns and syncs across every machine. A dotted key targets a
 # sub-key (env vars, permissions.defaultMode), keeping its machine-local siblings;
-# a plain key owns the whole value; a null value deletes the path. Any path not
-# listed (enabledPlugins, extraKnownMarketplaces, MCP servers, permissions.allow,
-# hooks, …) is left untouched.
+# a plain key owns the whole value. Any path not listed (enabledPlugins,
+# extraKnownMarketplaces, MCP servers, permissions.allow, hooks, …) is left
+# untouched.
 managed=$(cat <<'JSON'
 {
   "env.CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000",
@@ -45,10 +45,6 @@ managed=$(cat <<'JSON'
     "pr": ""
   },
   "permissions.defaultMode": "auto",
-  "hooks.PreToolUse": null,
-  "hooks.UserPromptSubmit": null,
-  "hooks.Stop": null,
-  {{ if ne .chezmoi.os "darwin" }}"hooks.SessionStart": null,{{ end }}
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh",
@@ -60,6 +56,14 @@ managed=$(cat <<'JSON'
 JSON
 )
 
+# Hook commands chezmoi used to put into settings.json and no longer should
+# (they moved into plugins). Every hook whose command contains one of these
+# substrings is removed, wherever it sits; groups, events and the "hooks" object
+# are dropped once empty. Nothing else in hooks.* is touched, so machine-local
+# hooks (herdr, hand-added ones) survive. Safe to keep forever: a no-op once the
+# entries are gone. Drop the list once every machine has applied it.
+retired_hooks='["/.claude/english-coach/coach-hook.sh", "/.claude/english-coach/coach-precompute.sh", "rtk hook claude"]'
+
 existing="$(cat)"
 [ -z "$existing" ] && existing='{}'
 
@@ -68,15 +72,26 @@ if command -v jq >/dev/null 2>&1; then
   # that path — replacing only the leaf while leaving its siblings untouched.
   # A plain key ("theme") replaces the whole top-level value; a dotted key
   # ("permissions.defaultMode") replaces just that sub-key and keeps the rest of
-  # the object (permissions.allow, …). A null value deletes the path. Any path not
-  # listed is never touched, so removing a key from the managed block simply
-  # stops syncing it. A "hooks" object left empty by deletions is dropped too.
+  # the object (permissions.allow, …). Any path not listed is never touched, so
+  # deleting a key from the managed block simply stops syncing it — never null.
   # (Managed keys must not contain a literal "." in a single path segment.)
-  printf '%s' "$existing" | jq --argjson managed "$managed" '
-    reduce ($managed | to_entries[]) as $e (.;
-      if $e.value == null then delpaths([$e.key | split(".")])
-      else setpath($e.key | split("."); $e.value) end)
-    | if .hooks == {} then del(.hooks) else . end
+  # Then prune the retired hook commands (see $retired_hooks above).
+  printf '%s' "$existing" | jq --argjson managed "$managed" --argjson retired "$retired_hooks" '
+    reduce ($managed | to_entries[]) as $e (.; setpath($e.key | split("."); $e.value))
+    | if (.hooks | type) == "object" then
+        .hooks |= (
+          map_values(
+            if type == "array" then
+              map(
+                if (.hooks | type) == "array" then
+                  .hooks |= map(select(
+                    (.command // "") as $c | ($retired | any(. as $r | $c | contains($r))) | not))
+                else . end
+                | select((.hooks | type) != "array" or (.hooks | length) > 0))
+            else . end)
+          | with_entries(select((.value | type) != "array" or (.value | length) > 0)))
+        | if .hooks == {} then del(.hooks) else . end
+      else . end
   '
 else
   # No jq (fresh-machine bootstrap, before ansible installs it). $managed is a
