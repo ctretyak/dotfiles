@@ -9,7 +9,7 @@
 #
 # The managed block is the single source of truth for what syncs: add a key to
 # sync it, delete a key to stop syncing it (the machine then keeps whatever it
-# had — no stray nulls).
+# had), set a key to null to delete that path from the machine's file.
 #
 # Granularity is chosen per entry:
 #   "theme": "auto"                  -> replaces the whole top-level "theme"
@@ -22,20 +22,21 @@
 # is the single source of truth for plugins; the `claude plugin install` CLI writes
 # the enablement into settings.json locally and this merge leaves it alone.
 #
-# "hooks.UserPromptSubmit" / "hooks.Stop" are kept as empty arrays on purpose: the
-# english-coach hooks that used to live here moved into the english-coach plugin
-# (ctretyak marketplace). Deleting the keys would leave the old entries on every
-# machine (this merge never removes anything); owning them as [] clears them.
+# Hooks are deliberately NOT managed either: english-coach and rtk are plugins
+# (ctretyak marketplace) and herdr writes its own SessionStart entry via
+# `herdr integration install claude` (ansible). The null entries below delete the
+# inline hook entries that used to live here; once every machine has applied
+# them they can be dropped from the block.
 #
 # chezmoi passes the current target contents on stdin (empty on a fresh machine)
 # and writes this script's stdout back to ~/.claude/settings.json.
 set -euo pipefail
 
 # The paths chezmoi owns and syncs across every machine. A dotted key targets a
-# sub-key (env vars, permissions.defaultMode, individual hooks.* events), keeping
-# its machine-local siblings; a plain key owns the whole value. Any path not listed
-# (enabledPlugins, extraKnownMarketplaces, MCP servers, permissions.allow, a
-# machine-only hook event, …) is left untouched.
+# sub-key (env vars, permissions.defaultMode), keeping its machine-local siblings;
+# a plain key owns the whole value; a null value deletes the path. Any path not
+# listed (enabledPlugins, extraKnownMarketplaces, MCP servers, permissions.allow,
+# hooks, …) is left untouched.
 managed=$(cat <<'JSON'
 {
   "env.CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000",
@@ -44,31 +45,10 @@ managed=$(cat <<'JSON'
     "pr": ""
   },
   "permissions.defaultMode": "auto",
-  "hooks.PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "rtk hook claude"
-          }
-        ]
-      }
-    ],
-  "hooks.UserPromptSubmit": [],
-  "hooks.Stop": [],
-  "hooks.SessionStart": [
-      {{ if eq .chezmoi.os "darwin" }}{
-        "matcher": "*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash '{{ .chezmoi.homeDir }}/.claude/hooks/herdr-agent-state.sh' session",
-            "timeout": 10
-          }
-        ]
-      }{{ end }}
-    ],
+  "hooks.PreToolUse": null,
+  "hooks.UserPromptSubmit": null,
+  "hooks.Stop": null,
+  {{ if ne .chezmoi.os "darwin" }}"hooks.SessionStart": null,{{ end }}
   "statusLine": {
     "type": "command",
     "command": "bash ~/.claude/statusline-command.sh",
@@ -88,11 +68,15 @@ if command -v jq >/dev/null 2>&1; then
   # that path — replacing only the leaf while leaving its siblings untouched.
   # A plain key ("theme") replaces the whole top-level value; a dotted key
   # ("permissions.defaultMode") replaces just that sub-key and keeps the rest of
-  # the object (permissions.allow, …). Any path not listed is never touched, so
-  # deleting a key from the managed block simply stops syncing it — never null.
+  # the object (permissions.allow, …). A null value deletes the path. Any path not
+  # listed is never touched, so removing a key from the managed block simply
+  # stops syncing it. A "hooks" object left empty by deletions is dropped too.
   # (Managed keys must not contain a literal "." in a single path segment.)
   printf '%s' "$existing" | jq --argjson managed "$managed" '
-    reduce ($managed | to_entries[]) as $e (.; setpath($e.key | split("."); $e.value))
+    reduce ($managed | to_entries[]) as $e (.;
+      if $e.value == null then delpaths([$e.key | split(".")])
+      else setpath($e.key | split("."); $e.value) end)
+    | if .hooks == {} then del(.hooks) else . end
   '
 else
   # No jq (fresh-machine bootstrap, before ansible installs it). $managed is a
