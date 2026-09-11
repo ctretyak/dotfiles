@@ -2,8 +2,9 @@
 # single source of truth for plugins: settings.json no longer declares them — its
 # modify_ script leaves enabledPlugins machine-local, and `claude plugin enable`
 # writes the enablement there. The claude-plugins-official marketplace is not
-# preconfigured on a fresh machine, so we add it (idempotent) before installing.
-# Identical across OS trees.
+# preconfigured on a fresh machine, so we add it (idempotent) before installing;
+# same for the personal ctretyak marketplace (github.com/ctretyak/claude-code-plugins).
+# Identical across OS trees except the plugin list.
 #
 # Install and enable are two distinct steps: `claude plugin install` only puts the
 # plugin code in the cache, it leaves the plugin disabled. Without the enable pass
@@ -31,13 +32,16 @@
       # Own plugin: holds one continuous caffeinate while Claude works, so the Mac
       # does not idle-sleep mid-response (anthropics/claude-code#81832).
       - keep-awake@ctretyak
+      # Own plugin: out-of-process English coaching, shows native rewrites of the
+      # user's prompt after each turn (used to be bare hooks in settings.json).
+      - english-coach@ctretyak
   block:
     - name: claude-code-plugins | Ensure official marketplace is configured
       ansible.builtin.command: claude plugin marketplace add anthropics/claude-plugins-official --scope user
       changed_when: false
 
     - name: claude-code-plugins | Ensure ctretyak marketplace is configured
-      ansible.builtin.command: claude plugin marketplace add https://github.com/ctretyak/claude-code-keep-awake.git --scope user
+      ansible.builtin.command: claude plugin marketplace add https://github.com/ctretyak/claude-code-plugins.git --scope user
       changed_when: false
 
     - name: claude-code-plugins | Query installed plugins

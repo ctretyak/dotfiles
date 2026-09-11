@@ -22,6 +22,11 @@
 # is the single source of truth for plugins; the `claude plugin install` CLI writes
 # the enablement into settings.json locally and this merge leaves it alone.
 #
+# "hooks.UserPromptSubmit" / "hooks.Stop" are kept as empty arrays on purpose: the
+# english-coach hooks that used to live here moved into the english-coach plugin
+# (ctretyak marketplace). Deleting the keys would leave the old entries on every
+# machine (this merge never removes anything); owning them as [] clears them.
+#
 # chezmoi passes the current target contents on stdin (empty on a fresh machine)
 # and writes this script's stdout back to ~/.claude/settings.json.
 set -euo pipefail
@@ -41,16 +46,6 @@ managed=$(cat <<'JSON'
   "permissions.defaultMode": "auto",
   "hooks.PreToolUse": [
       {
-        "matcher": "ExitPlanMode|AskUserQuestion",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.claude/english-coach/coach-hook.sh",
-            "timeout": 15
-          }
-        ]
-      },
-      {
         "matcher": "Bash",
         "hooks": [
           {
@@ -60,29 +55,8 @@ managed=$(cat <<'JSON'
         ]
       }
     ],
-  "hooks.UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.claude/english-coach/coach-precompute.sh",
-            "timeout": 30,
-            "async": true
-          }
-        ]
-      }
-    ],
-  "hooks.Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash {{ .chezmoi.homeDir }}/.claude/english-coach/coach-hook.sh",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
+  "hooks.UserPromptSubmit": [],
+  "hooks.Stop": [],
   "hooks.SessionStart": [
       {{ if eq .chezmoi.os "darwin" }}{
         "matcher": "*",
