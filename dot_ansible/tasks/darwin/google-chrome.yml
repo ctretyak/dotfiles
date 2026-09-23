@@ -3,3 +3,13 @@
     update_homebrew: no
     name: google-chrome
     state: present
+
+- name: google-chrome | Check pinned Homebrew packages
+  ansible.builtin.command: /opt/homebrew/bin/brew list --pinned
+  register: brew_pinned
+  changed_when: false
+
+# Chrome updates itself; pinning keeps `brew upgrade --cask` (brew autoupdate) from replacing the app.
+- name: google-chrome | Pin google-chrome cask
+  ansible.builtin.command: /opt/homebrew/bin/brew pin google-chrome
+  when: "'google-chrome' not in brew_pinned.stdout_lines"
