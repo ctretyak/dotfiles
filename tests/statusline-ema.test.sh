@@ -42,10 +42,11 @@ check "A cold-start" \
   "$(ema_project $T 10 $((T+9000)) 18000 3600 20 1800 2 NA 0 NA NA NA NA)" \
   0 NA NA 0
 
-# B: 2nd sample seeds rate; ready; EMA proj far above linear -> UP
+# B: 2nd sample seeds rate by blending into the window average (10.5/9000), not the
+#    raw 0.005 delta; ready; stays near linear -> FLAT
 B=$(ema_project $T 10.5 $((T+9000)) 18000 3600 20 1800 2 21 1 $((T-100)) 10 NA $((T+9000)))
-check      "B seed-up"   "$B" 1 56 UP 0
-check_rate "B seed-rate" "$B" 0.005 0.0001
+check      "B seed-blend" "$B" 1 22 FLAT 0
+check_rate "B seed-rate"  "$B" 0.00124 0.00001
 
 # C: recent pace below window average -> DOWN
 C=$(ema_project $T 10.52 $((T+9000)) 18000 3600 20 1800 2 21 1 $((T-100)) 10.5 0.0008 $((T+9000)))
@@ -82,8 +83,8 @@ check_rate "F gate-rate"       "$F" 0.0001 0.00002
 G=$(ema_project $T 10.5 $((T+9000)) 18000 3600 20 1800 2 NA 0 $((T-100)) 10 0.005 $((T+9000)))
 check "G flat-no-linear" "$G" 1 56 FLAT 0
 
-# H: constant rate fed through 30 steps -> EMA converges to that rate
-pts=$((T-3000)); pu=0; pr=NA; rst=$((T+9000)); now=$((T-3000)); cur=0
+# H: constant rate from window start, fed through 30 steps -> EMA converges to that rate
+pts=$((T-3000)); pu=0; pr=NA; rst=$((T+15000)); now=$((T-3000)); cur=0
 for i in $(seq 1 30); do
   now=$((now+100))
   cur=$(awk -v u="$cur" 'BEGIN{printf "%.4f", u+0.01}')   # +0.01% each 100s -> 0.0001 %/s
@@ -111,6 +112,14 @@ K1=$(ema_project $T 67 $((T+255000)) 604800 86400 20 14400 2 135 1 $((T-100)) 78
 read -r k_ts k_used k_rate _ <<<"$K1"
 K2=$(ema_project $((T+21)) 78 $((T+255000)) 604800 86400 20 14400 2 135 1 "$k_ts" "$k_used" "$k_rate" $((T+255000)))
 check_rate "K recovery-no-whiplash" "$K2" 0.0000822 0.00001
+
+# L: first rate after a reset must not be seeded from a single 1pp quantization step.
+#    Real 7d bug: re-anchored at 23%, then 23->24 over 24s seeded 0.0417 %/s and the
+#    24h half-life kept the projection near 17600%. The window average (used/elapsed)
+#    is the prior, so the seed stays near the linear pace (~179).
+L=$(ema_project $T 24 $((T+523903)) 604800 86400 20 14400 2 179 1 $((T-24)) 23 NA $((T+523903)))
+check      "L seed-no-quantization-spike" "$L" 1 184 UP 0
+check_rate "L seed-rate"                  "$L" 0.000305 0.00001
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

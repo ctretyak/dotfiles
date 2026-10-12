@@ -62,13 +62,13 @@ ema_project() {
     } else {
       rate = (used - pu) / dt
       if (rate < 0) rate = 0   # defensive: float noise only; real dips are held above
-      if (pr == "NA") {
-        out_rate = rate
-      } else {
-        tau = hl / log(2)
-        alpha = 1 - exp(-dt / tau)
-        out_rate = alpha * rate + (1 - alpha) * (pr + 0)
-      }
+      tau = hl / log(2)
+      alpha = 1 - exp(-dt / tau)
+      # First rate after cold start/reset: blend into the window-average pace rather
+      # than seeding from one delta. used% is integer-quantized, so a single 1pp step
+      # over a short dt reads as a huge burst that a long half-life never decays.
+      prior = (pr != "NA") ? pr + 0 : (elapsed > 0 ? used / elapsed : rate)
+      out_rate = alpha * rate + (1 - alpha) * prior
       out_ts = now; out_used = used; out_rst = rst
     }
 

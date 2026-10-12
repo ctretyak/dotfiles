@@ -42,8 +42,10 @@ Per window, on each status-line render that passes the min-Δt guard:
 2. **Time-based EMA of the rate** (correct under irregular render intervals):
    `α = 1 − exp(−Δt / tau)`
    `ema_rate = α · rate + (1 − α) · ema_rate_prev`
-   On the **first** rate computation after a reset/cold start, `ema_rate` is
-   seeded directly with `rate` (no prior value to blend).
+   On the **first** rate computation after a reset/cold start, the prior is the
+   window-average pace `used_now / elapsed_sec` (not the raw `rate`): used% is
+   integer-quantized, so one 1pp step over a short Δt would otherwise seed a huge
+   burst that the 7d half-life never decays.
 3. **Projection** to end of window:
    `projected_ema = used_now + ema_rate · remaining_sec`, clamped at ≥ 0.
 
