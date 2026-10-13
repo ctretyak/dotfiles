@@ -42,3 +42,4 @@ description = "navigate right (vim/herdr)"
 
 [ui]
 agent_panel_sort = "spaces"
+status_indicators = "dots"
