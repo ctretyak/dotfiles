@@ -36,7 +36,7 @@ if [ "${1:-}" = open ]; then
   exit 0
 fi
 
-# Startup and the manual action refresh everything; events refresh one workspace.
+# Startup, the manual action and the launchd timer refresh everything; events refresh one workspace.
 target=""
 if [ "${HERDR_PLUGIN_EVENT:-startup}" != startup ] && [ "${1:-}" != all ]; then
   target=$(jq -r '[.. | .workspace_id? // empty] | first // empty' <<<"${HERDR_PLUGIN_EVENT_JSON:-null}")

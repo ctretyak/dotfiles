@@ -1,0 +1,10 @@
+#!/bin/bash
+# Links the herdr glab-mr plugin and (re)loads its 5-minute refresh agent.
+# plist hash: {{ include "Library/private_LaunchAgents/dev.herdr.glab-mr.plist.tmpl" | sha256sum }}
+set -e
+
+/opt/homebrew/bin/herdr plugin link "$HOME/.config/herdr/local-plugins/glab-mr" >/dev/null
+
+plist="$HOME/Library/LaunchAgents/dev.herdr.glab-mr.plist"
+launchctl bootout "gui/$(id -u)" "$plist" 2>/dev/null || true
+launchctl bootstrap "gui/$(id -u)" "$plist"

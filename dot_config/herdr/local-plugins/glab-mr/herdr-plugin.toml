@@ -16,11 +16,6 @@ command = ["bash", "mr.sh"]
 on = "worktree.opened"
 command = ["bash", "mr.sh"]
 
-# MR usually appears after the worktree is created, so refresh on focus too.
-[[events]]
-on = "workspace.focused"
-command = ["bash", "mr.sh"]
-
 [[actions]]
 id = "refresh"
 title = "Refresh MR numbers"
