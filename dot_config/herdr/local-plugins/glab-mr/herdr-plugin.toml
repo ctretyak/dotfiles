@@ -1,0 +1,12 @@
+id = "glab-mr"
+name = "GitLab MR"
+version = "0.2.0"
+min_herdr_version = "0.9.0"
+description = "Open the GitLab MR of a worktree branch in the browser"
+platforms = ["macos"]
+
+[[actions]]
+id = "open"
+title = "Open MR in browser"
+contexts = ["global"]
+command = ["bash", "mr.sh"]

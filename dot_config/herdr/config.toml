@@ -40,6 +40,12 @@ type = "plugin_action"
 command = "vim-herdr-navigation.right"
 description = "navigate right (vim/herdr)"
 
+[[keys.command]]
+key = "prefix+m"
+type = "plugin_action"
+command = "glab-mr.open"
+description = "open MR of this worktree"
+
 [ui]
 agent_panel_sort = "spaces"
 status_indicators = "dots"
