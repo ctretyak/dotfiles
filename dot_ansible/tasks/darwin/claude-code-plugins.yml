@@ -32,12 +32,14 @@
       # Own plugin: holds one continuous caffeinate while Claude works, so the Mac
       # does not idle-sleep mid-response (anthropics/claude-code#81832).
       - keep-awake@ctretyak
-      # Own plugin: out-of-process English coaching, shows native rewrites of the
-      # user's prompt after each turn (used to be bare hooks in settings.json).
-      - english-coach@ctretyak
       # Own plugin: the rtk PreToolUse hook (Bash commands rewritten to `rtk <cmd>`),
       # instead of the bare entry `rtk init -g` writes into settings.json.
       - rtk@ctretyak
+    # Installed but kept disabled. To turn one back on, move it into ccp_plugins.
+    ccp_disabled_plugins:
+      # Own plugin: out-of-process English coaching, shows native rewrites of the
+      # user's prompt after each turn (used to be bare hooks in settings.json).
+      - english-coach@ctretyak
   block:
     - name: claude-code-plugins | Ensure official marketplace is configured
       ansible.builtin.command: claude plugin marketplace add anthropics/claude-plugins-official --scope user
@@ -54,7 +56,7 @@
 
     - name: claude-code-plugins | Install missing plugins
       ansible.builtin.command: "claude plugin install {{ item }} --scope user"
-      loop: "{{ ccp_plugins }}"
+      loop: "{{ ccp_plugins + ccp_disabled_plugins }}"
       when: item not in ccp_installed.stdout
 
     - name: claude-code-plugins | Re-query plugin state after install
@@ -66,3 +68,8 @@
       ansible.builtin.command: "claude plugin enable {{ item }} --scope user"
       loop: "{{ ccp_plugins }}"
       when: item in (ccp_state.stdout | from_json | rejectattr('enabled') | map(attribute='id') | list)
+
+    - name: claude-code-plugins | Disable plugins kept off
+      ansible.builtin.command: "claude plugin disable {{ item }} --scope user"
+      loop: "{{ ccp_disabled_plugins }}"
+      when: item in (ccp_state.stdout | from_json | selectattr('enabled') | map(attribute='id') | list)
